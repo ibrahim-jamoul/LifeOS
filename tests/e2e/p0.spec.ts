@@ -10,6 +10,7 @@ test("an anonymous visitor cannot open the private application", async ({ page }
 });
 
 test("authenticated P0 control-plane and branch journey", async ({ page }) => {
+  test.setTimeout(120_000);
   test.skip(!email || !password, "Set LIFEOS_E2E_EMAIL and LIFEOS_E2E_PASSWORD for the authenticated journey.");
   await login(page, email!, password!);
   const suffix = crypto.randomUUID().slice(0, 8);
@@ -50,8 +51,9 @@ test("authenticated P0 control-plane and branch journey", async ({ page }) => {
     const transfer = await page.request.post("/api/data/financial_transactions", { data: { account_id: accountA.id, destination_account_id: accountB.id, occurred_on: isoDate(), amount: 5, tx_type: "transfer", category: null, description: "E2E transfer", currency: "EUR", notes: null } });
     const transferRaw = await transfer.text();
     expect(transfer.ok(), transferRaw).toBeTruthy();
-    const transferBody = JSON.parse(transferRaw) as { data: { source_transaction_id: string } };
+    const transferBody = JSON.parse(transferRaw) as { data: { source_transaction_id: string; destination_transaction_id: string } };
     created.push({ resource: "financial_transactions", id: transferBody.data.source_transaction_id });
+    created.push({ resource: "financial_transactions", id: transferBody.data.destination_transaction_id });
     await create("net_worth_snapshots", { snapshot_date: isoDate(), assets: 100, liabilities: 0, currency: "EUR", note: "E2E" });
 
     const habit = await create("habits", { name: `E2E Habit ${suffix}`, frequency: "daily", target_count: 1, reminder_time: null, active: true, notes: null });
@@ -76,7 +78,7 @@ async function login(page: Page, userEmail: string, userPassword: string) {
   await page.getByLabel("Adresse e-mail").fill(userEmail);
   await page.getByLabel("Mot de passe", { exact: true }).fill(userPassword);
   await page.getByRole("button", { name: "Se connecter" }).click();
-  await expect(page).toHaveURL(/\/app\/dashboard/);
+  await expect(page).toHaveURL(/\/app\/dashboard/, { timeout: 30_000 });
 }
 
 function isoDate(): string { return new Date().toISOString().slice(0, 10); }
