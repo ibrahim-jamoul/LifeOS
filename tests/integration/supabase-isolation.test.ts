@@ -14,14 +14,17 @@ const live = Object.values(config).every(Boolean);
 describe.runIf(live)("live Supabase tenant isolation", () => {
   let a: SupabaseClient;
   let b: SupabaseClient;
+  let anonymous: SupabaseClient;
   let userA = "";
   let userB = "";
   let goalId = "";
+  let projectBId = "";
   let storagePath = "";
 
   beforeAll(async () => {
     a = createClient(config.url!, config.key!, { auth: { persistSession: false, autoRefreshToken: false } });
     b = createClient(config.url!, config.key!, { auth: { persistSession: false, autoRefreshToken: false } });
+    anonymous = createClient(config.url!, config.key!, { auth: { persistSession: false, autoRefreshToken: false } });
     const [loginA, loginB] = await Promise.all([
       a.auth.signInWithPassword({ email: config.emailA!, password: config.passwordA! }),
       b.auth.signInWithPassword({ email: config.emailB!, password: config.passwordB! }),
@@ -34,6 +37,7 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
 
   afterAll(async () => {
     if (goalId) await a.from("goals").delete().eq("id", goalId);
+    if (projectBId) await b.from("projects").delete().eq("id", projectBId);
     if (storagePath) await a.storage.from("documents").remove([storagePath]);
     await Promise.all([a?.auth.signOut(), b?.auth.signOut()]);
   });
@@ -65,8 +69,27 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
 
     const forged = await a.from("goals").insert({ user_id: userB, title: "forged owner", definition_of_done: "must fail" });
     expect(forged.error).not.toBeNull();
+    const forgedUpdate = await a.from("goals").update({ user_id: userB }).eq("id", goalId);
+    expect(forgedUpdate.error).not.toBeNull();
     const ownerStillReads = await a.from("goals").select("id").eq("id", goalId).single();
     expect(ownerStillReads.error).toBeNull();
+  });
+
+  it("rejects a child row that references another user's parent", async () => {
+    const projectB = await b
+      .from("projects")
+      .insert({ user_id: userB, title: `RLS parent ${crypto.randomUUID()}` })
+      .select("id")
+      .single();
+    expect(projectB.error).toBeNull();
+    projectBId = projectB.data!.id;
+
+    const crossTenantTask = await a.from("tasks").insert({
+      user_id: userA,
+      project_id: projectBId,
+      title: "cross-tenant FK must fail",
+    });
+    expect(crossTenantTask.error).not.toBeNull();
   });
 
   it("keeps private Storage objects unreadable by another authenticated user", async () => {
@@ -77,6 +100,12 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
     expect(ownerDownload.error).toBeNull();
     const otherDownload = await b.storage.from("documents").download(storagePath);
     expect(otherDownload.error).not.toBeNull();
+    const otherUpdate = await b.storage
+      .from("documents")
+      .update(storagePath, new Blob(["modified by B"], { type: "text/plain" }));
+    expect(otherUpdate.error).not.toBeNull();
+    const anonymousDownload = await anonymous.storage.from("documents").download(storagePath);
+    expect(anonymousDownload.error).not.toBeNull();
     const wrongPrefixUpload = await a.storage.from("documents").upload(`${userB}/2026/${crypto.randomUUID()}-forged.txt`, new Blob(["forged"]));
     expect(wrongPrefixUpload.error).not.toBeNull();
   });

@@ -10,3 +10,5 @@ test-results/
 *.log
 *.tsbuildinfo
 .vercel/
+supabase/.branches/
+supabase/.temp/

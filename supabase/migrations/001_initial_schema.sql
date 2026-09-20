@@ -526,6 +526,8 @@ create table if not exists public.activity_log (
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+security invoker
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
@@ -635,7 +637,7 @@ create or replace function public.initialize_lifeos()
 returns void
 language plpgsql
 security invoker
-set search_path = public
+set search_path = ''
 as $$
 declare
   uid uuid := auth.uid();
@@ -720,851 +722,851 @@ alter table public.profiles enable row level security;
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own" on public.profiles
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "profiles_delete_own" on public.profiles;
 create policy "profiles_delete_own" on public.profiles
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.life_vision enable row level security;
 
 drop policy if exists "life_vision_select_own" on public.life_vision;
 create policy "life_vision_select_own" on public.life_vision
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "life_vision_insert_own" on public.life_vision;
 create policy "life_vision_insert_own" on public.life_vision
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "life_vision_update_own" on public.life_vision;
 create policy "life_vision_update_own" on public.life_vision
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "life_vision_delete_own" on public.life_vision;
 create policy "life_vision_delete_own" on public.life_vision
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.domains enable row level security;
 
 drop policy if exists "domains_select_own" on public.domains;
 create policy "domains_select_own" on public.domains
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "domains_insert_own" on public.domains;
 create policy "domains_insert_own" on public.domains
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "domains_update_own" on public.domains;
 create policy "domains_update_own" on public.domains
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "domains_delete_own" on public.domains;
 create policy "domains_delete_own" on public.domains
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.goals enable row level security;
 
 drop policy if exists "goals_select_own" on public.goals;
 create policy "goals_select_own" on public.goals
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "goals_insert_own" on public.goals;
 create policy "goals_insert_own" on public.goals
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "goals_update_own" on public.goals;
 create policy "goals_update_own" on public.goals
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "goals_delete_own" on public.goals;
 create policy "goals_delete_own" on public.goals
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.kpis enable row level security;
 
 drop policy if exists "kpis_select_own" on public.kpis;
 create policy "kpis_select_own" on public.kpis
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "kpis_insert_own" on public.kpis;
 create policy "kpis_insert_own" on public.kpis
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "kpis_update_own" on public.kpis;
 create policy "kpis_update_own" on public.kpis
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "kpis_delete_own" on public.kpis;
 create policy "kpis_delete_own" on public.kpis
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.kpi_entries enable row level security;
 
 drop policy if exists "kpi_entries_select_own" on public.kpi_entries;
 create policy "kpi_entries_select_own" on public.kpi_entries
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "kpi_entries_insert_own" on public.kpi_entries;
 create policy "kpi_entries_insert_own" on public.kpi_entries
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "kpi_entries_update_own" on public.kpi_entries;
 create policy "kpi_entries_update_own" on public.kpi_entries
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "kpi_entries_delete_own" on public.kpi_entries;
 create policy "kpi_entries_delete_own" on public.kpi_entries
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.projects enable row level security;
 
 drop policy if exists "projects_select_own" on public.projects;
 create policy "projects_select_own" on public.projects
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "projects_insert_own" on public.projects;
 create policy "projects_insert_own" on public.projects
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "projects_update_own" on public.projects;
 create policy "projects_update_own" on public.projects
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "projects_delete_own" on public.projects;
 create policy "projects_delete_own" on public.projects
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.goal_projects enable row level security;
 
 drop policy if exists "goal_projects_select_own" on public.goal_projects;
 create policy "goal_projects_select_own" on public.goal_projects
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "goal_projects_insert_own" on public.goal_projects;
 create policy "goal_projects_insert_own" on public.goal_projects
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "goal_projects_update_own" on public.goal_projects;
 create policy "goal_projects_update_own" on public.goal_projects
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "goal_projects_delete_own" on public.goal_projects;
 create policy "goal_projects_delete_own" on public.goal_projects
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.tasks enable row level security;
 
 drop policy if exists "tasks_select_own" on public.tasks;
 create policy "tasks_select_own" on public.tasks
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "tasks_insert_own" on public.tasks;
 create policy "tasks_insert_own" on public.tasks
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "tasks_update_own" on public.tasks;
 create policy "tasks_update_own" on public.tasks
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "tasks_delete_own" on public.tasks;
 create policy "tasks_delete_own" on public.tasks
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.reminders enable row level security;
 
 drop policy if exists "reminders_select_own" on public.reminders;
 create policy "reminders_select_own" on public.reminders
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "reminders_insert_own" on public.reminders;
 create policy "reminders_insert_own" on public.reminders
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "reminders_update_own" on public.reminders;
 create policy "reminders_update_own" on public.reminders
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "reminders_delete_own" on public.reminders;
 create policy "reminders_delete_own" on public.reminders
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.notifications enable row level security;
 
 drop policy if exists "notifications_select_own" on public.notifications;
 create policy "notifications_select_own" on public.notifications
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "notifications_insert_own" on public.notifications;
 create policy "notifications_insert_own" on public.notifications
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "notifications_update_own" on public.notifications;
 create policy "notifications_update_own" on public.notifications
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "notifications_delete_own" on public.notifications;
 create policy "notifications_delete_own" on public.notifications
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.decisions enable row level security;
 
 drop policy if exists "decisions_select_own" on public.decisions;
 create policy "decisions_select_own" on public.decisions
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "decisions_insert_own" on public.decisions;
 create policy "decisions_insert_own" on public.decisions
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "decisions_update_own" on public.decisions;
 create policy "decisions_update_own" on public.decisions
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "decisions_delete_own" on public.decisions;
 create policy "decisions_delete_own" on public.decisions
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.weekly_reviews enable row level security;
 
 drop policy if exists "weekly_reviews_select_own" on public.weekly_reviews;
 create policy "weekly_reviews_select_own" on public.weekly_reviews
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "weekly_reviews_insert_own" on public.weekly_reviews;
 create policy "weekly_reviews_insert_own" on public.weekly_reviews
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "weekly_reviews_update_own" on public.weekly_reviews;
 create policy "weekly_reviews_update_own" on public.weekly_reviews
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "weekly_reviews_delete_own" on public.weekly_reviews;
 create policy "weekly_reviews_delete_own" on public.weekly_reviews
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.study_topics enable row level security;
 
 drop policy if exists "study_topics_select_own" on public.study_topics;
 create policy "study_topics_select_own" on public.study_topics
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "study_topics_insert_own" on public.study_topics;
 create policy "study_topics_insert_own" on public.study_topics
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "study_topics_update_own" on public.study_topics;
 create policy "study_topics_update_own" on public.study_topics
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "study_topics_delete_own" on public.study_topics;
 create policy "study_topics_delete_own" on public.study_topics
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.study_sessions enable row level security;
 
 drop policy if exists "study_sessions_select_own" on public.study_sessions;
 create policy "study_sessions_select_own" on public.study_sessions
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "study_sessions_insert_own" on public.study_sessions;
 create policy "study_sessions_insert_own" on public.study_sessions
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "study_sessions_update_own" on public.study_sessions;
 create policy "study_sessions_update_own" on public.study_sessions
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "study_sessions_delete_own" on public.study_sessions;
 create policy "study_sessions_delete_own" on public.study_sessions
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.religion_routines enable row level security;
 
 drop policy if exists "religion_routines_select_own" on public.religion_routines;
 create policy "religion_routines_select_own" on public.religion_routines
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_routines_insert_own" on public.religion_routines;
 create policy "religion_routines_insert_own" on public.religion_routines
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_routines_update_own" on public.religion_routines;
 create policy "religion_routines_update_own" on public.religion_routines
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_routines_delete_own" on public.religion_routines;
 create policy "religion_routines_delete_own" on public.religion_routines
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.religion_logs enable row level security;
 
 drop policy if exists "religion_logs_select_own" on public.religion_logs;
 create policy "religion_logs_select_own" on public.religion_logs
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_logs_insert_own" on public.religion_logs;
 create policy "religion_logs_insert_own" on public.religion_logs
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_logs_update_own" on public.religion_logs;
 create policy "religion_logs_update_own" on public.religion_logs
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "religion_logs_delete_own" on public.religion_logs;
 create policy "religion_logs_delete_own" on public.religion_logs
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.arabic_profiles enable row level security;
 
 drop policy if exists "arabic_profiles_select_own" on public.arabic_profiles;
 create policy "arabic_profiles_select_own" on public.arabic_profiles
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_profiles_insert_own" on public.arabic_profiles;
 create policy "arabic_profiles_insert_own" on public.arabic_profiles
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_profiles_update_own" on public.arabic_profiles;
 create policy "arabic_profiles_update_own" on public.arabic_profiles
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_profiles_delete_own" on public.arabic_profiles;
 create policy "arabic_profiles_delete_own" on public.arabic_profiles
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.arabic_sessions enable row level security;
 
 drop policy if exists "arabic_sessions_select_own" on public.arabic_sessions;
 create policy "arabic_sessions_select_own" on public.arabic_sessions
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_sessions_insert_own" on public.arabic_sessions;
 create policy "arabic_sessions_insert_own" on public.arabic_sessions
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_sessions_update_own" on public.arabic_sessions;
 create policy "arabic_sessions_update_own" on public.arabic_sessions
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "arabic_sessions_delete_own" on public.arabic_sessions;
 create policy "arabic_sessions_delete_own" on public.arabic_sessions
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.quran_items enable row level security;
 
 drop policy if exists "quran_items_select_own" on public.quran_items;
 create policy "quran_items_select_own" on public.quran_items
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_items_insert_own" on public.quran_items;
 create policy "quran_items_insert_own" on public.quran_items
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_items_update_own" on public.quran_items;
 create policy "quran_items_update_own" on public.quran_items
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_items_delete_own" on public.quran_items;
 create policy "quran_items_delete_own" on public.quran_items
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.quran_sessions enable row level security;
 
 drop policy if exists "quran_sessions_select_own" on public.quran_sessions;
 create policy "quran_sessions_select_own" on public.quran_sessions
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_sessions_insert_own" on public.quran_sessions;
 create policy "quran_sessions_insert_own" on public.quran_sessions
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_sessions_update_own" on public.quran_sessions;
 create policy "quran_sessions_update_own" on public.quran_sessions
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "quran_sessions_delete_own" on public.quran_sessions;
 create policy "quran_sessions_delete_own" on public.quran_sessions
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.financial_accounts enable row level security;
 
 drop policy if exists "financial_accounts_select_own" on public.financial_accounts;
 create policy "financial_accounts_select_own" on public.financial_accounts
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_accounts_insert_own" on public.financial_accounts;
 create policy "financial_accounts_insert_own" on public.financial_accounts
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_accounts_update_own" on public.financial_accounts;
 create policy "financial_accounts_update_own" on public.financial_accounts
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_accounts_delete_own" on public.financial_accounts;
 create policy "financial_accounts_delete_own" on public.financial_accounts
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.financial_transactions enable row level security;
 
 drop policy if exists "financial_transactions_select_own" on public.financial_transactions;
 create policy "financial_transactions_select_own" on public.financial_transactions
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_transactions_insert_own" on public.financial_transactions;
 create policy "financial_transactions_insert_own" on public.financial_transactions
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_transactions_update_own" on public.financial_transactions;
 create policy "financial_transactions_update_own" on public.financial_transactions
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_transactions_delete_own" on public.financial_transactions;
 create policy "financial_transactions_delete_own" on public.financial_transactions
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.budget_items enable row level security;
 
 drop policy if exists "budget_items_select_own" on public.budget_items;
 create policy "budget_items_select_own" on public.budget_items
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "budget_items_insert_own" on public.budget_items;
 create policy "budget_items_insert_own" on public.budget_items
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "budget_items_update_own" on public.budget_items;
 create policy "budget_items_update_own" on public.budget_items
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "budget_items_delete_own" on public.budget_items;
 create policy "budget_items_delete_own" on public.budget_items
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.financial_goals enable row level security;
 
 drop policy if exists "financial_goals_select_own" on public.financial_goals;
 create policy "financial_goals_select_own" on public.financial_goals
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_goals_insert_own" on public.financial_goals;
 create policy "financial_goals_insert_own" on public.financial_goals
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_goals_update_own" on public.financial_goals;
 create policy "financial_goals_update_own" on public.financial_goals
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "financial_goals_delete_own" on public.financial_goals;
 create policy "financial_goals_delete_own" on public.financial_goals
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.net_worth_snapshots enable row level security;
 
 drop policy if exists "net_worth_snapshots_select_own" on public.net_worth_snapshots;
 create policy "net_worth_snapshots_select_own" on public.net_worth_snapshots
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "net_worth_snapshots_insert_own" on public.net_worth_snapshots;
 create policy "net_worth_snapshots_insert_own" on public.net_worth_snapshots
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "net_worth_snapshots_update_own" on public.net_worth_snapshots;
 create policy "net_worth_snapshots_update_own" on public.net_worth_snapshots
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "net_worth_snapshots_delete_own" on public.net_worth_snapshots;
 create policy "net_worth_snapshots_delete_own" on public.net_worth_snapshots
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.habits enable row level security;
 
 drop policy if exists "habits_select_own" on public.habits;
 create policy "habits_select_own" on public.habits
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "habits_insert_own" on public.habits;
 create policy "habits_insert_own" on public.habits
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "habits_update_own" on public.habits;
 create policy "habits_update_own" on public.habits
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "habits_delete_own" on public.habits;
 create policy "habits_delete_own" on public.habits
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.habit_logs enable row level security;
 
 drop policy if exists "habit_logs_select_own" on public.habit_logs;
 create policy "habit_logs_select_own" on public.habit_logs
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "habit_logs_insert_own" on public.habit_logs;
 create policy "habit_logs_insert_own" on public.habit_logs
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "habit_logs_update_own" on public.habit_logs;
 create policy "habit_logs_update_own" on public.habit_logs
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "habit_logs_delete_own" on public.habit_logs;
 create policy "habit_logs_delete_own" on public.habit_logs
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.health_metrics enable row level security;
 
 drop policy if exists "health_metrics_select_own" on public.health_metrics;
 create policy "health_metrics_select_own" on public.health_metrics
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "health_metrics_insert_own" on public.health_metrics;
 create policy "health_metrics_insert_own" on public.health_metrics
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "health_metrics_update_own" on public.health_metrics;
 create policy "health_metrics_update_own" on public.health_metrics
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "health_metrics_delete_own" on public.health_metrics;
 create policy "health_metrics_delete_own" on public.health_metrics
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.health_entries enable row level security;
 
 drop policy if exists "health_entries_select_own" on public.health_entries;
 create policy "health_entries_select_own" on public.health_entries
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "health_entries_insert_own" on public.health_entries;
 create policy "health_entries_insert_own" on public.health_entries
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "health_entries_update_own" on public.health_entries;
 create policy "health_entries_update_own" on public.health_entries
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "health_entries_delete_own" on public.health_entries;
 create policy "health_entries_delete_own" on public.health_entries
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.workouts enable row level security;
 
 drop policy if exists "workouts_select_own" on public.workouts;
 create policy "workouts_select_own" on public.workouts
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "workouts_insert_own" on public.workouts;
 create policy "workouts_insert_own" on public.workouts
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "workouts_update_own" on public.workouts;
 create policy "workouts_update_own" on public.workouts
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "workouts_delete_own" on public.workouts;
 create policy "workouts_delete_own" on public.workouts
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.documents enable row level security;
 
 drop policy if exists "documents_select_own" on public.documents;
 create policy "documents_select_own" on public.documents
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "documents_insert_own" on public.documents;
 create policy "documents_insert_own" on public.documents
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "documents_update_own" on public.documents;
 create policy "documents_update_own" on public.documents
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "documents_delete_own" on public.documents;
 create policy "documents_delete_own" on public.documents
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.memories enable row level security;
 
 drop policy if exists "memories_select_own" on public.memories;
 create policy "memories_select_own" on public.memories
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "memories_insert_own" on public.memories;
 create policy "memories_insert_own" on public.memories
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "memories_update_own" on public.memories;
 create policy "memories_update_own" on public.memories
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "memories_delete_own" on public.memories;
 create policy "memories_delete_own" on public.memories
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.memory_assets enable row level security;
 
 drop policy if exists "memory_assets_select_own" on public.memory_assets;
 create policy "memory_assets_select_own" on public.memory_assets
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "memory_assets_insert_own" on public.memory_assets;
 create policy "memory_assets_insert_own" on public.memory_assets
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "memory_assets_update_own" on public.memory_assets;
 create policy "memory_assets_update_own" on public.memory_assets
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "memory_assets_delete_own" on public.memory_assets;
 create policy "memory_assets_delete_own" on public.memory_assets
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.ai_threads enable row level security;
 
 drop policy if exists "ai_threads_select_own" on public.ai_threads;
 create policy "ai_threads_select_own" on public.ai_threads
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_threads_insert_own" on public.ai_threads;
 create policy "ai_threads_insert_own" on public.ai_threads
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_threads_update_own" on public.ai_threads;
 create policy "ai_threads_update_own" on public.ai_threads
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_threads_delete_own" on public.ai_threads;
 create policy "ai_threads_delete_own" on public.ai_threads
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.ai_messages enable row level security;
 
 drop policy if exists "ai_messages_select_own" on public.ai_messages;
 create policy "ai_messages_select_own" on public.ai_messages
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_messages_insert_own" on public.ai_messages;
 create policy "ai_messages_insert_own" on public.ai_messages
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_messages_update_own" on public.ai_messages;
 create policy "ai_messages_update_own" on public.ai_messages
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "ai_messages_delete_own" on public.ai_messages;
 create policy "ai_messages_delete_own" on public.ai_messages
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 alter table public.activity_log enable row level security;
 
 drop policy if exists "activity_log_select_own" on public.activity_log;
 create policy "activity_log_select_own" on public.activity_log
 for select to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 drop policy if exists "activity_log_insert_own" on public.activity_log;
 create policy "activity_log_insert_own" on public.activity_log
 for insert to authenticated
-with check (auth.uid() = user_id);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "activity_log_update_own" on public.activity_log;
 create policy "activity_log_update_own" on public.activity_log
 for update to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "activity_log_delete_own" on public.activity_log;
 create policy "activity_log_delete_own" on public.activity_log
 for delete to authenticated
-using (auth.uid() = user_id);
+using ((select auth.uid()) = user_id);
 
 -- Grants: authenticated users may operate on application tables, with RLS enforcing ownership.
 -- Adjust/revoke further according to current Supabase project defaults and API exposure settings.
@@ -1617,7 +1619,7 @@ create policy "lifeos_storage_select_own"
 on storage.objects for select to authenticated
 using (
   bucket_id in ('documents','memories')
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
 drop policy if exists "lifeos_storage_insert_own" on storage.objects;
@@ -1625,7 +1627,7 @@ create policy "lifeos_storage_insert_own"
 on storage.objects for insert to authenticated
 with check (
   bucket_id in ('documents','memories')
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
 drop policy if exists "lifeos_storage_update_own" on storage.objects;
@@ -1633,11 +1635,11 @@ create policy "lifeos_storage_update_own"
 on storage.objects for update to authenticated
 using (
   bucket_id in ('documents','memories')
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 )
 with check (
   bucket_id in ('documents','memories')
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
 drop policy if exists "lifeos_storage_delete_own" on storage.objects;
@@ -1645,5 +1647,5 @@ create policy "lifeos_storage_delete_own"
 on storage.objects for delete to authenticated
 using (
   bucket_id in ('documents','memories')
-  and (storage.foldername(name))[1] = auth.uid()::text
+  and (storage.foldername(name))[1] = (select auth.uid())::text
 );

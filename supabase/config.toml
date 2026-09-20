@@ -1,0 +1,14 @@
+project_id = "lifeos"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/update-password",
+  "http://127.0.0.1:3000/auth/callback",
+  "http://127.0.0.1:3000/update-password",
+]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
