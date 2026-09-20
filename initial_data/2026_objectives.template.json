@@ -1,0 +1,70 @@
+{
+  "note": "Editable starter data. Do not treat as immutable or insert fake KPI values.",
+  "objectives": [
+    {
+      "code": "O1",
+      "title": "Religious and learning discipline",
+      "status": "active"
+    },
+    {
+      "code": "O2",
+      "title": "First professional role",
+      "status": "active"
+    },
+    {
+      "code": "O3",
+      "title": "Australia Ready",
+      "status": "active"
+    },
+    {
+      "code": "O4",
+      "title": "Learn e-commerce by operating real stores",
+      "status": "active"
+    },
+    {
+      "code": "O5",
+      "title": "LifeQuest MVP",
+      "status": "active"
+    },
+    {
+      "code": "O6",
+      "title": "Lean Six Sigma SaaS validation",
+      "status": "draft"
+    },
+    {
+      "code": "O7",
+      "title": "Skills and certifications",
+      "status": "active"
+    },
+    {
+      "code": "O8",
+      "title": "Physical condition",
+      "status": "active"
+    },
+    {
+      "code": "O9",
+      "title": "Engineering homelab / portfolio",
+      "status": "draft"
+    },
+    {
+      "code": "O10",
+      "title": "Vehicle rental business study",
+      "status": "draft"
+    },
+    {
+      "code": "O11",
+      "title": "AI job application agent",
+      "status": "draft"
+    },
+    {
+      "code": "O12",
+      "title": "LifeOS",
+      "status": "active"
+    },
+    {
+      "code": "O13",
+      "title": "Business/legal structure knowledge",
+      "status": "draft"
+    }
+  ]
+}

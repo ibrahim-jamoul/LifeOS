@@ -1,0 +1,93 @@
+{
+  "product": "LifeOS",
+  "version": "1.0",
+  "date": "2026-09-20",
+  "deployment": {
+    "frontend": "Vercel",
+    "backend": "Supabase"
+  },
+  "branches": [
+    {
+      "slug": "religion",
+      "name": "Religion"
+    },
+    {
+      "slug": "arabic",
+      "name": "Arabic"
+    },
+    {
+      "slug": "quran",
+      "name": "Quran"
+    },
+    {
+      "slug": "goals",
+      "name": "Goals, KPIs & Decisions"
+    },
+    {
+      "slug": "assistant",
+      "name": "Personal AI Assistant"
+    },
+    {
+      "slug": "finances",
+      "name": "Finances"
+    },
+    {
+      "slug": "health",
+      "name": "Health, Sport & Habits"
+    },
+    {
+      "slug": "documents",
+      "name": "Personal Documents"
+    },
+    {
+      "slug": "memories",
+      "name": "Photos & Memories"
+    }
+  ],
+  "core_loop": [
+    "vision",
+    "objective",
+    "project",
+    "task",
+    "measurement",
+    "review",
+    "decision",
+    "adjustment"
+  ],
+  "focus_project_limit_warning": 3,
+  "security": {
+    "rls_required": true,
+    "private_storage_buckets": [
+      "documents",
+      "memories"
+    ],
+    "service_role_client_exposure": false,
+    "ai_write_confirmation": true
+  },
+  "p0": [
+    "auth",
+    "dashboard",
+    "vision",
+    "goals",
+    "projects",
+    "tasks",
+    "kpis",
+    "decisions",
+    "weekly_reviews",
+    "alerts",
+    "religion",
+    "arabic",
+    "quran",
+    "finance",
+    "health",
+    "documents",
+    "memories",
+    "json_export"
+  ],
+  "p1": [
+    "ai_assistant",
+    "global_search",
+    "advanced_imports",
+    "advanced_recurring_rules"
+  ]
+}
