@@ -18,6 +18,7 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
   let userA = "";
   let userB = "";
   let goalId = "";
+  let resourceId = "";
   let projectBId = "";
   let storagePath = "";
 
@@ -37,6 +38,7 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
 
   afterAll(async () => {
     if (goalId) await a.from("goals").delete().eq("id", goalId);
+    if (resourceId) await a.from("resources").delete().eq("id", resourceId);
     if (projectBId) await b.from("projects").delete().eq("id", projectBId);
     if (storagePath) await a.storage.from("documents").remove([storagePath]);
     await Promise.all([a?.auth.signOut(), b?.auth.signOut()]);
@@ -90,6 +92,22 @@ describe.runIf(live)("live Supabase tenant isolation", () => {
       title: "cross-tenant FK must fail",
     });
     expect(crossTenantTask.error).not.toBeNull();
+  });
+
+  it("isolates the additive resources table with the same ownership rules", async () => {
+    const inserted = await a.from("resources").insert({
+      user_id: userA,
+      title: `Private resource ${crypto.randomUUID()}`,
+      resource_type: "document",
+    }).select("id").single();
+    expect(inserted.error).toBeNull();
+    resourceId = inserted.data!.id;
+
+    const readByB = await b.from("resources").select("id").eq("id", resourceId);
+    expect(readByB.error).toBeNull();
+    expect(readByB.data).toEqual([]);
+    const forged = await a.from("resources").insert({ user_id: userB, title: "forged owner" });
+    expect(forged.error).not.toBeNull();
   });
 
   it("keeps private Storage objects unreadable by another authenticated user", async () => {

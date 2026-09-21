@@ -1,35 +1,54 @@
 # LifeOS validation report
 
-Validated locally on 2026-09-20.
+Validated locally and against the linked Supabase project on 2026-09-21.
 
 ## Automated results
 
-- PASS — `npm run lint`
-- PASS — `npm run typecheck`
-- PASS — `npm test`: 27 tests passed; 3 live Supabase isolation tests skipped because no test credentials were configured
-- PASS — `npm run test:e2e`: anonymous route protection passed on desktop Chromium and a Pixel 7 viewport; 2 authenticated journeys skipped because no E2E account was configured
-- PASS — `npm run build`: Next.js 16.3.5 production build completed and emitted all expected application/API routes
-- PASS — static secret scan found no committed provider, Supabase secret or production API key
-- PASS — 37 public application tables and 37 RLS enable statements
+- PASS — `npm run lint`, zero warning.
+- PASS — `npm run typecheck`.
+- PASS — `npm test`: 47 unit tests passed; 5 live tests skipped by the default command.
+- PASS — live Supabase suite: 5 RLS/Storage tests passed with two dedicated accounts.
+- PASS — Playwright: 4/4 desktop and mobile journeys passed, including the authenticated control-plane flow.
+- PASS — `npm run build`: Next.js 16.3.5 production build completed with all expected routes.
+- PASS — agent-browser: login page rendered, contained interactive controls and had no framework error overlay or page error.
+- PASS — `git diff --check` and importer syntax check.
 
-## Pack and schema checks
+## Database and import results
 
-- PASS — exactly nine domain slugs in `initialize_lifeos()`
-- PASS — initialization uses conflict-safe inserts
-- PASS — owner RLS policies exist for every application table
-- PASS — owner-prefixed private Storage policies exist for `documents` and `memories`
-- PASS — tenant-aware composite foreign keys cover parent/child ownership
-- PASS — notification dedupe uniqueness and lifecycle fields exist
-- PASS — financial transfer RPC creates a same-currency atomic pair
-- PASS — weekly review normalization and uniqueness exist
+- PASS — three additive reference-model migrations applied; local and remote histories match.
+- PASS — no table reset, destructive migration or deletion of existing user data.
+- PASS — `resources` ownership policies block cross-user reads and forged ownership.
+- PASS — private Storage object is unreadable by another authenticated account and by an anonymous client.
+- PASS — initial import: 115 inserts, 52 fill-only updates and 16 new goal-project relations.
+- PASS — full Word stored in the private `documents` bucket and verified present.
+- PASS — final simulation: 0 inserts, 0 updates and 0 relations; idempotence confirmed.
+- PASS — no normalized-title duplicates detected in the imported operational tables.
+- PASS — 11 imported KPI rows with unknown cadence were corrected to explicit `unset`.
 
-## Requires configured external services
+## Resulting personal data totals
 
-- PENDING LIVE — apply both migrations to a Supabase project
-- PENDING LIVE — create the two private buckets
-- PENDING LIVE — execute the two-user RLS/Storage suite with dedicated accounts
-- PENDING LIVE — execute the authenticated Playwright journey
-- PENDING LIVE — deploy to Vercel and run the production smoke test
-- OPTIONAL — configure an OpenAI-compatible provider and validate one scoped read-only answer
+| Resource | Total |
+|---|---:|
+| Goals | 18 |
+| Projects | 22 |
+| Tasks | 36 |
+| KPI | 22 |
+| Decisions | 16 |
+| Habits | 10 |
+| Religion routines | 13 |
+| Resources | 17 |
+| Study topics | 10 |
+| Reminders | 1 |
+| Weekly reviews | 1 |
+| Goal-project links | 26 |
+| Private documents | 2 |
 
-These pending checks require credentials or external state and are documented in `README.md` and `KNOWN_LIMITATIONS.md`; they are not silently reported as passing.
+## External completion
+
+- DONE — Supabase schema and data import.
+- DONE — live two-user RLS and Storage verification.
+- DONE — authenticated desktop/mobile application journey.
+- PENDING AT THIS CHECKPOINT — GitHub push and Vercel production deployment.
+- OPTIONAL — configure an OpenAI-compatible provider and validate a scoped read-only answer.
+
+Production status is finalized in `PASSATION_LIFEOS_2026-09-21.md` after deployment.

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { classifyDueStatus, getIsoWeek } from "@/lib/domain/dates";
+import { calendarDateInTimeZone, isoWeekday, isRoutineScheduledOn } from "@/lib/domain/routines";
 
 export type AlertSeverity = "info" | "warning" | "critical";
 
@@ -20,9 +21,9 @@ type GenericRow = Record<string, unknown>;
 const DAY = 86_400_000;
 
 export async function getDerivedAlerts(supabase: SupabaseClient, userId: string, now = new Date()): Promise<LifeOsAlert[]> {
-  const [profileResult, tasksResult, goalsResult, projectsResult, kpisResult, entriesResult, decisionsResult, documentsResult, quranResult, reviewsResult, remindersResult, lifecycleResult] = await Promise.all([
+  const [profileResult, tasksResult, goalsResult, projectsResult, kpisResult, entriesResult, decisionsResult, documentsResult, quranResult, reviewsResult, remindersResult, habitsResult, religionRoutinesResult, lifecycleResult] = await Promise.all([
     supabase.from("profiles").select("timezone,weekly_review_weekday").eq("id", userId).maybeSingle(),
-    supabase.from("tasks").select("id,title,status,due_at").eq("user_id", userId).not("status", "in", "(done,cancelled)").not("due_at", "is", null).limit(500),
+    supabase.from("tasks").select("id,title,status,due_on,due_at").eq("user_id", userId).not("status", "in", "(done,cancelled)").or("due_on.not.is.null,due_at.not.is.null").limit(500),
     supabase.from("goals").select("id,title,status,target_date").eq("user_id", userId).in("status", ["active", "at_risk"]).not("target_date", "is", null).limit(200),
     supabase.from("projects").select("id,title,status,next_action,last_activity_at,updated_at,target_date").eq("user_id", userId).in("status", ["focus", "active", "blocked"]).limit(200),
     supabase.from("kpis").select("id,name,cadence,active").eq("user_id", userId).eq("active", true).limit(200),
@@ -31,11 +32,13 @@ export async function getDerivedAlerts(supabase: SupabaseClient, userId: string,
     supabase.from("documents").select("id,title,expires_on").eq("user_id", userId).not("expires_on", "is", null).limit(500),
     supabase.from("quran_items").select("id,surah_number,surah_name,next_revision_at,status").eq("user_id", userId).not("next_revision_at", "is", null).neq("status", "paused").limit(500),
     supabase.from("weekly_reviews").select("week_start").eq("user_id", userId).order("week_start", { ascending: false }).limit(4),
-    supabase.from("reminders").select("id,title,source_type,source_id,remind_at,active").eq("user_id", userId).eq("active", true).lte("remind_at", now.toISOString()).limit(200),
+    supabase.from("reminders").select("id,title,source_type,source_id,remind_at,remind_on,reminder_time,recurrence,timezone,active,configuration_status").eq("user_id", userId).eq("active", true).limit(200),
+    supabase.from("habits").select("id,name,frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,reminder_enabled,reminder_time,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").eq("reminder_enabled", true).not("reminder_time", "is", null).limit(200),
+    supabase.from("religion_routines").select("id,name,target_frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,reminder_enabled,reminder_time,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").eq("reminder_enabled", true).not("reminder_time", "is", null).limit(200),
     supabase.from("notifications").select("dedupe_key,dismissed_at,snoozed_until").eq("user_id", userId).limit(5_000),
   ]);
 
-  const queryErrors = [tasksResult.error, goalsResult.error, projectsResult.error, kpisResult.error, entriesResult.error, decisionsResult.error, documentsResult.error, quranResult.error, reviewsResult.error, remindersResult.error, lifecycleResult.error].filter(Boolean);
+  const queryErrors = [tasksResult.error, goalsResult.error, projectsResult.error, kpisResult.error, entriesResult.error, decisionsResult.error, documentsResult.error, quranResult.error, reviewsResult.error, remindersResult.error, habitsResult.error, religionRoutinesResult.error, lifecycleResult.error].filter(Boolean);
   if (queryErrors.length) {
     console.error("LifeOS derived alert query failed", { codes: queryErrors.map((error) => error?.code) });
     throw new Error("Impossible de calculer les alertes.");
@@ -44,17 +47,20 @@ export async function getDerivedAlerts(supabase: SupabaseClient, userId: string,
   const profile = profileResult.data as GenericRow | null;
   const timezone = typeof profile?.timezone === "string" ? profile.timezone : "Europe/Paris";
   const reviewWeekday = typeof profile?.weekly_review_weekday === "number" ? profile.weekly_review_weekday : 0;
+  const today = calendarDateInTimeZone(now, timezone);
   const alerts: LifeOsAlert[] = [];
 
   for (const task of (tasksResult.data ?? []) as GenericRow[]) {
-    if (typeof task.due_at !== "string" || typeof task.id !== "string") continue;
-    const state = classifyDueStatus({ dueAt: task.due_at, status: String(task.status ?? ""), now, dueSoonWithinMs: DAY, timeZone: timezone });
+    if (typeof task.id !== "string") continue;
+    const dueValue = typeof task.due_on === "string" ? task.due_on : typeof task.due_at === "string" ? task.due_at : null;
+    if (!dueValue) continue;
+    const state = classifyDueStatus({ dueAt: dueValue, status: String(task.status ?? ""), now, dueSoonWithinMs: DAY, timeZone: timezone });
     if (state !== "overdue" && state !== "due_soon") continue;
     alerts.push(makeAlert({
       code: state === "overdue" ? "TASK_OVERDUE" : "TASK_DUE_SOON",
       sourceType: "task", sourceId: task.id, window: state,
       title: state === "overdue" ? "Tâche en retard" : "Tâche bientôt due",
-      body: stringValue(task.title, "Tâche sans titre"), severity: state === "overdue" ? "warning" : "info", dueAt: task.due_at, href: "/app/goals/tasks",
+      body: stringValue(task.title, "Tâche sans titre"), severity: state === "overdue" ? "warning" : "info", dueAt: dueValue, href: "/app/goals/tasks",
     }));
   }
 
@@ -128,7 +134,25 @@ export async function getDerivedAlerts(supabase: SupabaseClient, userId: string,
 
   for (const reminder of (remindersResult.data ?? []) as GenericRow[]) {
     if (typeof reminder.id !== "string") continue;
-    alerts.push(makeAlert({ code: "REMINDER", sourceType: stringValue(reminder.source_type, "reminder"), sourceId: typeof reminder.source_id === "string" ? reminder.source_id : reminder.id, window: stringValue(reminder.remind_at, "due"), title: "Rappel", body: stringValue(reminder.title, "Rappel personnel"), severity: "info", dueAt: typeof reminder.remind_at === "string" ? reminder.remind_at : null, href: "/app/alerts" }));
+    const occurrence = dueReminderOccurrence(reminder, now, timezone);
+    if (!occurrence) continue;
+    const sourceType = stringValue(reminder.source_type, "reminder");
+    alerts.push(makeAlert({ code: "REMINDER", sourceType, sourceId: typeof reminder.source_id === "string" ? reminder.source_id : reminder.id, window: occurrence.window, title: "Rappel", body: stringValue(reminder.title, "Rappel personnel"), severity: "info", dueAt: occurrence.dueAt, href: sourceHref(sourceType) }));
+  }
+
+  for (const [routineType, href, routine] of [
+    ...((habitsResult.data ?? []) as GenericRow[]).map((row) => ["habit", "/app/health/habits", row] as const),
+    ...((religionRoutinesResult.data ?? []) as GenericRow[]).map((row) => ["religion_routine", "/app/religion/routines", row] as const),
+  ]) {
+    if (typeof routine.id !== "string" || typeof routine.reminder_time !== "string") continue;
+    const frequency = routineType === "habit" ? routine.frequency : routine.target_frequency;
+    if (!isRoutineScheduledOn({
+      frequency: String(frequency ?? ""), active: routine.active !== false && routine.status === "active",
+      scheduleWeekday: numberValue(routine.schedule_weekday), scheduleDayOfMonth: numberValue(routine.schedule_day_of_month),
+      startOn: typeof routine.start_on === "string" ? routine.start_on : null, endOn: typeof routine.end_on === "string" ? routine.end_on : null,
+      pausedAt: typeof routine.paused_at === "string" ? routine.paused_at : null, archivedAt: typeof routine.archived_at === "string" ? routine.archived_at : null,
+    }, today) || localTime(now, timezone) < routine.reminder_time.slice(0, 5)) continue;
+    alerts.push(makeAlert({ code: "ROUTINE_REMINDER", sourceType: routineType, sourceId: routine.id, window: today, title: "Routine prévue", body: stringValue(routine.name, "Routine"), severity: "info", dueAt: null, href }));
   }
 
   const suppressedKeys = new Set(((lifecycleResult.data ?? []) as GenericRow[])
@@ -175,4 +199,47 @@ function calendarDayDifference(dateOnly: string, now: Date, timeZone: string): n
   const target = Date.UTC(targetParts[0] ?? 0, (targetParts[1] ?? 1) - 1, targetParts[2] ?? 1);
   const current = Date.UTC(todayParts[0] ?? 0, (todayParts[1] ?? 1) - 1, todayParts[2] ?? 1);
   return Math.floor((target - current) / DAY);
+}
+
+function dueReminderOccurrence(reminder: GenericRow, now: Date, fallbackTimeZone: string): { window: string; dueAt: string | null } | null {
+  const recurrence = typeof reminder.recurrence === "string" ? reminder.recurrence : "none";
+  const timeZone = typeof reminder.timezone === "string" && reminder.timezone ? reminder.timezone : fallbackTimeZone;
+  const today = calendarDateInTimeZone(now, timeZone);
+  const currentTime = localTime(now, timeZone);
+
+  if (typeof reminder.remind_at === "string") {
+    const anchor = new Date(reminder.remind_at);
+    if (Number.isNaN(anchor.getTime()) || anchor.getTime() > now.getTime()) return null;
+    if (recurrence === "none") return { window: reminder.remind_at, dueAt: reminder.remind_at };
+    const anchorDate = calendarDateInTimeZone(anchor, timeZone);
+    const anchorTime = localTime(anchor, timeZone);
+    if (currentTime < anchorTime) return null;
+    if (recurrence === "weekly" && isoWeekday(today) !== isoWeekday(anchorDate)) return null;
+    if (recurrence === "monthly" && today.slice(8, 10) !== anchorDate.slice(8, 10)) return null;
+    return { window: today, dueAt: null };
+  }
+
+  if (typeof reminder.remind_on !== "string" || reminder.remind_on > today) return null;
+  const reminderTime = typeof reminder.reminder_time === "string" ? reminder.reminder_time.slice(0, 5) : null;
+  if (reminderTime && currentTime < reminderTime) return null;
+  if (recurrence === "none") return { window: reminder.remind_on, dueAt: reminder.remind_on };
+  if (recurrence === "weekly" && isoWeekday(today) !== isoWeekday(reminder.remind_on)) return null;
+  if (recurrence === "monthly" && today.slice(8, 10) !== reminder.remind_on.slice(8, 10)) return null;
+  return { window: today, dueAt: today };
+}
+
+function localTime(value: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(value);
+}
+
+function numberValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) ? value : null;
+}
+
+function sourceHref(sourceType: string): string {
+  const links: Readonly<Record<string, string>> = {
+    task: "/app/goals/tasks", goal: "/app/goals/objectives", project: "/app/goals/projects", kpi: "/app/goals/kpis",
+    decision: "/app/goals/decisions", habit: "/app/health/habits", religion_routine: "/app/religion/routines",
+  };
+  return links[sourceType] ?? "/app/goals/reminders";
 }

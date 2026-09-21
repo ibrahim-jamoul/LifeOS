@@ -1,0 +1,629 @@
+{
+  "metadata": {
+    "dataset": "lifeos-referentiel-personnel-2026-09-21",
+    "version": 1,
+    "source_filename": "Referentiel perso.docx",
+    "source_date": null,
+    "source_scope": ["pro", "perso", "religion"],
+    "principles": [
+      "Only explicit, operational information from the source is represented.",
+      "Unknown dates, times, KPI targets, priorities and resources remain null or are marked to_complete, to_validate or to_configure.",
+      "Where the current schema requires progress_percent, 0 is a technical initialization value and not an observed measurement from the source.",
+      "Existing user values are never overwritten by the importer.",
+      "Month-only source dates are retained in context and the database date remains null.",
+      "The explicit expression fin octobre 2026 is normalized to 2026-10-31 and the original wording is retained in review_trigger."
+    ]
+  },
+  "reference_document": {
+    "title": "Référentiel personnel — PRO / PERSO / RELIGION",
+    "category": "reference",
+    "original_filename": "Referentiel perso.docx",
+    "source_path": "D:\\Referentiel perso.docx",
+    "issued_on": null,
+    "tags": ["référentiel", "pro", "perso", "religion", "source"],
+    "notes": "Document privé de référence complet. Les éléments opérationnels sont suivis séparément dans LifeOS."
+  },
+  "life_vision": [
+    {
+      "key": "vision-personnelle-2026",
+      "data": {
+        "one_year": "Construire une base solide : expérience professionnelle valorisable, gestion financière claire, organisation stable, activité sportive régulière, LifeOS comme système central et progression structurée en Coran, arabe et apprentissage religieux.",
+        "three_year": "Disposer d'une carrière solide, d'un patrimoine en progression, de projets testés, de compétences monétisables et d'une capacité réelle à choisir la suite de ma vie.",
+        "five_year": null,
+        "quarter_focus": null,
+        "last_reviewed_at": null
+      }
+    }
+  ],
+  "goals": [
+    {
+      "key": "goal-pro-cdi",
+      "dedupe_titles": ["Obtenir un premier CDI de Consultant / Chef de projet IT junior en ESN", "Obtenir un CDI Consultant / Chef de projet IT junior"],
+      "data": {
+        "title": "Obtenir un premier CDI de Consultant / Chef de projet IT junior en ESN",
+        "life_area": "pro",
+        "next_action": "Adapter le CV principal et lancer les candidatures ciblées",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-pro-certifications",
+      "dedupe_titles": ["Obtenir les certifications prioritaires PSM I, CCNA et AWS SAA"],
+      "data": {
+        "title": "Obtenir les certifications prioritaires PSM I, CCNA et AWS SAA",
+        "life_area": "pro",
+        "next_action": "Commencer la préparation PSM I",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-pro-portfolio",
+      "dedupe_titles": ["Construire un portfolio professionnel crédible autour de 3 à 4 projets riches", "Construire progressivement mon portfolio technique"],
+      "data": {
+        "title": "Construire un portfolio professionnel crédible autour de 3 à 4 projets riches",
+        "life_area": "pro",
+        "next_action": "Documenter les projets prioritaires du portfolio",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-pro-lifequest",
+      "dedupe_titles": ["Valider LifeQuest avec un premier prototype complet", "Faire avancer LifeQuest"],
+      "data": {
+        "title": "Valider LifeQuest avec un premier prototype complet",
+        "life_area": "pro",
+        "next_action": "Construire et tester le premier prototype complet",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-pro-revenus-diversifies",
+      "dedupe_titles": ["Développer progressivement plusieurs sources de revenus"],
+      "data": {
+        "title": "Développer progressivement plusieurs sources de revenus",
+        "life_area": "pro",
+        "desired_outcome": "Ne pas dépendre à long terme uniquement du salaire, en combinant progressivement revenu salarié, revenus secondaires, activité scalable et patrimoine.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "horizon": "Moyen / long terme",
+        "progress_percent": 0,
+        "next_action": null,
+        "configuration_status": "to_complete",
+        "notes": "Aucun montant, délai exact ni niveau d'avancement n'est défini dans le référentiel."
+      }
+    },
+    {
+      "key": "goal-perso-hygiene-vie",
+      "dedupe_titles": ["Maintenir une bonne hygiène de vie", "Construire une bonne hygiène de vie globale"],
+      "data": {
+        "title": "Maintenir une bonne hygiène de vie",
+        "life_area": "perso",
+        "desired_outcome": "Maintenir un équilibre durable entre sommeil, alimentation, sport, organisation et récupération.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": "Définir des routines quotidiennes simples et tenables",
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-finances",
+      "dedupe_titles": ["Construire une situation financière personnelle confortable", "Construire une situation financière confortable"],
+      "data": {
+        "title": "Construire une situation financière personnelle confortable",
+        "life_area": "perso",
+        "desired_outcome": "Disposer d'une marge de sécurité et financer projets, voyages et achats importants sans stress financier.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": "Mettre en place un suivi financier régulier",
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-fonds-securite",
+      "dedupe_titles": ["Constituer et maintenir un fonds de sécurité", "Constituer / maintenir un fonds de sécurité"],
+      "data": {
+        "title": "Constituer et maintenir un fonds de sécurité",
+        "life_area": "perso",
+        "desired_outcome": "Maintenir un fonds séparé et facilement disponible couvrant idéalement environ six mois de dépenses essentielles.",
+        "definition_of_done": "Fonds disponible équivalant à environ six mois de dépenses essentielles.",
+        "status": "active",
+        "priority": "unset",
+        "target_value": 6,
+        "target_unit": "mois de dépenses essentielles",
+        "progress_percent": 0,
+        "next_action": null,
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-ecran",
+      "dedupe_titles": ["Réduire le temps d'écran inutile", "Réduire le temps perdu sur le téléphone et les réseaux sociaux"],
+      "data": {
+        "title": "Réduire le temps d'écran inutile",
+        "life_area": "perso",
+        "desired_outcome": "Récupérer du temps pour le sport, la lecture, les projets, la famille et le repos.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": "Créer plusieurs périodes de la journée sans réseaux sociaux",
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-sport",
+      "dedupe_titles": ["Faire du sport régulièrement", "Maintenir une activité sportive régulière et durable"],
+      "data": {
+        "title": "Faire du sport régulièrement",
+        "life_area": "perso",
+        "desired_outcome": "Maintenir une bonne condition physique et développer progressivement force, endurance et mobilité.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": "Définir à l'avance les créneaux sportifs de la semaine",
+        "configuration_status": "to_validate",
+        "notes": "Le référentiel mentionne 3 à 4 séances structurées par semaine, un minimum de 4 lors d'une semaine difficile et un objectif normal de 5 à 6 activités incluant la marche. La cible doit être validée."
+      }
+    },
+    {
+      "key": "goal-perso-anglais",
+      "dedupe_titles": ["Améliorer mon anglais", "Maintenir et améliorer mon anglais"],
+      "data": {
+        "title": "Maintenir et améliorer mon anglais",
+        "life_area": "perso",
+        "desired_outcome": "Être totalement à l'aise dans un environnement professionnel anglophone, notamment en entretien, réunion et présentation.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": null,
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-lecture",
+      "dedupe_titles": ["Lire et apprendre régulièrement", "Lire davantage et construire progressivement une vraie culture personnelle"],
+      "data": {
+        "title": "Lire et apprendre régulièrement",
+        "life_area": "perso",
+        "desired_outcome": "Développer une culture personnelle et apprendre des contenus qui améliorent concrètement la compréhension ou l'action.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": null,
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-voyages",
+      "dedupe_titles": ["Voyager régulièrement"],
+      "data": {
+        "title": "Voyager régulièrement",
+        "life_area": "perso",
+        "desired_outcome": "Créer des souvenirs et découvrir de nouveaux environnements sans mettre en danger les objectifs d'épargne.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "horizon": "Au moins une ou plusieurs expériences intéressantes par an selon les moyens",
+        "progress_percent": 0,
+        "next_action": "Créer une enveloppe annuelle dédiée aux voyages",
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-perso-patrimoine",
+      "dedupe_titles": ["Construire progressivement mon patrimoine", "Développer progressivement un patrimoine personnel"],
+      "data": {
+        "title": "Construire progressivement mon patrimoine",
+        "life_area": "perso",
+        "desired_outcome": "Développer à long terme des actifs et plusieurs sources potentielles de revenus afin d'augmenter la sécurité et la liberté.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "horizon": "Long terme",
+        "progress_percent": 0,
+        "next_action": null,
+        "configuration_status": "to_complete",
+        "notes": "Le référentiel évoque une vision idéale autour de 1 à 2 millions d'euros, sans en faire une échéance ni une cible opérationnelle datée."
+      }
+    },
+    {
+      "key": "goal-perso-lifeos",
+      "dedupe_titles": ["Utiliser LifeOS comme système central d'organisation", "Faire de LifeOS mon système central d'organisation"],
+      "data": {
+        "title": "Utiliser LifeOS comme système central d'organisation",
+        "life_area": "perso",
+        "desired_outcome": "Réduire la dispersion, les oublis et la dépendance à la mémoire en centralisant objectifs, projets, finances, routines, décisions et documents.",
+        "definition_of_done": "LifeOS est utilisé comme source de vérité opérationnelle et les cahiers servent de supports de réflexion.",
+        "status": "active",
+        "priority": "unset",
+        "progress_percent": 0,
+        "next_action": "Finaliser, tester puis utiliser les revues LifeOS",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-religion-coran",
+      "dedupe_titles": ["Progresser dans le Coran", "Coran — 3 pages par mois"],
+      "data": {
+        "title": "Progresser dans le Coran",
+        "life_area": "religion",
+        "desired_outcome": "Mémoriser, comprendre et consolider régulièrement le Coran en commençant par Juz Tabarak, puis Juz Amma et Juz 28.",
+        "definition_of_done": "Trois nouvelles pages sont travaillées chaque mois, avec révision et Tafsir.",
+        "status": "active",
+        "priority": "unset",
+        "target_value": 3,
+        "target_unit": "pages par mois",
+        "progress_percent": 0,
+        "next_action": "Sélectionner la page de Coran à travailler",
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "goal-religion-arabe",
+      "dedupe_titles": ["Progresser en arabe", "Arabe — 30 minutes par jour"],
+      "data": {
+        "title": "Progresser en arabe",
+        "life_area": "religion",
+        "desired_outcome": "Améliorer la lecture, l'écriture, la compréhension et le vocabulaire à partir de textes réels, idéalement religieux.",
+        "definition_of_done": "",
+        "status": "active",
+        "priority": "unset",
+        "target_value": 30,
+        "target_unit": "minutes par jour",
+        "progress_percent": 0,
+        "next_action": "Sélectionner un texte arabe avec voyelles",
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "goal-religion-apprentissage",
+      "dedupe_titles": ["Apprentissage religieux quotidien", "Apprendre au minimum une chose liée à la religion chaque jour"],
+      "data": {
+        "title": "Apprentissage religieux quotidien",
+        "life_area": "religion",
+        "desired_outcome": "Apprendre au minimum une chose nouvelle chaque jour et progresser régulièrement en Seerah, Aqida, Fiqh, Hadith, Tafsir, histoire, biographies, du'a et adhkar.",
+        "definition_of_done": "Au moins une connaissance, un passage, une du'a, un mot arabe ou un enseignement nouveau est travaillé chaque jour.",
+        "status": "active",
+        "priority": "unset",
+        "target_value": 1,
+        "target_unit": "apprentissage par jour",
+        "progress_percent": 0,
+        "next_action": "Sélectionner les prochains textes religieux à lire",
+        "configuration_status": "ready"
+      }
+    }
+  ],
+  "projects": [
+    {"key": "project-pro-cdi", "dedupe_titles": ["Recherche ciblée du premier CDI"], "data": {"title": "Recherche ciblée du premier CDI", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "project-pro-psm1", "dedupe_titles": ["Certification PSM I"], "data": {"title": "Certification PSM I", "life_area": "pro", "project_type": "certification", "target_window": "Octobre / novembre 2026", "configuration_status": "to_configure"}},
+    {"key": "project-pro-ccna", "dedupe_titles": ["Certification CCNA et laboratoire réseau documenté"], "data": {"title": "Certification CCNA et laboratoire réseau documenté", "life_area": "pro", "project_type": "certification", "target_window": "Décembre 2026 / janvier 2027", "configuration_status": "to_configure"}},
+    {"key": "project-pro-cloud-lab", "dedupe_titles": ["Cloud Lab AWS + Terraform + IAM"], "data": {"title": "Cloud Lab AWS + Terraform + IAM", "life_area": "pro", "project_type": "portfolio", "configuration_status": "ready"}},
+    {"key": "project-pro-homelab", "dedupe_titles": ["Homelab Réseaux / Systèmes / Cybersécurité", "Homelab personnel"], "data": {"title": "Homelab Réseaux / Systèmes / Cybersécurité", "life_area": "pro", "project_type": "portfolio", "configuration_status": "ready"}},
+    {"key": "project-pro-pfe", "dedupe_titles": ["Étude de cas anonymisée du PFE Orange / Dataiku"], "data": {"title": "Étude de cas anonymisée du PFE Orange / Dataiku", "life_area": "pro", "project_type": "portfolio", "configuration_status": "ready"}},
+    {"key": "project-pro-lifeos", "dedupe_titles": ["Finalisation et mise en production de LifeOS", "LifeOS"], "data": {"title": "Finalisation et mise en production de LifeOS", "life_area": "pro", "project_type": "portfolio", "configuration_status": "ready"}},
+    {"key": "project-pro-lifequest", "dedupe_titles": ["LifeQuest — prototype physique + numérique", "LifeQuest"], "data": {"title": "LifeQuest — prototype physique + numérique", "life_area": "pro", "project_type": "business", "configuration_status": "ready"}},
+    {"key": "project-pro-cours", "dedupe_titles": ["Cours particuliers — revenu complémentaire"], "data": {"title": "Cours particuliers — revenu complémentaire", "life_area": "pro", "project_type": "business", "configuration_status": "to_complete"}},
+    {"key": "project-pro-saas-lss", "dedupe_titles": ["SaaS Lean Six Sigma / amélioration continue"], "data": {"title": "SaaS Lean Six Sigma / amélioration continue", "life_area": "pro", "project_type": "business", "configuration_status": "ready"}},
+    {"key": "project-pro-naas", "dedupe_titles": ["NaaS / Infrastructure & réseau pour TPE-PME"], "data": {"title": "NaaS / Infrastructure & réseau pour TPE-PME", "life_area": "pro", "project_type": "business", "configuration_status": "ready"}},
+    {"key": "project-pro-ecommerce", "dedupe_titles": ["E-commerce physique"], "data": {"title": "E-commerce physique", "life_area": "pro", "project_type": "business", "configuration_status": "to_complete"}},
+    {"key": "project-pro-location", "dedupe_titles": ["Étude de rentabilité — location de véhicules"], "data": {"title": "Étude de rentabilité — location de véhicules", "life_area": "pro", "project_type": "business", "configuration_status": "ready"}},
+    {"key": "project-pro-conseil-lean", "dedupe_titles": ["Conseil Lean / amélioration continue"], "data": {"title": "Conseil Lean / amélioration continue", "life_area": "pro", "project_type": "business", "configuration_status": "to_complete"}},
+    {
+      "key": "project-pro-aws-saa",
+      "dedupe_titles": ["Certification AWS Solutions Architect Associate"],
+      "data": {
+        "title": "Certification AWS Solutions Architect Associate",
+        "life_area": "pro",
+        "project_type": "certification",
+        "summary": "Préparer AWS Certified Solutions Architect – Associate (SAA-C03) avec un projet AWS concret.",
+        "status": "backlog",
+        "priority": "high",
+        "target_window": "Premier trimestre 2027",
+        "next_action": "Approfondir IAM, VPC, EC2, S3, CloudWatch, sécurité et architecture dans un projet concret",
+        "progress_percent": 0,
+        "configuration_status": "to_configure",
+        "notes": "Aucun jour cible exact ni niveau d'avancement n'est défini."
+      }
+    },
+    {
+      "key": "project-pro-terraform-cert",
+      "dedupe_titles": ["Certification Terraform Associate"],
+      "data": {
+        "title": "Certification Terraform Associate",
+        "life_area": "pro",
+        "project_type": "certification",
+        "summary": "Envisager HashiCorp Certified: Terraform Associate (004) après une pratique réelle sur un projet cloud.",
+        "status": "backlog",
+        "priority": "medium",
+        "target_window": "2027, après utilisation de Terraform sur un vrai projet cloud",
+        "next_action": "Utiliser Terraform sur un projet AWS, Azure ou OCI documenté",
+        "progress_percent": 0,
+        "configuration_status": "to_configure"
+      }
+    },
+    {
+      "key": "project-pro-az104",
+      "dedupe_titles": ["Certification Azure Administrator AZ-104"],
+      "data": {
+        "title": "Certification Azure Administrator AZ-104",
+        "life_area": "pro",
+        "project_type": "certification",
+        "summary": "Construire les fondamentaux Azure et un petit projet pratique avant la certification.",
+        "status": "backlog",
+        "priority": "medium",
+        "target_window": "2027, après AWS",
+        "next_action": "Construire les fondamentaux Azure puis réaliser un petit projet pratique",
+        "progress_percent": 0,
+        "configuration_status": "to_configure"
+      }
+    },
+    {
+      "key": "project-pro-ceh",
+      "dedupe_titles": ["Certification CEH"],
+      "data": {
+        "title": "Certification CEH",
+        "life_area": "pro",
+        "project_type": "certification",
+        "summary": "Conserver CEH dans la roadmap uniquement si le futur poste ou une spécialisation cybersécurité la rend pertinente.",
+        "status": "paused",
+        "priority": "low",
+        "target_window": null,
+        "next_action": "Réévaluer la pertinence selon le futur poste",
+        "progress_percent": 0,
+        "configuration_status": "to_validate"
+      }
+    },
+    {
+      "key": "project-pro-patrimoine",
+      "dedupe_titles": ["Immobilier / patrimoine"],
+      "data": {
+        "title": "Immobilier / patrimoine",
+        "life_area": "perso",
+        "project_type": "personal",
+        "summary": "Étudier progressivement la construction patrimoniale à long terme sans achat immédiat imposé.",
+        "status": "backlog",
+        "priority": "unset",
+        "target_window": "Long terme",
+        "next_action": null,
+        "progress_percent": 0,
+        "configuration_status": "to_complete"
+      }
+    },
+    {
+      "key": "project-perso-documents",
+      "dedupe_titles": ["Centralisation et sécurisation de mes documents", "Organisation documentaire personnelle"],
+      "data": {
+        "title": "Centralisation et sécurisation de mes documents",
+        "life_area": "perso",
+        "project_type": "personal",
+        "summary": "Regrouper les documents importants dans une structure claire et sécurisée.",
+        "status": "active",
+        "priority": "unset",
+        "next_action": "Faire l'inventaire des emplacements actuels et définir l'arborescence finale",
+        "progress_percent": 0,
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "project-perso-photos",
+      "dedupe_titles": ["Bibliothèque personnelle de souvenirs", "Archives photos et souvenirs"],
+      "data": {
+        "title": "Bibliothèque personnelle de souvenirs",
+        "life_area": "perso",
+        "project_type": "personal",
+        "summary": "Centraliser, organiser, sauvegarder et rendre consultables les photos, voyages et moments importants.",
+        "status": "active",
+        "priority": "unset",
+        "next_action": "Centraliser les sources existantes avant de choisir le stockage définitif",
+        "progress_percent": 0,
+        "configuration_status": "ready"
+      }
+    },
+    {
+      "key": "project-perso-organisation",
+      "dedupe_titles": ["Système personnel d'organisation", "Optimisation de mon organisation personnelle"],
+      "data": {
+        "title": "Système personnel d'organisation",
+        "life_area": "perso",
+        "project_type": "personal",
+        "summary": "Mettre en place tâches, revues, objectifs, décisions, suivi financier et organisation documentaire dans LifeOS.",
+        "status": "active",
+        "priority": "unset",
+        "next_action": "Intégrer les informations validées du référentiel dans LifeOS",
+        "progress_percent": 0,
+        "configuration_status": "ready"
+      }
+    }
+  ],
+  "goal_projects": [
+    {"goal_ref": "goal-pro-cdi", "project_ref": "project-pro-cdi"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-psm1"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-ccna"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-aws-saa"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-terraform-cert"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-az104"},
+    {"goal_ref": "goal-pro-certifications", "project_ref": "project-pro-ceh"},
+    {"goal_ref": "goal-pro-portfolio", "project_ref": "project-pro-pfe"},
+    {"goal_ref": "goal-pro-portfolio", "project_ref": "project-pro-lifeos"},
+    {"goal_ref": "goal-pro-portfolio", "project_ref": "project-pro-homelab"},
+    {"goal_ref": "goal-pro-portfolio", "project_ref": "project-pro-cloud-lab"},
+    {"goal_ref": "goal-pro-portfolio", "project_ref": "project-pro-ccna"},
+    {"goal_ref": "goal-pro-lifequest", "project_ref": "project-pro-lifequest"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-lifequest"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-cours"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-saas-lss"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-naas"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-ecommerce"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-location"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-conseil-lean"},
+    {"goal_ref": "goal-pro-revenus-diversifies", "project_ref": "project-pro-patrimoine"},
+    {"goal_ref": "goal-perso-patrimoine", "project_ref": "project-pro-patrimoine"},
+    {"goal_ref": "goal-perso-lifeos", "project_ref": "project-perso-organisation"},
+    {"goal_ref": "goal-perso-lifeos", "project_ref": "project-perso-documents"},
+    {"goal_ref": "goal-perso-lifeos", "project_ref": "project-perso-photos"}
+  ],
+  "tasks": [
+    {"key": "task-pro-cv-principal", "dedupe_titles": ["Préparer le CV principal"], "project_ref": "project-pro-cdi", "data": {"title": "Préparer le CV principal", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-cv-consultant", "dedupe_titles": ["Adapter le CV Consultant / Chef de projet IT"], "project_ref": "project-pro-cdi", "data": {"title": "Adapter le CV Consultant / Chef de projet IT", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-cv-cloud", "dedupe_titles": ["Préparer la variante CV Cloud / Infrastructure"], "project_ref": "project-pro-cdi", "data": {"title": "Préparer la variante CV Cloud / Infrastructure", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-cv-security", "dedupe_titles": ["Préparer la variante CV Cloud Security / Cyber"], "project_ref": "project-pro-cdi", "data": {"title": "Préparer la variante CV Cloud Security / Cyber", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-linkedin", "dedupe_titles": ["Mettre à jour LinkedIn avec le positionnement retenu"], "project_ref": "project-pro-cdi", "data": {"title": "Mettre à jour LinkedIn avec le positionnement retenu", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-psm-prepare", "dedupe_titles": ["Préparer la certification PSM I"], "project_ref": "project-pro-psm1", "data": {"title": "Préparer la certification PSM I", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-psm-pass", "dedupe_titles": ["Passer la certification PSM I"], "project_ref": "project-pro-psm1", "data": {"title": "Passer la certification PSM I", "life_area": "pro", "configuration_status": "to_configure"}},
+    {"key": "task-pro-ccna-labs", "dedupe_titles": ["Pratiquer régulièrement les labs Cisco CCNA"], "project_ref": "project-pro-ccna", "data": {"title": "Pratiquer régulièrement les labs Cisco CCNA", "life_area": "pro", "configuration_status": "to_configure"}},
+    {"key": "task-pro-ccna-doc", "dedupe_titles": ["Documenter le laboratoire réseau CCNA"], "project_ref": "project-pro-ccna", "data": {"title": "Documenter le laboratoire réseau CCNA", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-ccna-pass", "dedupe_titles": ["Passer la certification CCNA"], "project_ref": "project-pro-ccna", "data": {"title": "Passer la certification CCNA", "life_area": "pro", "configuration_status": "to_configure"}},
+    {"key": "task-pro-aws-architecture", "dedupe_titles": ["Définir l’architecture AWS complète du Cloud Lab"], "project_ref": "project-pro-cloud-lab", "data": {"title": "Définir l’architecture AWS complète du Cloud Lab", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-terraform-lab", "dedupe_titles": ["Automatiser le Cloud Lab avec Terraform"], "project_ref": "project-pro-cloud-lab", "data": {"title": "Automatiser le Cloud Lab avec Terraform", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-iam", "dedupe_titles": ["Ajouter la couche Cloud Security / IAM"], "project_ref": "project-pro-cloud-lab", "data": {"title": "Ajouter la couche Cloud Security / IAM", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-cloud-doc", "dedupe_titles": ["Documenter le Cloud Lab sur GitHub"], "project_ref": "project-pro-cloud-lab", "data": {"title": "Documenter le Cloud Lab sur GitHub", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-homelab-arch", "dedupe_titles": ["Définir l’architecture du Homelab"], "project_ref": "project-pro-homelab", "data": {"title": "Définir l’architecture du Homelab", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-homelab-build", "dedupe_titles": ["Construire le socle réseau, virtualisation et sécurité du Homelab"], "project_ref": "project-pro-homelab", "data": {"title": "Construire le socle réseau, virtualisation et sécurité du Homelab", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-homelab-doc", "dedupe_titles": ["Documenter l’installation et les procédures du Homelab"], "project_ref": "project-pro-homelab", "data": {"title": "Documenter l’installation et les procédures du Homelab", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-pfe", "dedupe_titles": ["Créer l’étude de cas anonymisée du PFE Orange / Dataiku"], "project_ref": "project-pro-pfe", "data": {"title": "Créer l’étude de cas anonymisée du PFE Orange / Dataiku", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lifeos-deploy", "dedupe_titles": ["Déployer LifeOS sur Vercel et réaliser la recette de production"], "project_ref": "project-pro-lifeos", "data": {"title": "Déployer LifeOS sur Vercel et réaliser la recette de production", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lifequest-prototype", "dedupe_titles": ["Construire et tester le premier prototype complet LifeQuest"], "project_ref": "project-pro-lifequest", "data": {"title": "Construire et tester le premier prototype complet LifeQuest", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lss-solutions", "dedupe_titles": ["Étudier les solutions Lean Six Sigma existantes"], "project_ref": "project-pro-saas-lss", "data": {"title": "Étudier les solutions Lean Six Sigma existantes", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lss-users", "dedupe_titles": ["Interroger des utilisateurs potentiels du SaaS LSS"], "project_ref": "project-pro-saas-lss", "data": {"title": "Interroger des utilisateurs potentiels du SaaS LSS", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lss-mvp", "dedupe_titles": ["Définir le MVP du SaaS LSS"], "project_ref": "project-pro-saas-lss", "data": {"title": "Définir le MVP du SaaS LSS", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-lss-wtp", "dedupe_titles": ["Tester la volonté de payer avant le développement complet"], "project_ref": "project-pro-saas-lss", "data": {"title": "Tester la volonté de payer avant le développement complet", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-naas-offer", "dedupe_titles": ["Définir précisément l’offre NaaS pour TPE-PME"], "project_ref": "project-pro-naas", "data": {"title": "Définir précisément l’offre NaaS pour TPE-PME", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-naas-needs", "dedupe_titles": ["Identifier le besoin réel des TPE-PME"], "project_ref": "project-pro-naas", "data": {"title": "Identifier le besoin réel des TPE-PME", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-rental-model", "dedupe_titles": ["Créer un modèle financier complet pour un premier véhicule théorique"], "project_ref": "project-pro-location", "data": {"title": "Créer un modèle financier complet pour un premier véhicule théorique", "life_area": "pro", "configuration_status": "ready"}},
+    {"key": "task-pro-aws-prepare", "dedupe_titles": ["Préparer la certification AWS Solutions Architect Associate"], "project_ref": "project-pro-aws-saa", "data": {"title": "Préparer la certification AWS Solutions Architect Associate", "life_area": "pro", "status": "todo", "priority": "unset", "configuration_status": "to_configure", "notes": "Horizon : premier trimestre 2027 ; aucun jour exact."}},
+    {"key": "task-pro-terraform-practice", "dedupe_titles": ["Utiliser Terraform sur un vrai projet cloud avant la certification"], "project_ref": "project-pro-terraform-cert", "data": {"title": "Utiliser Terraform sur un vrai projet cloud avant la certification", "life_area": "pro", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-pro-azure-project", "dedupe_titles": ["Réaliser un petit projet Azure pratique avant AZ-104"], "project_ref": "project-pro-az104", "data": {"title": "Réaliser un petit projet Azure pratique avant AZ-104", "life_area": "pro", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-perso-routines", "dedupe_titles": ["Définir les routines quotidiennes"], "project_ref": "project-perso-organisation", "data": {"title": "Définir les routines quotidiennes", "life_area": "perso", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-perso-doc-inventory", "dedupe_titles": ["Faire l'inventaire des emplacements actuels des documents"], "project_ref": "project-perso-documents", "data": {"title": "Faire l'inventaire des emplacements actuels des documents", "life_area": "perso", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-perso-doc-tree", "dedupe_titles": ["Définir l'arborescence finale des documents personnels"], "project_ref": "project-perso-documents", "data": {"title": "Définir l'arborescence finale des documents personnels", "life_area": "perso", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-perso-photos", "dedupe_titles": ["Centraliser les sources existantes de photos et souvenirs"], "project_ref": "project-perso-photos", "data": {"title": "Centraliser les sources existantes de photos et souvenirs", "life_area": "perso", "status": "todo", "priority": "unset", "configuration_status": "ready"}},
+    {"key": "task-religion-texts", "dedupe_titles": ["Sélectionner les textes religieux à lire"], "data": {"title": "Sélectionner les textes religieux à lire", "life_area": "religion", "status": "todo", "priority": "unset", "configuration_status": "to_complete"}},
+    {"key": "task-religion-seerah-resource", "dedupe_titles": ["Choisir une ressource pour étudier la Seerah"], "data": {"title": "Choisir une ressource pour étudier la Seerah", "life_area": "religion", "status": "todo", "priority": "unset", "configuration_status": "to_complete", "notes": "Le référentiel indique explicitement que la ressource reste à définir."}}
+  ],
+  "kpis": [
+    {"key": "kpi-pro-applications", "dedupe_titles": ["Candidatures ciblées pertinentes par semaine"], "goal_ref": "goal-pro-cdi", "data": {"name": "Candidatures ciblées pertinentes par semaine", "life_area": "pro", "unit": "candidatures", "target_type": "min", "target_value": 10, "cadence": "weekly", "direction": "none", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-pro-recruiters", "dedupe_titles": ["Nouveaux contacts recruteurs ciblés par semaine"], "goal_ref": "goal-pro-cdi", "data": {"name": "Nouveaux contacts recruteurs ciblés par semaine", "life_area": "pro", "unit": "contacts", "target_type": "range", "target_min": 5, "target_max": 10, "cadence": "weekly", "direction": "none", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-pro-salary", "dedupe_titles": ["Salaire brut annuel de l’offre retenue"], "goal_ref": "goal-pro-cdi", "data": {"name": "Salaire brut annuel de l’offre retenue", "life_area": "pro", "unit": "EUR brut/an", "target_type": "min", "target_value": 42000, "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "La cible est explicite ; la cadence de mesure n'est pas précisée."}},
+    {"key": "kpi-pro-interviews", "dedupe_titles": ["Entretiens obtenus"], "goal_ref": "goal-pro-cdi", "data": {"name": "Entretiens obtenus", "life_area": "pro", "unit": "entretiens", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Aucune cible ni cadence n'est précisée."}},
+    {"key": "kpi-pro-psm", "dedupe_titles": ["Progression PSM I"], "goal_ref": "goal-pro-certifications", "data": {"name": "Progression PSM I", "life_area": "pro", "unit": "", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Unité, cadence et cible non précisées."}},
+    {"key": "kpi-pro-ccna", "dedupe_titles": ["Progression CCNA"], "goal_ref": "goal-pro-certifications", "data": {"name": "Progression CCNA", "life_area": "pro", "unit": "", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Unité, cadence et cible non précisées."}},
+    {"key": "kpi-pro-portfolio", "dedupe_titles": ["Progression des projets portfolio"], "goal_ref": "goal-pro-portfolio", "data": {"name": "Progression des projets portfolio", "life_area": "pro", "unit": "", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Unité, cadence et cible non précisées."}},
+    {"key": "kpi-pro-lifequest", "dedupe_titles": ["Avancement LifeQuest"], "goal_ref": "goal-pro-lifequest", "data": {"name": "Avancement LifeQuest", "life_area": "pro", "unit": "", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Unité, cadence et cible non précisées."}},
+    {"key": "kpi-perso-sport", "dedupe_titles": ["Séances de sport par semaine"], "goal_ref": "goal-perso-sport", "data": {"name": "Séances de sport par semaine", "life_area": "perso", "unit": "séances", "target_type": "none", "cadence": "weekly", "direction": "maintain", "active": true, "configuration_status": "to_validate", "notes": "Le référentiel contient trois formulations différentes : 3 à 4 séances structurées, minimum 4 en semaine difficile, et objectif normal de 5 à 6 activités incluant la marche. Aucune cible n'est imposée avant validation."}},
+    {"key": "kpi-perso-routines", "dedupe_titles": ["Respect des routines"], "goal_ref": "goal-perso-hygiene-vie", "data": {"name": "Respect des routines", "life_area": "perso", "unit": "", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Méthode de mesure, cadence et cible non précisées."}},
+    {"key": "kpi-perso-screen", "dedupe_titles": ["Temps d'écran inutile"], "goal_ref": "goal-perso-ecran", "data": {"name": "Temps d'écran inutile", "life_area": "perso", "unit": "", "target_type": "none", "cadence": "unset", "direction": "decrease", "active": true, "configuration_status": "to_configure", "notes": "Unité, cadence et cible non précisées."}},
+    {"key": "kpi-perso-savings", "dedupe_titles": ["Épargne mensuelle"], "goal_ref": "goal-perso-finances", "data": {"name": "Épargne mensuelle", "life_area": "perso", "unit": "", "target_type": "none", "cadence": "monthly", "direction": "increase", "active": true, "configuration_status": "to_configure", "notes": "Aucun montant cible n'est précisé."}},
+    {"key": "kpi-perso-emergency-fund", "dedupe_titles": ["Mois de dépenses essentielles couverts par le fonds de sécurité", "Progression du fonds de sécurité"], "goal_ref": "goal-perso-fonds-securite", "data": {"name": "Mois de dépenses essentielles couverts par le fonds de sécurité", "life_area": "perso", "unit": "mois", "target_type": "min", "target_value": 6, "cadence": "monthly", "direction": "increase", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-perso-weekly-reviews", "dedupe_titles": ["Revues hebdomadaires réalisées"], "goal_ref": "goal-perso-lifeos", "data": {"name": "Revues hebdomadaires réalisées", "life_area": "perso", "unit": "revues", "target_type": "exact", "target_value": 1, "cadence": "weekly", "direction": "maintain", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-perso-finished-content", "dedupe_titles": ["Livres et contenus réellement terminés"], "goal_ref": "goal-perso-lecture", "data": {"name": "Livres et contenus réellement terminés", "life_area": "perso", "unit": "contenus", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Aucune cible ni cadence n'est précisée."}},
+    {"key": "kpi-religion-quran-pages", "dedupe_titles": ["Pages de Coran travaillées par mois"], "goal_ref": "goal-religion-coran", "data": {"name": "Pages de Coran travaillées par mois", "life_area": "religion", "unit": "pages", "target_type": "exact", "target_value": 3, "cadence": "monthly", "direction": "maintain", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-religion-arabic-days", "dedupe_titles": ["Jours avec 30 minutes d'arabe"], "goal_ref": "goal-religion-arabe", "data": {"name": "Jours avec 30 minutes d'arabe", "life_area": "religion", "unit": "jours", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Le rythme de la routine est quotidien ; la cadence de mesure du KPI et sa cible ne sont pas précisées."}},
+    {"key": "kpi-religion-learning-days", "dedupe_titles": ["Jours avec apprentissage religieux"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Jours avec apprentissage religieux", "life_area": "religion", "unit": "jours", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_configure", "notes": "Le rythme de la routine est quotidien ; la cadence de mesure du KPI et sa cible ne sont pas précisées."}},
+    {"key": "kpi-religion-seerah", "dedupe_titles": ["Séances Seerah réalisées par semaine"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Séances Seerah réalisées par semaine", "life_area": "religion", "unit": "séances", "target_type": "exact", "target_value": 1, "cadence": "weekly", "direction": "maintain", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-religion-duas", "dedupe_titles": ["Du'a apprises"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Du'a apprises", "life_area": "religion", "unit": "du'a", "target_type": "none", "cadence": "unset", "direction": "none", "active": true, "configuration_status": "to_validate", "notes": "Le référentiel précise une nouvelle du'a par jour lorsque possible ; aucune cible rigide ni cadence de mesure n'est imposée."}},
+    {"key": "kpi-religion-dhikr", "dedupe_titles": ["Dhikr réalisés par jour", "Régularité dhikr"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Dhikr réalisés par jour", "life_area": "religion", "unit": "dhikr", "target_type": "min", "target_value": 1000, "cadence": "daily", "direction": "maintain", "active": true, "configuration_status": "ready"}},
+    {"key": "kpi-religion-sadaqa", "dedupe_titles": ["Sadaqa hebdomadaire"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Sadaqa hebdomadaire", "life_area": "religion", "unit": "sadaqa", "target_type": "exact", "target_value": 1, "cadence": "weekly", "direction": "maintain", "active": true, "configuration_status": "ready"}}
+  ],
+  "habits": [
+    {"key": "habit-pro-targeted-applications", "dedupe_titles": ["Candidatures ciblées hebdomadaires"], "goal_ref": "goal-pro-cdi", "kpi_ref": "kpi-pro-applications", "data": {"name": "Candidatures ciblées hebdomadaires", "life_area": "pro", "frequency": "weekly", "target_count": 10, "target_unit": "candidatures", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Environ 10 candidatures réellement pertinentes par semaine. Les jours et heures ne sont pas définis."}},
+    {"key": "habit-pro-recruiter-contacts", "dedupe_titles": ["Contacts recruteurs ciblés hebdomadaires"], "goal_ref": "goal-pro-cdi", "kpi_ref": "kpi-pro-recruiters", "data": {"name": "Contacts recruteurs ciblés hebdomadaires", "life_area": "pro", "frequency": "weekly", "target_count": null, "target_unit": "contacts", "active": true, "reminder_enabled": false, "configuration_status": "to_validate", "notes": "Objectif explicite : environ 5 à 10 nouveaux contacts ciblés par semaine. Le moteur de routine n'enregistre qu'une valeur unique ; la plage est conservée dans le KPI et les notes."}},
+    {"key": "habit-perso-daily-review", "dedupe_titles": ["Revue quotidienne LifeOS"], "goal_ref": "goal-perso-lifeos", "data": {"name": "Revue quotidienne LifeOS", "life_area": "perso", "frequency": "daily", "target_count": 1, "duration_minutes": 5, "time_context": "Le soir avant de terminer la journée ou de se coucher", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Vérifier les tâches terminées, reporter ce qui reste et choisir les priorités du lendemain. Aucune heure exacte n'est définie."}},
+    {"key": "habit-perso-weekly-review", "dedupe_titles": ["Revue hebdomadaire"], "goal_ref": "goal-perso-lifeos", "kpi_ref": "kpi-perso-weekly-reviews", "data": {"name": "Revue hebdomadaire", "life_area": "perso", "frequency": "weekly", "target_count": 1, "duration_minutes": null, "schedule_weekday": 7, "time_context": "Fin de semaine, idéalement le dimanche", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Durée explicite : 15 à 30 minutes. Aucune heure exacte n'est définie."}},
+    {"key": "habit-perso-monthly-review", "dedupe_titles": ["Revue mensuelle LifeOS"], "goal_ref": "goal-perso-lifeos", "data": {"name": "Revue mensuelle LifeOS", "life_area": "perso", "frequency": "monthly", "target_count": 1, "schedule_day_of_month": null, "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Faire le bilan des objectifs, KPI, habitudes, finances, projets, décisions et priorités. Le jour et l'heure ne sont pas définis."}},
+    {"key": "habit-perso-sport", "dedupe_titles": ["Sport régulier"], "goal_ref": "goal-perso-sport", "kpi_ref": "kpi-perso-sport", "data": {"name": "Sport régulier", "life_area": "perso", "frequency": "weekly", "target_count": null, "active": true, "reminder_enabled": false, "configuration_status": "to_validate", "notes": "Le référentiel mentionne 3 à 4 séances structurées, un minimum de 4 séances courtes en semaine difficile et un objectif normal de 5 à 6 activités incluant la marche. Les créneaux et la cible restent à valider."}},
+    {"key": "habit-perso-screen", "dedupe_titles": ["Réduction du temps d'écran inutile"], "goal_ref": "goal-perso-ecran", "kpi_ref": "kpi-perso-screen", "data": {"name": "Réduction du temps d'écran inutile", "life_area": "perso", "frequency": "daily", "target_count": null, "time_context": "Lors de l'ouverture du téléphone ou d'une application sans objectif précis", "active": true, "reminder_enabled": false, "configuration_status": "to_complete", "notes": "Éviter les longues sessions automatiques de scrolling et créer plusieurs périodes sans réseaux sociaux. Aucun seuil chiffré n'est défini."}},
+    {"key": "habit-perso-sleep", "dedupe_titles": ["Sommeil régulier"], "goal_ref": "goal-perso-hygiene-vie", "data": {"name": "Sommeil régulier", "life_area": "perso", "frequency": "daily", "target_count": null, "active": true, "reminder_enabled": false, "configuration_status": "to_complete", "notes": "Protéger le temps de récupération. Aucune durée ni heure n'est définie."}},
+    {"key": "habit-perso-reading", "dedupe_titles": ["Lecture régulière"], "goal_ref": "goal-perso-lecture", "kpi_ref": "kpi-perso-finished-content", "data": {"name": "Lecture régulière", "life_area": "perso", "frequency": "flexible", "target_count": null, "active": true, "reminder_enabled": false, "configuration_status": "to_complete", "notes": "Lire davantage sans objectif de quantité inventé."}},
+    {"key": "habit-perso-finance-review", "dedupe_titles": ["Revue financière mensuelle"], "goal_ref": "goal-perso-finances", "data": {"name": "Revue financière mensuelle", "life_area": "perso", "frequency": "monthly", "target_count": 1, "schedule_day_of_month": null, "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Le jour et l'heure ne sont pas définis."}}
+  ],
+  "religion_routines": [
+    {"key": "routine-religion-arabic", "dedupe_titles": ["Arabe — 30 minutes par jour"], "goal_ref": "goal-religion-arabe", "kpi_ref": "kpi-religion-arabic-days", "data": {"name": "Arabe — 30 minutes par jour", "target_frequency": "daily", "target_count": 1, "duration_minutes": 30, "target_unit": "séance", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Lecture avec voyelles, compréhension, relecture sans voyelles, vocabulaire et écriture. Aucune heure n'est définie."}},
+    {"key": "routine-religion-daily-learning", "dedupe_titles": ["Apprentissage religieux quotidien"], "goal_ref": "goal-religion-apprentissage", "kpi_ref": "kpi-religion-learning-days", "data": {"name": "Apprentissage religieux quotidien", "target_frequency": "daily", "target_count": 1, "target_unit": "apprentissage", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Minimum : une connaissance, un passage, une du'a, un mot arabe ou un enseignement nouveau. Aucune heure n'est définie."}},
+    {"key": "routine-religion-quran-repeat", "dedupe_titles": ["Révision du Coran en cours d'apprentissage"], "goal_ref": "goal-religion-coran", "data": {"name": "Révision du Coran en cours d'apprentissage", "target_frequency": "daily", "target_count": 1, "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Répéter la page et revenir sur les passages hésitants. Aucune durée ni heure n'est définie."}},
+    {"key": "routine-religion-quran-new-page", "dedupe_titles": ["Travail approfondi d'une nouvelle page de Coran"], "goal_ref": "goal-religion-coran", "kpi_ref": "kpi-religion-quran-pages", "data": {"name": "Travail approfondi d'une nouvelle page de Coran", "target_frequency": "weekly", "target_count": 1, "time_context": "Week-end, pendant les trois premières semaines du mois", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Découvrir, lire, commencer à mémoriser et étudier le sens. Le moteur actuel ne code pas automatiquement les semaines 1 à 3 ; vérifier le contexte mensuel lors de la planification."}},
+    {"key": "routine-religion-tafsir", "dedupe_titles": ["Tafsir de la page de Coran"], "goal_ref": "goal-religion-coran", "data": {"name": "Tafsir de la page de Coran", "target_frequency": "weekly", "target_count": 1, "time_context": "Week-end, avec la page de Coran travaillée", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Aucun jour ni horaire exact n'est défini."}},
+    {"key": "routine-religion-quran-monthly-review", "dedupe_titles": ["Révision mensuelle des trois pages de Coran"], "goal_ref": "goal-religion-coran", "data": {"name": "Révision mensuelle des trois pages de Coran", "target_frequency": "monthly", "target_count": 1, "time_context": "Quatrième semaine, et cinquième lorsqu'elle existe", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Consolider les trois pages travaillées pendant le mois. Aucun jour ni horaire exact n'est défini."}},
+    {"key": "routine-religion-seerah", "dedupe_titles": ["Étudier la Seerah"], "goal_ref": "goal-religion-apprentissage", "kpi_ref": "kpi-religion-seerah", "data": {"name": "Étudier la Seerah", "target_frequency": "weekly", "target_count": 1, "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Étudier chronologiquement un épisode, identifier personnes et enseignements, puis rédiger une courte synthèse. Le jour, l'heure et la ressource restent à définir."}},
+    {"key": "routine-religion-dhikr", "dedupe_titles": ["Dhikr quotidien"], "goal_ref": "goal-religion-apprentissage", "kpi_ref": "kpi-religion-dhikr", "data": {"name": "Dhikr quotidien", "target_frequency": "daily", "target_count": 1000, "target_unit": "dhikr", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Minimum personnel visé de 1 000 par jour, en complément des adhkar contextuels et après les prières. Aucune heure n'est définie."}},
+    {"key": "routine-religion-dua", "dedupe_titles": ["Apprendre une nouvelle du'a"], "goal_ref": "goal-religion-apprentissage", "kpi_ref": "kpi-religion-duas", "data": {"name": "Apprendre une nouvelle du'a", "target_frequency": "flexible", "target_count": null, "active": true, "reminder_enabled": false, "configuration_status": "to_validate", "notes": "Le référentiel indique une du'a par jour lorsque possible. La flexibilité est conservée sans cible quotidienne rigide."}},
+    {"key": "routine-religion-adhkar", "dedupe_titles": ["Adhkar contextuels"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Adhkar contextuels", "target_frequency": "contextual", "target_count": null, "active": true, "reminder_enabled": false, "configuration_status": "ready", "notes": "Apprendre et utiliser progressivement les adhkar associés aux situations du quotidien."}},
+    {"key": "routine-religion-sadaqa", "dedupe_titles": ["Sadaqa du vendredi"], "goal_ref": "goal-religion-apprentissage", "kpi_ref": "kpi-religion-sadaqa", "data": {"name": "Sadaqa du vendredi", "target_frequency": "weekly", "target_count": 1, "target_unit": "sadaqa", "schedule_weekday": 5, "time_context": "Vendredi, notamment autour de Jumu'ah", "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Faire une sadaqa selon les moyens. Aucune heure ni aucun montant n'est défini."}},
+    {"key": "routine-religion-evening-reading", "dedupe_titles": ["Lecture ou apprentissage du soir"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Lecture ou apprentissage du soir", "target_frequency": "flexible", "target_count": null, "time_context": "Entre environ 22 h et 00 h, le plus régulièrement possible", "active": true, "reminder_enabled": false, "configuration_status": "to_validate", "notes": "Remplacer le scrolling du soir par une période de lecture ou d'apprentissage. La fréquence n'est pas assez précise pour créer une occurrence quotidienne obligatoire."}},
+    {"key": "routine-religion-monthly-review", "dedupe_titles": ["Revue mensuelle des routines religieuses"], "goal_ref": "goal-religion-apprentissage", "data": {"name": "Revue mensuelle des routines religieuses", "target_frequency": "monthly", "target_count": 1, "schedule_day_of_month": null, "active": true, "reminder_enabled": false, "configuration_status": "to_configure", "notes": "Vérifier la régularité et ajuster les objectifs. Le jour et l'heure ne sont pas définis."}}
+  ],
+  "study_topics": [
+    {"key": "topic-quran-juz-tabarak", "dedupe_titles": ["Juz Tabarak"], "data": {"domain_slug": "quran", "title": "Juz Tabarak", "category": "Mémorisation et révision", "resource": null, "status": "active", "progress_percent": 0, "notes": "Premier ensemble à reprendre et consolider ; déjà connu en partie puis oublié."}},
+    {"key": "topic-quran-juz-amma", "dedupe_titles": ["Juz Amma"], "data": {"domain_slug": "quran", "title": "Juz Amma", "category": "Mémorisation et révision", "resource": null, "status": "planned", "progress_percent": 0, "notes": "À reprendre et consolider après Juz Tabarak."}},
+    {"key": "topic-quran-juz-28", "dedupe_titles": ["Juz 28"], "data": {"domain_slug": "quran", "title": "Juz 28", "category": "Mémorisation et révision", "resource": null, "status": "planned", "progress_percent": 0, "notes": "À commencer après maîtrise de Juz Tabarak et Juz Amma."}},
+    {"key": "topic-religion-seerah", "dedupe_titles": ["Seerah"], "data": {"domain_slug": "religion", "title": "Seerah", "category": "Seerah", "resource": null, "status": "active", "progress_percent": 0, "notes": "Progression chronologique ; ressource à définir."}},
+    {"key": "topic-religion-aqida", "dedupe_titles": ["Aqida"], "data": {"domain_slug": "religion", "title": "Aqida", "category": "Aqida", "resource": null, "status": "planned", "progress_percent": 0}},
+    {"key": "topic-religion-fiqh", "dedupe_titles": ["Fiqh"], "data": {"domain_slug": "religion", "title": "Fiqh", "category": "Fiqh", "resource": null, "status": "planned", "progress_percent": 0}},
+    {"key": "topic-religion-hadith", "dedupe_titles": ["Hadith"], "data": {"domain_slug": "religion", "title": "Hadith", "category": "Hadith", "resource": null, "status": "planned", "progress_percent": 0}},
+    {"key": "topic-religion-tafsir", "dedupe_titles": ["Tafsir"], "data": {"domain_slug": "religion", "title": "Tafsir", "category": "Tafsir", "resource": null, "status": "active", "progress_percent": 0, "notes": "À étudier chaque week-end avec la page de Coran travaillée."}},
+    {"key": "topic-religion-history", "dedupe_titles": ["Histoire islamique"], "data": {"domain_slug": "religion", "title": "Histoire islamique", "category": "Histoire", "resource": null, "status": "planned", "progress_percent": 0}},
+    {"key": "topic-religion-biographies", "dedupe_titles": ["Biographies islamiques"], "data": {"domain_slug": "religion", "title": "Biographies islamiques", "category": "Biographies", "resource": null, "status": "planned", "progress_percent": 0}}
+  ],
+  "decisions": [
+    {"key": "decision-pro-orientation", "dedupe_titles": ["Orientation professionnelle actuelle"], "goal_ref": "goal-pro-cdi", "project_ref": "project-pro-cdi", "data": {"title": "Orientation professionnelle actuelle", "life_area": "pro", "decision_date": "2026-09-20", "question": "Quelle orientation professionnelle privilégier pour mes premières années après mon diplôme ?", "options_considered": "Chercher exclusivement un poste technique.\nM'orienter directement vers la gestion de projet IT.\nRechercher un poste de Consultant / Chef de projet IT tout en conservant une forte proximité avec des environnements techniques.", "selected_option": "Privilégier les postes de Consultant / Chef de projet IT junior en ESN, idéalement autour de projets cloud, infrastructure, réseaux ou cybersécurité.", "rationale": "Accumuler différentes expériences clients, développer simultanément des compétences techniques et de gestion de projet, construire un réseau et préparer éventuellement une activité freelance.", "risks": "Devenir trop généraliste ; perdre en profondeur technique ; être affecté à des missions peu intéressantes ; entrer dans une ESN apportant moins de variété que prévu.", "review_trigger": "Après environ 6 à 12 mois dans le premier CDI", "configuration_status": "to_configure"}},
+    {"key": "decision-pro-environment", "dedupe_titles": ["Environnement professionnel de début de carrière"], "goal_ref": "goal-pro-cdi", "project_ref": "project-pro-cdi", "data": {"title": "Environnement professionnel de début de carrière", "life_area": "pro", "decision_date": "2026-09-20", "question": "Quel type d'entreprise privilégier au début de ma carrière ?", "options_considered": "Grand groupe.\nClient final.\nESN / cabinet de conseil.", "selected_option": "Privilégier une ESN ou une structure de conseil au début de ma carrière.", "rationale": "Être exposé à plusieurs projets et environnements afin d'apprendre rapidement et construire une expertise valorisable.", "risks": "Qualité des missions variable ; dépendance au staffing ; possibilité de rester longtemps sur une mission peu intéressante.", "review_trigger": "Après les premières missions réalisées", "configuration_status": "to_configure"}},
+    {"key": "decision-pro-certifications", "dedupe_titles": ["Stratégie de certifications"], "goal_ref": "goal-pro-certifications", "data": {"title": "Stratégie de certifications", "life_area": "pro", "decision_date": "2026-09-20", "question": "Quelles certifications préparer en priorité ?", "options_considered": "Accumuler rapidement plusieurs certifications.\nSe concentrer uniquement sur une certification technique.\nConstruire progressivement un mix gestion de projet + technique.", "selected_option": "Construire progressivement un mix cohérent : PSM I, CCNA puis AWS, avant d'envisager Terraform, Azure et éventuellement CEH.", "rationale": "Construire un profil cohérent de consultant ou chef de projet IT disposant d'un véritable socle technique.", "risks": "Consacrer trop de temps aux certifications au détriment des projets concrets ; préparer des certifications ne correspondant finalement pas au poste obtenu.", "review_trigger": "À l'obtention du premier CDI ou lorsqu'une offre professionnelle change les priorités", "configuration_status": "to_configure"}},
+    {"key": "decision-pro-long-term", "dedupe_titles": ["Objectif professionnel long terme"], "data": {"title": "Objectif professionnel long terme", "life_area": "pro", "decision_date": "2026-09-20", "question": "Quel est le but derrière ma progression professionnelle ?", "selected_option": "Construire une expertise suffisamment recherchée et valorisable pour disposer à terme d'une réelle liberté professionnelle et financière.", "rationale": "Conserver de bons revenus et du temps pour la vie personnelle, la famille, le sport et la religion.", "risks": "Rechercher excessivement les revenus ; multiplier trop de projets ; confondre liberté financière et accumulation permanente de travail.", "review_trigger": "Revue annuelle", "configuration_status": "to_configure"}},
+    {"key": "decision-pro-technical-foundation", "dedupe_titles": ["Conserver un socle technique Cloud / Réseaux / Sécurité"], "goal_ref": "goal-pro-portfolio", "data": {"title": "Conserver un socle technique Cloud / Réseaux / Sécurité", "life_area": "pro", "question": "Comment conserver une expertise différenciante en évoluant vers la gestion de projet ?", "selected_option": "Conserver un socle technique Cloud / Réseaux / Sécurité.", "rationale": "Ne pas devenir uniquement gestionnaire et conserver une expertise technique différenciante.", "configuration_status": "to_complete", "context": "Cette décision est explicitement récapitulée dans le référentiel, sans date propre associée."}},
+    {"key": "decision-pro-lifequest-priority", "dedupe_titles": ["LifeQuest devient le projet entrepreneurial prioritaire"], "goal_ref": "goal-pro-lifequest", "project_ref": "project-pro-lifequest", "data": {"title": "LifeQuest devient le projet entrepreneurial prioritaire", "life_area": "pro", "question": "Quel projet entrepreneurial prioriser actuellement ?", "selected_option": "Prioriser LifeQuest.", "rationale": "LifeQuest présente actuellement la proposition de valeur la plus intéressante parmi les idées business.", "configuration_status": "to_complete", "context": "Cette décision est explicitement récapitulée dans le référentiel, sans date propre associée."}},
+    {"key": "decision-pro-freelance", "dedupe_titles": ["Stratégie freelance à moyen terme"], "goal_ref": "goal-pro-revenus-diversifies", "data": {"title": "Stratégie freelance à moyen terme", "life_area": "pro", "question": "Quelle place donner au freelance dans la trajectoire professionnelle ?", "selected_option": "Construire d'abord suffisamment d'expérience et une expertise réellement valorisable avant d'exercer une activité freelance à moyen terme.", "rationale": "Diversifier progressivement les sources de revenus sans quitter précipitamment le salariat ni vendre une expertise insuffisamment établie.", "review_trigger": "Lorsque l'expérience et l'expertise permettent de proposer une compétence réellement valorisable", "configuration_status": "to_complete", "context": "Le référentiel demande explicitement de transférer cette stratégie mais ne lui attribue pas de date de décision exacte."}},
+    {"key": "decision-perso-lifeos-truth", "dedupe_titles": ["LifeOS comme source de vérité"], "goal_ref": "goal-perso-lifeos", "project_ref": "project-perso-organisation", "data": {"title": "LifeOS comme source de vérité", "life_area": "perso", "decision_date": "2026-09-20", "question": "Où centraliser durablement mes informations, objectifs et projets ?", "options_considered": "Plusieurs applications spécialisées.\nCahiers et documents séparés.\nUne plateforme personnelle centrale complétée par des cahiers de réflexion.", "selected_option": "Utiliser LifeOS comme source de vérité, et conserver les cahiers et référentiels comme supports de réflexion.", "rationale": "Éviter la dispersion et disposer d'un endroit unique pour consulter et suivre la situation.", "risks": "Passer trop de temps à développer LifeOS ; complexifier inutilement l'outil ; dépendre excessivement d'une application unique.", "review_trigger": "Après plusieurs mois d'utilisation réelle", "configuration_status": "to_configure"}},
+    {"key": "decision-perso-homelab", "dedupe_titles": ["Reporter l'achat du homelab"], "project_ref": "project-pro-homelab", "data": {"title": "Reporter l'achat du homelab", "life_area": "perso", "question": "Acheter immédiatement une machine dédiée ou commencer sans matériel supplémentaire ?", "options_considered": "Acheter immédiatement un mini-PC ou serveur.\nCommencer avec le cloud et les équipements actuels.\nAbandonner le homelab.", "selected_option": "Reporter l'achat et commencer avec les ressources existantes et le cloud.", "rationale": "Éviter une dépense prématurée tant que le matériel n'est pas réellement nécessaire.", "risks": "Repousser trop longtemps le projet ; être limité pour certaines expérimentations.", "review_date": "2026-10-31", "review_trigger": "D'ici fin octobre 2026", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 pour la date de décision ; la date exacte reste vide. La date de revue fin octobre est normalisée au 31 octobre 2026."}},
+    {"key": "decision-perso-vehicle", "dedupe_titles": ["Achat d'un véhicule"], "data": {"title": "Achat d'un véhicule", "life_area": "perso", "question": "Quelle solution de mobilité choisir ?", "options_considered": "Voiture.\nScooter 125.\nMoto 125.\nContinuer avec les transports en commun jusqu'à connaître le futur trajet professionnel.", "selected_option": "Ne pas précipiter l'achat avant d'avoir davantage de visibilité sur le futur lieu de travail et l'usage réel.", "rationale": "Le véhicule doit répondre à un besoin concret plutôt qu'à une envie temporaire.", "risks": "Acheter trop tôt ; sous-estimer le coût total de possession ; privilégier le plaisir au détriment de l'utilité.", "review_trigger": "Lors de la signature du prochain CDI ou lorsque les besoins de déplacement changent", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 pour la date de décision ; la date exacte reste vide."}},
+    {"key": "decision-perso-financial-rules", "dedupe_titles": ["Structurer la gestion financière avant les gros investissements"], "goal_ref": "goal-perso-finances", "data": {"title": "Structurer la gestion financière avant les gros investissements", "life_area": "perso", "question": "Comment décider des gros achats et investissements ?", "selected_option": "Structurer la gestion financière et vérifier les chiffres avant les gros investissements.", "rationale": "Éviter les achats ou investissements décidés uniquement sur l'envie ; distinguer besoin, confort et envie ; comparer le coût total de possession.", "risks": "Toucher au fonds de sécurité ; inflation du niveau de vie ; immobiliser de l'argent dans des achats peu utiles ou fortement dépréciables.", "review_trigger": "Revue financière mensuelle", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 ; la date exacte reste vide."}},
+    {"key": "decision-perso-project-discipline", "dedupe_titles": ["Limiter le nombre de projets réellement actifs"], "data": {"title": "Limiter le nombre de projets réellement actifs", "life_area": "perso", "question": "Comment gérer le grand nombre de projets et objectifs qui m'intéressent ?", "options_considered": "Avancer sur tous simultanément.\nAbandonner la majorité.\nConserver une liste complète mais limiter le nombre de projets réellement actifs.", "selected_option": null, "rationale": "La justification et l'ensemble du référentiel recommandent de limiter la dispersion, mais la ligne de décision indique contradictoirement « Avancer sur tous simultanément ».", "risks": "Changer trop souvent de priorité ; confondre planification et progression réelle ; accumuler des projets jamais terminés.", "review_trigger": "À chaque revue mensuelle", "configuration_status": "to_validate", "context": "Contradiction explicite dans la source. Aucune option n'est enregistrée comme décision finale avant validation. La source indique seulement septembre 2026 ; la date exacte reste vide."}},
+    {"key": "decision-religion-daily-learning", "dedupe_titles": ["Mettre en place un apprentissage religieux quotidien"], "goal_ref": "goal-religion-apprentissage", "data": {"title": "Mettre en place un apprentissage religieux quotidien", "life_area": "religion", "question": "Comment progresser continuellement dans l'apprentissage religieux ?", "selected_option": "Apprendre au minimum une chose liée à la religion chaque jour.", "rationale": "Faire progresser les connaissances de manière continue.", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 ; la date exacte reste vide."}},
+    {"key": "decision-religion-quran-program", "dedupe_titles": ["Programme Coran de 3 pages par mois"], "goal_ref": "goal-religion-coran", "data": {"title": "Programme Coran de 3 pages par mois", "life_area": "religion", "question": "Quel rythme adopter pour progresser dans le Coran ?", "selected_option": "Travailler trois nouvelles pages par mois, avec la quatrième semaine consacrée principalement à la révision et au Tafsir.", "rationale": "Privilégier une progression régulière avec mémorisation, révision et compréhension.", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 ; la date exacte reste vide."}},
+    {"key": "decision-religion-arabic-program", "dedupe_titles": ["Consacrer environ 30 minutes par jour à l'arabe"], "goal_ref": "goal-religion-arabe", "data": {"title": "Consacrer environ 30 minutes par jour à l'arabe", "life_area": "religion", "question": "Quel rythme adopter pour progresser en arabe ?", "selected_option": "Consacrer environ 30 minutes par jour à la lecture, compréhension, relecture sans voyelles, vocabulaire et écriture.", "rationale": "Progresser régulièrement en lecture, compréhension, vocabulaire et écriture.", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 ; la date exacte reste vide."}},
+    {"key": "decision-religion-arabic-texts", "dedupe_titles": ["Utiliser des textes religieux pour apprendre l'arabe"], "goal_ref": "goal-religion-arabe", "data": {"title": "Utiliser des textes religieux pour apprendre l'arabe", "life_area": "religion", "question": "Quels textes privilégier pour l'apprentissage de l'arabe ?", "selected_option": "Utiliser autant que possible des textes religieux.", "rationale": "Travailler simultanément l'arabe et les connaissances religieuses.", "configuration_status": "to_complete", "context": "La source indique seulement septembre 2026 ; la date exacte reste vide."}}
+  ],
+  "reminders": [
+    {"key": "reminder-perso-homelab-review", "dedupe_titles": ["Réévaluer l'achat du homelab"], "source_ref": "decision-perso-homelab", "data": {"source_type": "decision", "title": "Réévaluer l'achat du homelab", "life_area": "perso", "remind_at": null, "remind_on": "2026-10-31", "reminder_time": null, "recurrence": "none", "timezone": "Europe/Paris", "active": true, "configuration_status": "to_configure"}}
+  ],
+  "resources": [
+    {"key": "resource-psm-scrum-guide", "project_ref": "project-pro-psm1", "data": {"source_key": "referentiel:psm1:scrum-guide", "title": "Scrum Guide", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "Scrum.org"}},
+    {"key": "resource-psm-scrum-org", "project_ref": "project-pro-psm1", "data": {"source_key": "referentiel:psm1:scrum-org", "title": "Scrum.org", "life_area": "pro", "resource_type": "website", "status": "planned", "provider": "Scrum.org"}},
+    {"key": "resource-psm-open-assessments", "project_ref": "project-pro-psm1", "data": {"source_key": "referentiel:psm1:open-assessments", "title": "Scrum Open Assessments", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "Scrum.org"}},
+    {"key": "resource-ccna-netacad", "project_ref": "project-pro-ccna", "data": {"source_key": "referentiel:ccna:netacad", "title": "Cisco Networking Academy", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "Cisco"}},
+    {"key": "resource-ccna-cisco-u", "project_ref": "project-pro-ccna", "data": {"source_key": "referentiel:ccna:cisco-u", "title": "Cisco U.", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "Cisco"}},
+    {"key": "resource-ccna-topics", "project_ref": "project-pro-ccna", "data": {"source_key": "referentiel:ccna:exam-topics-200-301", "title": "Exam Topics officiels 200-301", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "Cisco"}},
+    {"key": "resource-ccna-packet-tracer", "project_ref": "project-pro-ccna", "data": {"source_key": "referentiel:ccna:packet-tracer", "title": "Packet Tracer", "life_area": "pro", "resource_type": "tool", "status": "planned", "provider": "Cisco"}},
+    {"key": "resource-aws-skill-builder", "project_ref": "project-pro-aws-saa", "data": {"source_key": "referentiel:aws:skill-builder", "title": "AWS Skill Builder", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "AWS"}},
+    {"key": "resource-aws-exam-guide", "project_ref": "project-pro-aws-saa", "data": {"source_key": "referentiel:aws:exam-guide-saa-c03", "title": "Exam Guide officiel SAA-C03", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "AWS"}},
+    {"key": "resource-aws-well-architected", "project_ref": "project-pro-aws-saa", "data": {"source_key": "referentiel:aws:well-architected", "title": "AWS Well-Architected Framework", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "AWS"}},
+    {"key": "resource-azure-learn", "project_ref": "project-pro-az104", "data": {"source_key": "referentiel:az104:microsoft-learn", "title": "Microsoft Learn", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "Microsoft"}},
+    {"key": "resource-azure-guide", "project_ref": "project-pro-az104", "data": {"source_key": "referentiel:az104:official-guide", "title": "Guide officiel AZ-104", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "Microsoft"}},
+    {"key": "resource-azure-assessments", "project_ref": "project-pro-az104", "data": {"source_key": "referentiel:az104:practice-assessments", "title": "Practice Assessments Microsoft", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "Microsoft"}},
+    {"key": "resource-terraform-developer", "project_ref": "project-pro-terraform-cert", "data": {"source_key": "referentiel:terraform:hashicorp-developer", "title": "HashiCorp Developer", "life_area": "pro", "resource_type": "website", "status": "planned", "provider": "HashiCorp"}},
+    {"key": "resource-terraform-path", "project_ref": "project-pro-terraform-cert", "data": {"source_key": "referentiel:terraform:learning-path-004", "title": "Learning Path officiel Terraform Associate 004", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "HashiCorp"}},
+    {"key": "resource-terraform-docs", "project_ref": "project-pro-terraform-cert", "data": {"source_key": "referentiel:terraform:documentation", "title": "Documentation Terraform", "life_area": "pro", "resource_type": "document", "status": "planned", "provider": "HashiCorp"}},
+    {"key": "resource-ceh-program", "project_ref": "project-pro-ceh", "data": {"source_key": "referentiel:ceh:official-program", "title": "Programme officiel EC-Council", "life_area": "pro", "resource_type": "course", "status": "planned", "provider": "EC-Council"}}
+  ],
+  "weekly_reviews": [
+    {
+      "key": "weekly-review-2026-09-21",
+      "data": {
+        "week_start": "2026-09-21",
+        "wins": "Trajectoire professionnelle clarifiée ; positionnement Consultant / Chef de projet IT en ESN ; roadmap de certifications ; projets professionnels et portfolio structurés ; objectifs personnels, finances, routines, apprentissage et objectifs religieux structurés ; programmes Coran et arabe définis.",
+        "misses": "Finalisation technique complète de LifeOS ; lancement réel des certifications ; construction du homelab et du Cloud Lab ; validation commerciale de LifeQuest ; mise en application prolongée des routines.",
+        "causes": "Temps consacré à structurer objectifs, décisions, projets et routines avant l'intégration dans LifeOS ; certaines tâches techniques dépendaient du retour des outils de développement.",
+        "risks": "Continuer à enrichir le référentiel au lieu d'exécuter, mesurer et ajuster.",
+        "pause_or_stop": null,
+        "next_week_top3": "1. Rendre LifeOS opérationnel et intégrer le référentiel.\n2. Commencer l'exécution CDI, première certification et projets.\n3. Commencer les routines PERSO et RELIGION.",
+        "notes": "Revue explicitement datée du 21 septembre 2026 dans le référentiel."
+      }
+    }
+  ]
+}

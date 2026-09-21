@@ -70,6 +70,10 @@ const optionalDateTime = z.preprocess(
   (value) => (value === "" || value === undefined ? null : value),
   z.iso.datetime({ offset: true }).nullable(),
 );
+const optionalTime = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.string().regex(/^\d{2}:\d{2}$/).nullable(),
+);
 const requiredDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const requiredDateTime = z.iso.datetime({ offset: true });
 const optionalNumber = (min?: number, max?: number) =>
@@ -80,10 +84,42 @@ const requiredNumber = (min?: number, max?: number) =>
 const optionalInteger = (min = 0, max = Number.MAX_SAFE_INTEGER) => optionalNumber(min, max).refine((value) => value === null || Number.isInteger(value), "Nombre entier attendu.");
 const booleanValue = z.preprocess((value) => value === true || value === "true", z.boolean());
 const priorities = [
+  { value: "unset", label: "À définir" },
   { value: "low", label: "Basse" },
   { value: "medium", label: "Moyenne" },
   { value: "high", label: "Haute" },
   { value: "critical", label: "Critique" },
+] as const;
+
+const lifeAreas = [
+  { value: "pro", label: "PRO" },
+  { value: "perso", label: "PERSO" },
+  { value: "religion", label: "RELIGION" },
+] as const;
+
+const configurationStatuses = [
+  { value: "ready", label: "Prêt" },
+  { value: "to_complete", label: "À compléter" },
+  { value: "to_validate", label: "À valider" },
+  { value: "to_configure", label: "À configurer" },
+] as const;
+
+const routineFrequencies = [
+  { value: "daily", label: "Quotidienne" },
+  { value: "weekly", label: "Hebdomadaire" },
+  { value: "monthly", label: "Mensuelle" },
+  { value: "flexible", label: "Flexible" },
+  { value: "contextual", label: "Selon le contexte" },
+] as const;
+
+const weekdays = [
+  { value: "1", label: "Lundi" },
+  { value: "2", label: "Mardi" },
+  { value: "3", label: "Mercredi" },
+  { value: "4", label: "Jeudi" },
+  { value: "5", label: "Vendredi" },
+  { value: "6", label: "Samedi" },
+  { value: "7", label: "Dimanche" },
 ] as const;
 
 const goalStatuses = [
@@ -145,27 +181,34 @@ const resources: ResourceConfig[] = [
     primaryField: "title",
     fields: [
       { key: "title", label: "Titre", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
       { key: "desired_outcome", label: "Résultat recherché", kind: "textarea", rows: 3 },
-      { key: "definition_of_done", label: "Définition de DONE", kind: "textarea", required: true, rows: 3 },
+      { key: "definition_of_done", label: "Définition de DONE", kind: "textarea", rows: 3, help: "Laissez vide et choisissez « À compléter » si le référentiel ne la précise pas." },
       { key: "status", label: "Statut", kind: "select", required: true, options: goalStatuses, defaultValue: "draft" },
-      { key: "priority", label: "Priorité", kind: "select", required: true, options: priorities, defaultValue: "medium" },
+      { key: "priority", label: "Priorité", kind: "select", required: true, options: priorities, defaultValue: "unset" },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "ready" },
       { key: "horizon", label: "Horizon", kind: "text", placeholder: "2026, T4, 3 ans…" },
       { key: "start_date", label: "Début", kind: "date" },
       { key: "target_date", label: "Échéance", kind: "date" },
+      { key: "target_value", label: "Cible", kind: "number", step: 0.01 },
+      { key: "target_unit", label: "Unité de la cible", kind: "text" },
       { key: "progress_percent", label: "Avancement (%)", kind: "number", required: true, min: 0, max: 100, step: 1, defaultValue: 0 },
+      { key: "next_action", label: "Prochaine action", kind: "textarea" },
+      { key: "next_review_date", label: "Prochaine revue", kind: "date" },
       { key: "reason", label: "Pourquoi", kind: "textarea" },
       { key: "risk_notes", label: "Risques", kind: "textarea" },
       { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["status", "priority", "target_date", "progress_percent", "desired_outcome"],
+    listFields: ["life_area", "status", "priority", "configuration_status", "target_date", "target_value", "target_unit", "progress_percent", "next_action", "next_review_date", "desired_outcome"],
     searchFields: ["title", "desired_outcome", "definition_of_done"],
-    filterFields: ["status", "priority"],
+    filterFields: ["life_area", "status", "priority", "configuration_status"],
     orderBy: "updated_at",
     archive: { field: "status", value: "archived" },
     schema: z.object({
-      title: requiredText("Le titre"), desired_outcome: optionalText(), definition_of_done: requiredText("La définition de DONE", 5_000),
-      status: z.enum(["draft", "active", "at_risk", "achieved", "paused", "cancelled", "archived"]), priority: z.enum(["low", "medium", "high", "critical"]),
-      horizon: optionalText(120), start_date: optionalDate, target_date: optionalDate, progress_percent: requiredNumber(0, 100), reason: optionalText(), risk_notes: optionalText(), notes: optionalText(),
+      title: requiredText("Le titre"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), desired_outcome: optionalText(), definition_of_done: optionalText(),
+      status: z.enum(["draft", "active", "at_risk", "achieved", "paused", "cancelled", "archived"]), priority: z.enum(["unset", "low", "medium", "high", "critical"]),
+      configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"),
+      horizon: optionalText(120), start_date: optionalDate, target_date: optionalDate, target_value: optionalNumber(), target_unit: optionalText(80), progress_percent: requiredNumber(0, 100), next_action: optionalText(), next_review_date: optionalDate, reason: optionalText(), risk_notes: optionalText(), notes: optionalText(),
     }).refine((data) => !data.start_date || !data.target_date || data.start_date <= data.target_date, { path: ["target_date"], message: "L’échéance doit suivre le début." }),
   },
   {
@@ -177,11 +220,18 @@ const resources: ResourceConfig[] = [
     primaryField: "title",
     fields: [
       { key: "title", label: "Titre", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
+      { key: "project_type", label: "Type", kind: "select", required: true, defaultValue: "project", options: [
+        { value: "project", label: "Projet" }, { value: "certification", label: "Certification" }, { value: "portfolio", label: "Portfolio" },
+        { value: "business", label: "Business" }, { value: "personal", label: "Personnel" }, { value: "other", label: "Autre" },
+      ] },
       { key: "summary", label: "Résumé", kind: "textarea" },
       { key: "goal_ids", label: "Objectifs liés", kind: "multirelation", relation: "goals", help: "Un projet peut soutenir plusieurs objectifs." },
       { key: "status", label: "Statut", kind: "select", required: true, options: projectStatuses, defaultValue: "backlog" },
-      { key: "priority", label: "Priorité manuelle", kind: "select", required: true, options: priorities, defaultValue: "medium" },
+      { key: "priority", label: "Priorité manuelle", kind: "select", required: true, options: priorities, defaultValue: "unset" },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "ready" },
       { key: "target_date", label: "Échéance", kind: "date" },
+      { key: "target_window", label: "Fenêtre cible", kind: "text", help: "Ex. Octobre–novembre 2026 lorsqu’aucune date exacte n’est définie." },
       { key: "next_milestone", label: "Prochain jalon", kind: "text" },
       { key: "next_action", label: "Prochaine action", kind: "text" },
       { key: "progress_percent", label: "Avancement (%)", kind: "number", required: true, min: 0, max: 100, defaultValue: 0 },
@@ -194,16 +244,16 @@ const resources: ResourceConfig[] = [
       { key: "blocker_note", label: "Blocage", kind: "textarea" },
       { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["status", "priority", "target_date", "next_action", "progress_percent", "impact", "urgency", "confidence", "effort"],
+    listFields: ["life_area", "project_type", "status", "priority", "configuration_status", "target_date", "target_window", "next_action", "progress_percent", "impact", "urgency", "confidence", "effort"],
     searchFields: ["title", "summary", "next_action"],
-    filterFields: ["status", "priority"],
+    filterFields: ["life_area", "project_type", "status", "priority", "configuration_status"],
     orderBy: "updated_at",
     archive: { field: "status", value: "archived" },
     relations: [{ field: "goal_ids", parentResource: "goals", multiple: true }],
     schema: z.object({
-      title: requiredText("Le titre"), summary: optionalText(), goal_ids: z.array(z.uuid()).max(20).default([]),
-      status: z.enum(["backlog", "focus", "active", "blocked", "paused", "done", "cancelled", "archived"]), priority: z.enum(["low", "medium", "high", "critical"]),
-      target_date: optionalDate, next_milestone: optionalText(500), next_action: optionalText(500), progress_percent: requiredNumber(0, 100),
+      title: requiredText("Le titre"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), project_type: z.enum(["project", "certification", "portfolio", "business", "personal", "other"]).default("project"), summary: optionalText(), goal_ids: z.array(z.uuid()).max(20).default([]),
+      status: z.enum(["backlog", "focus", "active", "blocked", "paused", "done", "cancelled", "archived"]), priority: z.enum(["unset", "low", "medium", "high", "critical"]), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"),
+      target_date: optionalDate, target_window: optionalText(160), next_milestone: optionalText(500), next_action: optionalText(500), progress_percent: requiredNumber(0, 100),
       impact: optionalInteger(1, 5), urgency: optionalInteger(1, 5), confidence: optionalInteger(1, 5), effort: optionalInteger(1, 5),
       budget_planned: optionalNumber(0), budget_actual: optionalNumber(0), blocker_note: optionalText(), notes: optionalText(),
     }),
@@ -217,18 +267,21 @@ const resources: ResourceConfig[] = [
     primaryField: "title",
     fields: [
       { key: "title", label: "Titre", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
       { key: "project_id", label: "Projet", kind: "relation", relation: "projects" },
       { key: "status", label: "Statut", kind: "select", required: true, options: taskStatuses, defaultValue: "todo" },
-      { key: "priority", label: "Priorité", kind: "select", required: true, options: priorities, defaultValue: "medium" },
-      { key: "due_at", label: "Échéance", kind: "datetime" },
+      { key: "priority", label: "Priorité", kind: "select", required: true, options: priorities, defaultValue: "unset" },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "ready" },
+      { key: "due_on", label: "Échéance (date seulement)", kind: "date", help: "Utilisez ce champ si le référentiel ne donne pas d’heure." },
+      { key: "due_at", label: "Échéance avec heure", kind: "datetime", help: "Ne renseignez pas les deux échéances." },
       { key: "estimate_minutes", label: "Estimation (minutes)", kind: "number", min: 0 },
       { key: "actual_minutes", label: "Réel (minutes)", kind: "number", min: 0 },
       { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["status", "priority", "due_at", "estimate_minutes", "project_id"],
-    searchFields: ["title", "notes"], filterFields: ["status", "priority", "project_id"], orderBy: "due_at", ascending: true,
+    listFields: ["life_area", "status", "priority", "configuration_status", "due_on", "due_at", "estimate_minutes", "project_id"],
+    searchFields: ["title", "notes"], filterFields: ["life_area", "status", "priority", "configuration_status", "project_id"], orderBy: "due_at", ascending: true,
     relations: [{ field: "project_id", parentResource: "projects" }],
-    schema: z.object({ title: requiredText("Le titre"), project_id: optionalUuid, status: z.enum(["todo", "doing", "blocked", "done", "cancelled"]), priority: z.enum(["low", "medium", "high", "critical"]), due_at: optionalDateTime, estimate_minutes: optionalInteger(), actual_minutes: optionalInteger(), notes: optionalText() }),
+    schema: z.object({ title: requiredText("Le titre"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), project_id: optionalUuid, status: z.enum(["todo", "doing", "blocked", "done", "cancelled"]), priority: z.enum(["unset", "low", "medium", "high", "critical"]), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"), due_on: optionalDate, due_at: optionalDateTime, estimate_minutes: optionalInteger(), actual_minutes: optionalInteger(), notes: optionalText() }).refine((data) => !(data.due_on && data.due_at), { path: ["due_at"], message: "Choisissez soit une date, soit une date avec heure." }),
   },
   {
     key: "kpis",
@@ -239,6 +292,7 @@ const resources: ResourceConfig[] = [
     primaryField: "name",
     fields: [
       { key: "name", label: "Nom", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
       { key: "goal_id", label: "Objectif lié", kind: "relation", relation: "goals" },
       { key: "unit", label: "Unité", kind: "text", required: true },
       { key: "target_type", label: "Type de cible", kind: "select", required: true, defaultValue: "none", options: [
@@ -247,20 +301,23 @@ const resources: ResourceConfig[] = [
       { key: "target_value", label: "Cible", kind: "number", step: 0.01 },
       { key: "target_min", label: "Borne basse", kind: "number", step: 0.01 },
       { key: "target_max", label: "Borne haute", kind: "number", step: 0.01 },
-      { key: "cadence", label: "Cadence", kind: "select", required: true, defaultValue: "weekly", options: [
-        { value: "daily", label: "Quotidienne" }, { value: "weekly", label: "Hebdomadaire" }, { value: "monthly", label: "Mensuelle" }, { value: "quarterly", label: "Trimestrielle" }, { value: "adhoc", label: "À la demande" },
+      { key: "cadence", label: "Cadence", kind: "select", required: true, defaultValue: "unset", options: [
+        { value: "unset", label: "Non définie" }, { value: "daily", label: "Quotidienne" }, { value: "weekly", label: "Hebdomadaire" }, { value: "monthly", label: "Mensuelle" }, { value: "quarterly", label: "Trimestrielle" }, { value: "adhoc", label: "À la demande" },
       ] },
-      { key: "direction", label: "Direction", kind: "select", required: true, defaultValue: "increase", options: [
-        { value: "increase", label: "Augmenter" }, { value: "decrease", label: "Diminuer" }, { value: "maintain", label: "Maintenir" },
+      { key: "direction", label: "Direction", kind: "select", required: true, defaultValue: "none", options: [
+        { value: "none", label: "Non définie" }, { value: "increase", label: "Augmenter" }, { value: "decrease", label: "Diminuer" }, { value: "maintain", label: "Maintenir" },
       ] },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "to_configure" },
       { key: "active", label: "Actif", kind: "checkbox", defaultValue: true },
+      { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["unit", "target_type", "target_value", "target_min", "target_max", "cadence", "goal_id", "active"],
-    searchFields: ["name", "unit"], filterFields: ["cadence", "active"], orderBy: "updated_at",
+    listFields: ["life_area", "unit", "target_type", "target_value", "target_min", "target_max", "cadence", "direction", "configuration_status", "goal_id", "active"],
+    searchFields: ["name", "unit", "notes"], filterFields: ["life_area", "cadence", "configuration_status", "active"], orderBy: "updated_at",
     relations: [{ field: "goal_id", parentResource: "goals" }],
-    schema: z.object({ name: requiredText("Le nom"), goal_id: optionalUuid, unit: z.string().trim().max(60), target_type: z.enum(["min", "max", "exact", "range", "none"]), target_value: optionalNumber(), target_min: optionalNumber(), target_max: optionalNumber(), cadence: z.enum(["daily", "weekly", "monthly", "quarterly", "adhoc"]), direction: z.enum(["increase", "decrease", "maintain"]), active: booleanValue }).superRefine((data, context) => {
+    schema: z.object({ name: requiredText("Le nom"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), goal_id: optionalUuid, unit: z.string().trim().max(60), target_type: z.enum(["min", "max", "exact", "range", "none"]), target_value: optionalNumber(), target_min: optionalNumber(), target_max: optionalNumber(), cadence: z.enum(["unset", "daily", "weekly", "monthly", "quarterly", "adhoc"]), direction: z.enum(["none", "increase", "decrease", "maintain"]), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"), active: booleanValue, notes: optionalText() }).superRefine((data, context) => {
       if (["min", "max", "exact"].includes(data.target_type) && data.target_value === null) context.addIssue({ code: "custom", path: ["target_value"], message: "Une cible est requise." });
       if (data.target_type === "range" && (data.target_min === null || data.target_max === null || data.target_min > data.target_max)) context.addIssue({ code: "custom", path: ["target_min"], message: "Indiquez un intervalle valide." });
+      if (data.cadence === "unset" && data.configuration_status === "ready") context.addIssue({ code: "custom", path: ["cadence"], message: "Définissez la cadence ou marquez le KPI comme incomplet." });
     }),
   },
   {
@@ -289,21 +346,27 @@ const resources: ResourceConfig[] = [
     primaryField: "title",
     fields: [
       { key: "title", label: "Titre", kind: "text", required: true },
-      { key: "decision_date", label: "Date de décision", kind: "date", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
+      { key: "decision_date", label: "Date de décision", kind: "date" },
       { key: "goal_id", label: "Objectif", kind: "relation", relation: "goals" },
       { key: "project_id", label: "Projet", kind: "relation", relation: "projects" },
+      { key: "question", label: "Question", kind: "textarea" },
       { key: "context", label: "Contexte", kind: "textarea" },
       { key: "options_considered", label: "Options considérées", kind: "textarea" },
       { key: "selected_option", label: "Choix", kind: "textarea" },
+      { key: "rationale", label: "Justification", kind: "textarea" },
+      { key: "risks", label: "Risques", kind: "textarea" },
       { key: "assumptions", label: "Hypothèses", kind: "textarea" },
       { key: "expected_outcome", label: "Résultat attendu", kind: "textarea" },
       { key: "review_date", label: "Date de réévaluation", kind: "date" },
+      { key: "review_trigger", label: "Déclencheur de réévaluation", kind: "textarea", help: "Pour une revue liée à un événement sans date précise." },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "ready" },
       { key: "actual_outcome", label: "Résultat réel", kind: "textarea" },
       { key: "lesson", label: "Enseignement", kind: "textarea" },
     ],
-    listFields: ["decision_date", "review_date", "selected_option", "actual_outcome", "project_id"], searchFields: ["title", "context", "selected_option"], orderBy: "decision_date",
+    listFields: ["life_area", "decision_date", "review_date", "review_trigger", "configuration_status", "selected_option", "actual_outcome", "project_id"], searchFields: ["title", "question", "context", "selected_option", "rationale", "risks"], filterFields: ["life_area", "configuration_status"], orderBy: "decision_date",
     relations: [{ field: "goal_id", parentResource: "goals" }, { field: "project_id", parentResource: "projects" }],
-    schema: z.object({ title: requiredText("Le titre"), decision_date: requiredDate, goal_id: optionalUuid, project_id: optionalUuid, context: optionalText(), options_considered: optionalText(), selected_option: optionalText(), assumptions: optionalText(), expected_outcome: optionalText(), review_date: optionalDate, actual_outcome: optionalText(), lesson: optionalText() }),
+    schema: z.object({ title: requiredText("Le titre"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), decision_date: optionalDate, goal_id: optionalUuid, project_id: optionalUuid, question: optionalText(), context: optionalText(), options_considered: optionalText(), selected_option: optionalText(), rationale: optionalText(), risks: optionalText(), assumptions: optionalText(), expected_outcome: optionalText(), review_date: optionalDate, review_trigger: optionalText(), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"), actual_outcome: optionalText(), lesson: optionalText() }),
   },
   {
     key: "weekly_reviews",
@@ -325,6 +388,79 @@ const resources: ResourceConfig[] = [
     ],
     listFields: ["week_start", "wins", "risks", "next_week_top3", "completed_at"], orderBy: "week_start",
     schema: z.object({ week_start: requiredDate, wins: optionalText(), misses: optionalText(), causes: optionalText(), risks: optionalText(), pause_or_stop: optionalText(), next_week_top3: requiredText("Le top 3", 5_000), notes: optionalText() }),
+  },
+  {
+    key: "reminders",
+    table: "reminders",
+    title: "Rappels",
+    singular: "rappel",
+    description: "Rappels internes liés aux échéances et récurrences, sans heure inventée.",
+    primaryField: "title",
+    fields: [
+      { key: "title", label: "Titre", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
+      { key: "source_type", label: "Type d’élément lié", kind: "text" },
+      { key: "source_id", label: "Identifiant de l’élément lié", kind: "text" },
+      { key: "remind_on", label: "Date du rappel", kind: "date", help: "Utilisez cette date lorsqu’aucune heure n’est connue." },
+      { key: "reminder_time", label: "Heure", kind: "time" },
+      { key: "remind_at", label: "Date et heure exactes", kind: "datetime", help: "Ne renseignez pas ce champ avec la date ci-dessus." },
+      { key: "recurrence", label: "Récurrence", kind: "select", required: true, defaultValue: "none", options: [
+        { value: "none", label: "Aucune" }, { value: "daily", label: "Quotidienne" }, { value: "weekly", label: "Hebdomadaire" }, { value: "monthly", label: "Mensuelle" },
+      ] },
+      { key: "timezone", label: "Fuseau", kind: "text", required: true, defaultValue: "Europe/Paris" },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "to_configure" },
+      { key: "active", label: "Actif", kind: "checkbox", defaultValue: true },
+    ],
+    listFields: ["life_area", "remind_on", "reminder_time", "remind_at", "recurrence", "configuration_status", "active", "source_type"],
+    searchFields: ["title", "source_type"], filterFields: ["life_area", "recurrence", "configuration_status", "active"], orderBy: "remind_at", ascending: true,
+    schema: z.object({
+      title: requiredText("Le titre"),
+      life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()),
+      source_type: optionalText(80), source_id: optionalUuid, remind_on: optionalDate, reminder_time: optionalTime, remind_at: optionalDateTime,
+      recurrence: z.enum(["none", "daily", "weekly", "monthly"]), timezone: requiredText("Le fuseau", 80),
+      configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("ready"), active: booleanValue,
+    }).superRefine((data, context) => {
+      if (data.remind_at && data.remind_on) context.addIssue({ code: "custom", path: ["remind_at"], message: "Choisissez soit une date, soit une date et heure exactes." });
+      if (data.reminder_time && !data.remind_on) context.addIssue({ code: "custom", path: ["reminder_time"], message: "Une heure seule nécessite une date." });
+      if (!data.remind_at && !data.remind_on && data.active && data.configuration_status !== "to_configure") context.addIssue({ code: "custom", path: ["remind_on"], message: "Planifiez le rappel ou marquez-le « À configurer »." });
+    }),
+  },
+  {
+    key: "resources",
+    table: "resources",
+    title: "Ressources",
+    singular: "ressource",
+    description: "Ressources réellement nommées dans le référentiel et liens vers les objectifs, projets ou sujets.",
+    primaryField: "title",
+    fields: [
+      { key: "title", label: "Titre", kind: "text", required: true },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
+      { key: "resource_type", label: "Type", kind: "select", required: true, defaultValue: "other", options: [
+        { value: "certification", label: "Certification" }, { value: "book", label: "Livre" }, { value: "course", label: "Cours" },
+        { value: "tool", label: "Outil" }, { value: "article", label: "Article" }, { value: "website", label: "Site" },
+        { value: "document", label: "Document" }, { value: "other", label: "Autre" },
+      ] },
+      { key: "status", label: "Statut", kind: "select", required: true, defaultValue: "planned", options: [
+        { value: "planned", label: "Planifiée" }, { value: "active", label: "Active" }, { value: "completed", label: "Terminée" },
+        { value: "paused", label: "En pause" }, { value: "archived", label: "Archivée" },
+      ] },
+      { key: "provider", label: "Fournisseur / auteur", kind: "text" },
+      { key: "url", label: "Lien", kind: "text" },
+      { key: "goal_id", label: "Objectif", kind: "relation", relation: "goals" },
+      { key: "project_id", label: "Projet", kind: "relation", relation: "projects" },
+      { key: "study_topic_id", label: "Sujet d’étude", kind: "relation", relation: "religion_topics" },
+      { key: "notes", label: "Notes", kind: "textarea" },
+    ],
+    listFields: ["life_area", "resource_type", "status", "provider", "url", "goal_id", "project_id", "study_topic_id"],
+    searchFields: ["title", "provider", "url", "notes"], filterFields: ["life_area", "resource_type", "status"], orderBy: "updated_at",
+    archive: { field: "status", value: "archived" },
+    relations: [{ field: "goal_id", parentResource: "goals" }, { field: "project_id", parentResource: "projects" }, { field: "study_topic_id", parentResource: "religion_topics" }],
+    schema: z.object({
+      title: requiredText("Le titre"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()),
+      resource_type: z.enum(["certification", "book", "course", "tool", "article", "website", "document", "other"]),
+      status: z.enum(["planned", "active", "completed", "paused", "archived"]), provider: optionalText(240), url: optionalText(1_000),
+      goal_id: optionalUuid, project_id: optionalUuid, study_topic_id: optionalUuid, notes: optionalText(),
+    }),
   },
   {
     key: "religion_topics",
@@ -381,15 +517,36 @@ const resources: ResourceConfig[] = [
     primaryField: "name",
     fields: [
       { key: "name", label: "Nom", kind: "text", required: true },
-      { key: "target_frequency", label: "Fréquence", kind: "select", required: true, defaultValue: "weekly", options: [
-        { value: "daily", label: "Quotidienne" }, { value: "weekly", label: "Hebdomadaire" }, { value: "monthly", label: "Mensuelle" },
+      { key: "goal_id", label: "Objectif", kind: "relation", relation: "goals" },
+      { key: "project_id", label: "Projet", kind: "relation", relation: "projects" },
+      { key: "kpi_id", label: "KPI", kind: "relation", relation: "kpis" },
+      { key: "target_frequency", label: "Fréquence", kind: "select", required: true, defaultValue: "weekly", options: routineFrequencies },
+      { key: "target_count", label: "Nombre cible", kind: "number", min: 1 },
+      { key: "target_unit", label: "Unité", kind: "text" },
+      { key: "duration_minutes", label: "Durée prévue (minutes)", kind: "number", min: 0 },
+      { key: "schedule_weekday", label: "Jour de semaine", kind: "select", options: weekdays },
+      { key: "schedule_day_of_month", label: "Jour du mois", kind: "number", min: 1, max: 31 },
+      { key: "time_context", label: "Contexte temporel", kind: "text", placeholder: "soir, week-end…" },
+      { key: "start_on", label: "Début", kind: "date" },
+      { key: "end_on", label: "Fin", kind: "date" },
+      { key: "reminder_enabled", label: "Rappel activé", kind: "checkbox" },
+      { key: "reminder_time", label: "Heure de rappel", kind: "time", help: "Laissez vide si aucune heure n’est explicitement définie." },
+      { key: "status", label: "Statut", kind: "select", required: true, defaultValue: "active", options: [
+        { value: "active", label: "Active" }, { value: "paused", label: "En pause" }, { value: "archived", label: "Archivée" },
       ] },
-      { key: "target_count", label: "Nombre cible", kind: "number", required: true, min: 1, defaultValue: 1 },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "to_configure" },
       { key: "active", label: "Active", kind: "checkbox", defaultValue: true },
       { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["target_frequency", "target_count", "active", "notes"], orderBy: "created_at",
-    schema: z.object({ name: requiredText("Le nom"), target_frequency: z.enum(["daily", "weekly", "monthly"]), target_count: requiredNumber(1, 1_000), active: booleanValue, notes: optionalText() }),
+    listFields: ["target_frequency", "target_count", "target_unit", "duration_minutes", "schedule_weekday", "schedule_day_of_month", "time_context", "reminder_enabled", "reminder_time", "status", "configuration_status", "active", "notes"], searchFields: ["name", "notes", "time_context"], filterFields: ["target_frequency", "status", "configuration_status", "active"], orderBy: "created_at",
+    archive: { field: "status", value: "archived" },
+    relations: [{ field: "goal_id", parentResource: "goals" }, { field: "project_id", parentResource: "projects" }, { field: "kpi_id", parentResource: "kpis" }],
+    schema: z.object({ name: requiredText("Le nom"), goal_id: optionalUuid, project_id: optionalUuid, kpi_id: optionalUuid, target_frequency: z.enum(["daily", "weekly", "monthly", "flexible", "contextual"]).default("weekly"), target_count: optionalInteger(1, 1_000), target_unit: optionalText(80), duration_minutes: optionalInteger(0, 1_440), schedule_weekday: optionalInteger(1, 7), schedule_day_of_month: optionalInteger(1, 31), time_context: optionalText(120), start_on: optionalDate, end_on: optionalDate, reminder_enabled: booleanValue, reminder_time: optionalTime, status: z.enum(["active", "paused", "archived"]).default("active"), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("to_configure"), active: booleanValue, notes: optionalText() }).superRefine((data, context) => {
+      if (data.start_on && data.end_on && data.start_on > data.end_on) context.addIssue({ code: "custom", path: ["end_on"], message: "La fin doit suivre le début." });
+      if (data.target_frequency === "weekly" && data.schedule_weekday === null && data.configuration_status === "ready") context.addIssue({ code: "custom", path: ["schedule_weekday"], message: "Indiquez un jour ou marquez la routine comme incomplète." });
+      if (data.target_frequency === "monthly" && data.schedule_day_of_month === null && data.configuration_status === "ready") context.addIssue({ code: "custom", path: ["schedule_day_of_month"], message: "Indiquez un jour ou marquez la routine comme incomplète." });
+      if (data.reminder_enabled && data.reminder_time === null) context.addIssue({ code: "custom", path: ["reminder_time"], message: "Définissez une heure avant d’activer le rappel." });
+    }),
   },
   {
     key: "religion_logs",
@@ -400,12 +557,14 @@ const resources: ResourceConfig[] = [
     primaryField: "note",
     fields: [
       { key: "routine_id", label: "Routine", kind: "relation", relation: "religion_routines", required: true },
-      { key: "occurred_at", label: "Réalisée le", kind: "datetime", required: true },
+      { key: "occurred_on", label: "Réalisée le", kind: "date", required: true },
+      { key: "occurred_at", label: "Horodatage exact", kind: "datetime", help: "Champ de compatibilité ; la date seule suffit pour le suivi quotidien." },
+      { key: "count", label: "Nombre", kind: "number", required: true, min: 0, defaultValue: 1 },
       { key: "note", label: "Note", kind: "textarea" },
     ],
-    listFields: ["routine_id", "occurred_at", "note"], orderBy: "occurred_at",
+    listFields: ["routine_id", "occurred_on", "count", "note"], orderBy: "occurred_on",
     relations: [{ field: "routine_id", parentResource: "religion_routines" }],
-    schema: z.object({ routine_id: z.uuid(), occurred_at: requiredDateTime, note: optionalText() }),
+    schema: z.object({ routine_id: z.uuid(), occurred_on: optionalDate, occurred_at: optionalDateTime, count: z.coerce.number().min(0).max(100_000).default(1), note: optionalText() }),
   },
   {
     key: "arabic_profile",
@@ -604,16 +763,37 @@ const resources: ResourceConfig[] = [
     primaryField: "name",
     fields: [
       { key: "name", label: "Nom", kind: "text", required: true },
-      { key: "frequency", label: "Fréquence", kind: "select", required: true, defaultValue: "daily", options: [
-        { value: "daily", label: "Quotidienne" }, { value: "weekly", label: "Hebdomadaire" }, { value: "monthly", label: "Mensuelle" },
+      { key: "life_area", label: "Volet", kind: "select", options: lifeAreas },
+      { key: "goal_id", label: "Objectif", kind: "relation", relation: "goals" },
+      { key: "project_id", label: "Projet", kind: "relation", relation: "projects" },
+      { key: "kpi_id", label: "KPI", kind: "relation", relation: "kpis" },
+      { key: "frequency", label: "Fréquence", kind: "select", required: true, defaultValue: "daily", options: routineFrequencies },
+      { key: "target_count", label: "Nombre cible", kind: "number", min: 1 },
+      { key: "target_unit", label: "Unité", kind: "text" },
+      { key: "duration_minutes", label: "Durée prévue (minutes)", kind: "number", min: 0 },
+      { key: "schedule_weekday", label: "Jour de semaine", kind: "select", options: weekdays },
+      { key: "schedule_day_of_month", label: "Jour du mois", kind: "number", min: 1, max: 31 },
+      { key: "time_context", label: "Contexte temporel", kind: "text", placeholder: "soir, fin de semaine…" },
+      { key: "start_on", label: "Début", kind: "date" },
+      { key: "end_on", label: "Fin", kind: "date" },
+      { key: "reminder_enabled", label: "Rappel activé", kind: "checkbox" },
+      { key: "reminder_time", label: "Heure de rappel", kind: "time", help: "Laissez vide si le référentiel ne donne pas d’heure." },
+      { key: "status", label: "Statut", kind: "select", required: true, defaultValue: "active", options: [
+        { value: "active", label: "Active" }, { value: "paused", label: "En pause" }, { value: "archived", label: "Archivée" },
       ] },
-      { key: "target_count", label: "Nombre cible", kind: "number", required: true, min: 1, defaultValue: 1 },
-      { key: "reminder_time", label: "Heure de rappel", kind: "time" },
+      { key: "configuration_status", label: "Complétude", kind: "select", required: true, options: configurationStatuses, defaultValue: "ready" },
       { key: "active", label: "Active", kind: "checkbox", defaultValue: true },
       { key: "notes", label: "Notes", kind: "textarea" },
     ],
-    listFields: ["frequency", "target_count", "reminder_time", "active"], searchFields: ["name", "notes"], filterFields: ["frequency", "active"], orderBy: "name", ascending: true,
-    schema: z.object({ name: requiredText("Le nom"), frequency: z.enum(["daily", "weekly", "monthly"]), target_count: requiredNumber(1, 10_000), reminder_time: z.preprocess((value) => value === "" || value === undefined ? null : value, z.string().regex(/^\d{2}:\d{2}$/).nullable()), active: booleanValue, notes: optionalText() }),
+    listFields: ["life_area", "frequency", "target_count", "target_unit", "duration_minutes", "schedule_weekday", "schedule_day_of_month", "time_context", "reminder_enabled", "reminder_time", "status", "configuration_status", "active"], searchFields: ["name", "notes", "time_context"], filterFields: ["life_area", "frequency", "status", "configuration_status", "active"], orderBy: "name", ascending: true,
+    archive: { field: "status", value: "archived" },
+    relations: [{ field: "goal_id", parentResource: "goals" }, { field: "project_id", parentResource: "projects" }, { field: "kpi_id", parentResource: "kpis" }],
+    schema: z.object({ name: requiredText("Le nom"), life_area: z.preprocess((value) => value === "" || value === undefined ? null : value, z.enum(["pro", "perso", "religion"]).nullable()), goal_id: optionalUuid, project_id: optionalUuid, kpi_id: optionalUuid, frequency: z.enum(["daily", "weekly", "monthly", "flexible", "contextual"]).default("daily"), target_count: optionalInteger(1, 10_000), target_unit: optionalText(80), duration_minutes: optionalInteger(0, 1_440), schedule_weekday: optionalInteger(1, 7), schedule_day_of_month: optionalInteger(1, 31), time_context: optionalText(120), start_on: optionalDate, end_on: optionalDate, reminder_enabled: booleanValue, reminder_time: optionalTime, status: z.enum(["active", "paused", "archived"]).default("active"), configuration_status: z.enum(["ready", "to_complete", "to_validate", "to_configure"]).default("to_configure"), active: booleanValue, notes: optionalText() }).superRefine((data, context) => {
+      if (data.start_on && data.end_on && data.start_on > data.end_on) context.addIssue({ code: "custom", path: ["end_on"], message: "La fin doit suivre le début." });
+      if (data.frequency === "weekly" && data.schedule_weekday === null && data.configuration_status === "ready") context.addIssue({ code: "custom", path: ["schedule_weekday"], message: "Indiquez un jour ou marquez l’habitude comme incomplète." });
+      if (data.frequency === "monthly" && data.schedule_day_of_month === null && data.configuration_status === "ready") context.addIssue({ code: "custom", path: ["schedule_day_of_month"], message: "Indiquez un jour ou marquez l’habitude comme incomplète." });
+      if (data.reminder_enabled && data.reminder_time === null) context.addIssue({ code: "custom", path: ["reminder_time"], message: "Définissez une heure avant d’activer le rappel." });
+    }),
   },
   {
     key: "habit_logs",

@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { apiData, apiError, databaseError, isApiResponse, readJsonObject, requireUser } from "@/lib/api";
+import { getIsoWeek, startOfCalendarDay } from "@/lib/domain";
+import { addCalendarDays, calendarDateInTimeZone } from "@/lib/domain/routines";
 import { getResourceConfig } from "@/lib/resources";
 import { attachProjectGoals, hydrateProjects, recordActivity, toDatabasePayload, verifyRelations } from "@/lib/resource-service";
 
@@ -41,14 +43,24 @@ export async function GET(request: NextRequest, routeContext: RouteContext) {
   const view = request.nextUrl.searchParams.get("view");
   const now = new Date();
   if (config.key === "tasks" && view) {
-    const endToday = new Date(now);
-    endToday.setHours(23, 59, 59, 999);
-    const endWeek = new Date(endToday);
-    endWeek.setDate(endWeek.getDate() + ((7 - endWeek.getDay()) % 7));
-    query = query.not("status", "in", "(done,cancelled)").not("due_at", "is", null);
-    if (view === "today") query = query.gte("due_at", new Date(now.setHours(0, 0, 0, 0)).toISOString()).lte("due_at", endToday.toISOString());
-    if (view === "week") query = query.gte("due_at", new Date(now.setHours(0, 0, 0, 0)).toISOString()).lte("due_at", endWeek.toISOString());
-    if (view === "overdue") query = query.lt("due_at", new Date().toISOString());
+    const { data: profile, error: profileError } = await auth.supabase
+      .from("profiles")
+      .select("timezone")
+      .eq("id", auth.userId)
+      .maybeSingle();
+    if (profileError) return databaseError(profileError);
+
+    const timeZone = profile?.timezone || "UTC";
+    const today = calendarDateInTimeZone(now, timeZone);
+    const tomorrow = addCalendarDays(today, 1);
+    const weekEnd = getIsoWeek(today).endsOn;
+    const dayStart = startOfCalendarDay(today, timeZone).toISOString();
+    const dayEndExclusive = startOfCalendarDay(tomorrow, timeZone).toISOString();
+    const weekEndExclusive = startOfCalendarDay(addCalendarDays(weekEnd, 1), timeZone).toISOString();
+    query = query.not("status", "in", "(done,cancelled)");
+    if (view === "today") query = query.or(`due_on.eq.${today},and(due_at.gte.${dayStart},due_at.lt.${dayEndExclusive})`);
+    if (view === "week") query = query.or(`and(due_on.gte.${today},due_on.lte.${weekEnd}),and(due_at.gte.${dayStart},due_at.lt.${weekEndExclusive})`);
+    if (view === "overdue") query = query.or(`due_on.lt.${today},due_at.lt.${now.toISOString()}`);
   }
   if (config.key === "quran_items" && view === "revision") {
     query = query.not("next_revision_at", "is", null).lte("next_revision_at", new Date().toISOString()).neq("status", "paused");
@@ -97,6 +109,16 @@ export async function POST(request: NextRequest, routeContext: RouteContext) {
 
     const payload = { ...toDatabasePayload(config, parsed), ...(config.fixedValues ?? {}) };
     if (config.key === "tasks") payload.completed_at = parsed.status === "done" ? new Date().toISOString() : null;
+    if (config.key === "religion_logs" && !payload.occurred_on) {
+      const { data: profile, error: profileError } = await auth.supabase
+        .from("profiles")
+        .select("timezone")
+        .eq("id", auth.userId)
+        .maybeSingle();
+      if (profileError) return databaseError(profileError);
+      const occurredAt = typeof payload.occurred_at === "string" ? new Date(payload.occurred_at) : new Date();
+      payload.occurred_on = calendarDateInTimeZone(occurredAt, profile?.timezone || "UTC");
+    }
     const ownedPayload = config.table === "profiles"
       ? { ...payload, id: auth.userId }
       : { ...payload, user_id: auth.userId };

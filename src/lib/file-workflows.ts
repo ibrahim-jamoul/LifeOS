@@ -16,6 +16,7 @@ export const documentCategories = [
   { value: "finance", label: "Finance" },
   { value: "health", label: "Santé" },
   { value: "education", label: "Formation" },
+  { value: "reference", label: "Référentiel" },
   { value: "vehicle", label: "Véhicule" },
   { value: "other", label: "Autre" },
 ] as const;
@@ -72,7 +73,7 @@ const tags = z.preprocess(
 
 const documentFields = {
   title: z.string().trim().min(1, "Le titre est requis.").max(240),
-  category: z.enum(["identity", "administrative", "finance", "health", "education", "vehicle", "other"]),
+  category: z.enum(["identity", "administrative", "finance", "health", "education", "reference", "vehicle", "other"]),
   issuer: optionalText(240),
   issued_on: optionalDate,
   expires_on: optionalDate,

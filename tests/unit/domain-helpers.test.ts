@@ -9,6 +9,7 @@ import {
   getIsoWeek,
   isDueSoon,
   isOverdue,
+  startOfCalendarDay,
 } from "../../src/lib/domain";
 
 describe("calculateProjectScore", () => {
@@ -162,6 +163,26 @@ describe("getIsoWeek", () => {
     expect(getIsoWeek("2026-01-04T23:30:00.000Z", "UTC").key).toBe("2026-W01");
     expect(getIsoWeek("2026-01-04T23:30:00.000Z", "Europe/Paris").key).toBe(
       "2026-W02",
+    );
+  });
+});
+
+describe("startOfCalendarDay", () => {
+  it("resolves local midnight independently from the server time zone", () => {
+    expect(startOfCalendarDay("2026-09-21", "Europe/Paris").toISOString()).toBe(
+      "2026-09-20T22:00:00.000Z",
+    );
+    expect(startOfCalendarDay("2026-01-21", "Europe/Paris").toISOString()).toBe(
+      "2026-01-20T23:00:00.000Z",
+    );
+  });
+
+  it("uses the correct offset across the daylight-saving transition", () => {
+    expect(startOfCalendarDay("2026-03-29", "Europe/Paris").toISOString()).toBe(
+      "2026-03-28T23:00:00.000Z",
+    );
+    expect(startOfCalendarDay("2026-03-30", "Europe/Paris").toISOString()).toBe(
+      "2026-03-29T22:00:00.000Z",
     );
   });
 });

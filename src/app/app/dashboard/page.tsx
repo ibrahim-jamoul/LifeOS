@@ -5,8 +5,10 @@ import { getDerivedAlerts } from "@/lib/alerts";
 import { classifyDueStatus, getIsoWeek } from "@/lib/domain/dates";
 import { classifyKpiValue, type KpiClassification, type KpiTargetType } from "@/lib/domain/kpis";
 import { calculateProjectScore } from "@/lib/domain/projects";
+import { addCalendarDays, calendarDateInTimeZone, isRoutineActionableOn, nextRoutineOccurrence, routineCompletionWindow, scheduledRoutineDates } from "@/lib/domain/routines";
 import { createClient } from "@/lib/supabase/server";
 import { CompleteTaskButton } from "@/components/complete-task-button";
+import { RoutinesToday, type RoutineTodayItem } from "@/components/routines-today";
 
 export const metadata: Metadata = { title: "Dashboard" };
 export const dynamic = "force-dynamic";
@@ -18,32 +20,56 @@ export default async function DashboardPage() {
   const { data: claims } = await supabase.auth.getClaims();
   const userId = typeof claims?.claims?.sub === "string" ? claims.claims.sub : "";
   const now = new Date();
+  const profileResult = await supabase
+    .from("profiles")
+    .select("display_name,timezone")
+    .eq("id", userId)
+    .maybeSingle();
+  const timezone = typeof profileResult.data?.timezone === "string" ? profileResult.data.timezone : "Europe/Paris";
+  const today = calendarDateInTimeZone(now, timezone);
+  const routineWindowStart = [addCalendarDays(today, -13), `${today.slice(0, 7)}-01`].sort()[0]!;
 
-  const [profileResult, tasksResult, goalsResult, projectsResult, kpisResult, entriesResult, activityResult, alerts] = await Promise.all([
-    supabase.from("profiles").select("display_name,timezone").eq("id", userId).maybeSingle(),
-    supabase.from("tasks").select("id,title,status,priority,due_at,project_id,estimate_minutes").eq("user_id", userId).not("status", "in", "(done,cancelled)").order("due_at", { ascending: true, nullsFirst: false }).limit(100),
+  const [tasksResult, goalsResult, projectsResult, kpisResult, entriesResult, activityResult, habitsResult, religionRoutinesResult, habitLogsResult, religionLogsResult, alerts] = await Promise.all([
+    supabase.from("tasks").select("id,title,status,priority,due_on,due_at,project_id,estimate_minutes").eq("user_id", userId).not("status", "in", "(done,cancelled)").order("due_at", { ascending: true, nullsFirst: false }).limit(100),
     supabase.from("goals").select("id,title,status,priority,target_date,progress_percent").eq("user_id", userId).in("status", ["active", "at_risk"]).order("priority", { ascending: false }).limit(20),
     supabase.from("projects").select("id,title,status,priority,target_date,next_action,next_milestone,progress_percent,impact,urgency,confidence,effort,last_activity_at,updated_at").eq("user_id", userId).in("status", ["focus", "active", "blocked"]).order("target_date", { ascending: true, nullsFirst: false }).limit(30),
     supabase.from("kpis").select("id,name,unit,target_type,target_value,target_min,target_max,cadence,goal_id").eq("user_id", userId).eq("active", true).limit(40),
     supabase.from("kpi_entries").select("kpi_id,value,measured_at").eq("user_id", userId).order("measured_at", { ascending: false }).limit(1_000),
     supabase.from("activity_log").select("id,entity_type,action,summary,created_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(8),
+    supabase.from("habits").select("id,name,life_area,frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,time_context,configuration_status,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(200),
+    supabase.from("religion_routines").select("id,name,target_frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,time_context,configuration_status,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(200),
+    supabase.from("habit_logs").select("habit_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineWindowStart).lte("occurred_on", today).limit(2_000),
+    supabase.from("religion_logs").select("routine_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineWindowStart).lte("occurred_on", today).limit(2_000),
     getDerivedAlerts(supabase, userId, now).catch(() => []),
   ]);
 
-  const timezone = typeof profileResult.data?.timezone === "string" ? profileResult.data.timezone : "Europe/Paris";
   const tasks = (tasksResult.data ?? []) as Row[];
   const goals = (goalsResult.data ?? []) as Row[];
   const projects = (projectsResult.data ?? []) as Row[];
   const kpis = (kpisResult.data ?? []) as Row[];
   const kpiEntries = (entriesResult.data ?? []) as Row[];
   const currentWeek = getIsoWeek(now, timezone);
-  const today = calendarDate(now, timezone);
-  const todayTasks = tasks.filter((task) => typeof task.due_at === "string" && calendarDate(new Date(task.due_at), timezone) === today);
-  const overdueTasks = tasks.filter((task) => classifyDueStatus({ dueAt: typeof task.due_at === "string" ? task.due_at : null, status: String(task.status ?? ""), now, timeZone: timezone }) === "overdue");
-  const weekTasks = tasks.filter((task) => typeof task.due_at === "string" && calendarDate(new Date(task.due_at), timezone) >= currentWeek.startsOn && calendarDate(new Date(task.due_at), timezone) <= currentWeek.endsOn);
+  const taskDate = (task: Row) => typeof task.due_on === "string" ? task.due_on : typeof task.due_at === "string" ? calendarDate(new Date(task.due_at), timezone) : null;
+  const todayTasks = tasks.filter((task) => taskDate(task) === today);
+  const overdueTasks = tasks.filter((task) => {
+    if (typeof task.due_on === "string") return task.due_on < today;
+    return classifyDueStatus({ dueAt: typeof task.due_at === "string" ? task.due_at : null, status: String(task.status ?? ""), now, timeZone: timezone }) === "overdue";
+  });
+  const weekTasks = tasks.filter((task) => {
+    const due = taskDate(task);
+    return due !== null && due >= currentWeek.startsOn && due <= currentWeek.endsOn;
+  });
   const focusProjects = projects.filter((project) => project.status === "focus");
   const latestEntries = new Map<string, Row>();
   for (const entry of kpiEntries) if (typeof entry.kpi_id === "string" && !latestEntries.has(entry.kpi_id)) latestEntries.set(entry.kpi_id, entry);
+  const routineSummary = buildRoutineSummary({
+    today,
+    windowStart: addCalendarDays(today, -6),
+    habits: (habitsResult.data ?? []) as Row[],
+    religionRoutines: (religionRoutinesResult.data ?? []) as Row[],
+    habitLogs: (habitLogsResult.data ?? []) as Row[],
+    religionLogs: (religionLogsResult.data ?? []) as Row[],
+  });
 
   return (
     <div className="grid gap-7">
@@ -76,6 +102,15 @@ export default async function DashboardPage() {
         <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950"><AlertTriangle className="mt-0.5 shrink-0" size={19} /><div><strong>Focus surchargé : {focusProjects.length} projets.</strong><p className="mt-1 text-sm">La recommandation est de trois maximum. LifeOS vous avertit mais ne décide pas à votre place.</p></div></div>
       ) : null}
 
+      <DashboardSection title="Routines du jour" href="/app/health/habits" icon={<CalendarDays size={19} />}>
+        <RoutinesToday
+          date={today}
+          items={routineSummary.items}
+          missedLast7={routineSummary.missedLast7}
+          configurationNeeded={routineSummary.configurationNeeded}
+        />
+      </DashboardSection>
+
       <div className="grid gap-6 xl:grid-cols-[1.15fr_.85fr]">
         <DashboardSection title="Aujourd’hui et cette semaine" href="/app/goals/tasks" icon={<ListTodo size={19} />}>
           {todayTasks.length === 0 && weekTasks.length === 0 ? <EmptyLine text="Aucune tâche datée cette semaine." href="/app/goals/tasks?new=1" label="Planifier une tâche" /> : (
@@ -83,7 +118,7 @@ export default async function DashboardPage() {
               {[...new Map([...overdueTasks, ...todayTasks, ...weekTasks].map((task) => [task.id, task])).values()].slice(0, 8).map((task) => (
                 <li key={String(task.id)} className="flex items-center gap-3 py-3">
                   <CompleteTaskButton taskId={String(task.id)} />
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{String(task.title)}</p><p className={`mt-0.5 text-xs ${overdueTasks.includes(task) ? "font-semibold text-red-700" : "text-slate-500"}`}>{typeof task.due_at === "string" ? formatDate(task.due_at, timezone) : "Sans échéance"} · {String(task.priority)}</p></div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{String(task.title)}</p><p className={`mt-0.5 text-xs ${overdueTasks.includes(task) ? "font-semibold text-red-700" : "text-slate-500"}`}>{typeof task.due_on === "string" ? formatDate(task.due_on, timezone) : typeof task.due_at === "string" ? formatDate(task.due_at, timezone) : "Sans échéance"} · {String(task.priority)}</p></div>
                 </li>
               ))}
             </ul>
@@ -124,6 +159,79 @@ export default async function DashboardPage() {
       </DashboardSection>
     </div>
   );
+}
+
+function buildRoutineSummary(input: { today: string; windowStart: string; habits: Row[]; religionRoutines: Row[]; habitLogs: Row[]; religionLogs: Row[] }): { items: RoutineTodayItem[]; missedLast7: number; configurationNeeded: number } {
+  const completedByKey = new Map<string, number>();
+  for (const log of input.habitLogs) {
+    if (typeof log.habit_id === "string" && typeof log.occurred_on === "string") completedByKey.set(`habit:${log.habit_id}:${log.occurred_on}`, Number(log.count ?? 0));
+  }
+  for (const log of input.religionLogs) {
+    if (typeof log.routine_id === "string" && typeof log.occurred_on === "string") completedByKey.set(`religion:${log.routine_id}:${log.occurred_on}`, Number(log.count ?? 0));
+  }
+
+  const normalized = [
+    ...input.habits.map((row) => normalizeRoutine(row, "habit")),
+    ...input.religionRoutines.map((row) => normalizeRoutine(row, "religion")),
+  ].filter((routine): routine is NonNullable<ReturnType<typeof normalizeRoutine>> => routine !== null);
+  const yesterday = addCalendarDays(input.today, -1);
+  let missedLast7 = 0;
+  for (const routine of normalized) {
+    for (const date of scheduledRoutineDates(routine.schedule, input.windowStart, yesterday)) {
+      if ((completedByKey.get(`${routine.item.routineType}:${routine.item.id}:${date}`) ?? 0) <= 0) missedLast7 += 1;
+    }
+  }
+
+  const items = normalized
+    .filter((routine) => isRoutineActionableOn(routine.schedule, input.today))
+    .map((routine) => {
+      const completionWindow = routineCompletionWindow(routine.schedule, input.today);
+      const completedEntry = [...completedByKey.entries()].find(([key, count]) => {
+        const date = key.slice(-10);
+        return key.startsWith(`${routine.item.routineType}:${routine.item.id}:`)
+          && count > 0
+          && completionWindow !== null
+          && date >= completionWindow.startsOn
+          && date <= completionWindow.endsOn;
+      });
+      const completedOn = completedEntry?.[0].slice(-10) ?? null;
+      const completedCount = completedEntry?.[1] ?? 0;
+      return { ...routine.item, completed: completedCount > 0, completedOn, completedCount, periodLabel: completionWindow?.label ?? null, nextOccurrence: nextRoutineOccurrence(routine.schedule, input.today, false) };
+    });
+  const configurationNeeded = normalized.filter((routine) => routine.item.configurationStatus && routine.item.configurationStatus !== "ready").length;
+  return { items, missedLast7, configurationNeeded };
+}
+
+function normalizeRoutine(row: Row, routineType: "habit" | "religion") {
+  if (typeof row.id !== "string" || typeof row.name !== "string") return null;
+  const frequency = String(routineType === "habit" ? row.frequency ?? "" : row.target_frequency ?? "");
+  const schedule = {
+    frequency,
+    active: row.active !== false && row.status === "active",
+    scheduleWeekday: numberOrNull(row.schedule_weekday),
+    scheduleDayOfMonth: numberOrNull(row.schedule_day_of_month),
+    startOn: typeof row.start_on === "string" ? row.start_on : null,
+    endOn: typeof row.end_on === "string" ? row.end_on : null,
+    pausedAt: typeof row.paused_at === "string" ? row.paused_at : null,
+    archivedAt: typeof row.archived_at === "string" ? row.archived_at : null,
+  };
+  const rawLifeArea = routineType === "religion" ? "religion" : row.life_area;
+  const lifeArea = rawLifeArea === "pro" || rawLifeArea === "perso" || rawLifeArea === "religion" ? rawLifeArea : null;
+  const rawConfiguration = row.configuration_status;
+  const configurationStatus = rawConfiguration === "ready" || rawConfiguration === "to_complete" || rawConfiguration === "to_validate" || rawConfiguration === "to_configure" ? rawConfiguration : null;
+  const item: RoutineTodayItem = {
+    id: row.id,
+    routineType,
+    name: row.name,
+    completed: false,
+    targetCount: numberOrNull(row.target_count),
+    targetUnit: typeof row.target_unit === "string" ? row.target_unit : null,
+    durationMinutes: numberOrNull(row.duration_minutes),
+    lifeArea,
+    timeContext: typeof row.time_context === "string" ? row.time_context : null,
+    configurationStatus,
+  };
+  return { schedule, item };
 }
 
 function Metric({ title, value, caption, icon, tone, href }: { title: string; value: number; caption: string; icon: React.ReactNode; tone: "emerald" | "red" | "blue" | "amber" | "slate"; href: string }) {

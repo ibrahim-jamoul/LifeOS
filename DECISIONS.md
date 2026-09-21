@@ -39,3 +39,31 @@ The AI adapter is server-only and OpenAI-compatible. It receives at most 75 stru
 ## 2026-09-20 — Export separates data from binaries
 
 The authenticated JSON export paginates every user-owned table and includes private file metadata, but not binary objects. This keeps the structured export portable without turning a single response into an unbounded media archive.
+
+## 2026-09-21 — The three life areas remain cross-cutting metadata
+
+PRO, PERSO and RELIGION are stored as `life_area` on the existing strategic
+engines. They do not create three applications or duplicate the nine navigation
+branches. Existing rows may remain unclassified until an audited import or a
+user edit assigns them.
+
+## 2026-09-21 — Unknown values are first-class states
+
+Unknown priorities and KPI cadences use `unset`; incomplete records use
+`to_complete`, `to_validate` or `to_configure`. A month-only source date remains
+textual context instead of being coerced to the first day of the month. A date
+without a source time is stored as `date`, not an invented timestamp.
+
+## 2026-09-21 — Period routines do not invent calendar days
+
+A weekly or monthly routine with no explicit weekday or month-day remains
+actionable once during its current period. Exact-day routines are actionable
+only on that day. Flexible and contextual routines can be recorded but are not
+classified as missed.
+
+## 2026-09-21 — Reference import is fill-only and content-verified
+
+The importer uses deterministic IDs and normalized-title matching. It inserts
+missing records, fills blank fields and reports conflicts without overwriting
+existing user values. The private reference document is reused only when its
+SHA-256 content matches the supplied Word file.

@@ -14,8 +14,8 @@ const sections: Readonly<Record<string, SectionDefinition>> = {
   goals: {
     heading: "Pilotage",
     intro: "Reliez résultats, projets, actions, mesures, revues et décisions dans une seule boucle.",
-    resources: ["vision", "goals", "projects", "tasks", "kpis", "kpi_entries", "weekly_reviews", "decisions"],
-    paths: { objectives: "goals", projects: "projects", tasks: "tasks", kpis: "kpis", "kpi-entries": "kpi_entries", reviews: "weekly_reviews", decisions: "decisions", vision: "vision" },
+    resources: ["vision", "goals", "projects", "tasks", "kpis", "kpi_entries", "weekly_reviews", "decisions", "reminders", "resources"],
+    paths: { objectives: "goals", projects: "projects", tasks: "tasks", kpis: "kpis", "kpi-entries": "kpi_entries", reviews: "weekly_reviews", decisions: "decisions", reminders: "reminders", resources: "resources", vision: "vision" },
   },
   religion: {
     heading: "Religion",

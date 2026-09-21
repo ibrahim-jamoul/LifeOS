@@ -7,19 +7,21 @@ export const dynamic = "force-dynamic";
 const scopeTables = {
   goals: [
     ["life_vision", "one_year,three_year,five_year,quarter_focus,last_reviewed_at"],
-    ["goals", "id,title,desired_outcome,status,priority,target_date,progress_percent"],
-    ["projects", "id,title,status,priority,target_date,next_action,next_milestone,progress_percent"],
-    ["tasks", "id,title,status,priority,due_at,project_id"],
-    ["kpis", "id,name,unit,target_type,target_value,target_min,target_max,cadence,active"],
+    ["goals", "id,title,life_area,desired_outcome,status,priority,target_date,target_value,target_unit,next_action,next_review_date,configuration_status,progress_percent"],
+    ["projects", "id,title,life_area,project_type,status,priority,target_date,target_window,next_action,next_milestone,configuration_status,progress_percent"],
+    ["tasks", "id,title,life_area,status,priority,due_on,due_at,project_id,configuration_status"],
+    ["kpis", "id,name,life_area,unit,target_type,target_value,target_min,target_max,cadence,direction,configuration_status,active"],
     ["kpi_entries", "kpi_id,value,measured_at,note"],
-    ["decisions", "id,title,decision_date,selected_option,expected_outcome,review_date,actual_outcome,lesson"],
+    ["decisions", "id,title,life_area,decision_date,question,selected_option,rationale,risks,expected_outcome,review_date,review_trigger,configuration_status,actual_outcome,lesson"],
     ["weekly_reviews", "week_start,wins,misses,causes,risks,pause_or_stop,next_week_top3,notes,completed_at"],
+    ["reminders", "id,title,life_area,source_type,source_id,remind_on,reminder_time,remind_at,recurrence,configuration_status,active"],
+    ["resources", "id,title,life_area,resource_type,status,provider,url,goal_id,project_id,study_topic_id,notes"],
   ],
   religion: [
     ["study_topics", "id,title,category,resource,status,target_date,progress_percent,notes"],
     ["study_sessions", "topic_id,occurred_at,duration_minutes,activity_type,resource,summary,takeaway"],
-    ["religion_routines", "id,name,target_frequency,target_count,active"],
-    ["religion_logs", "routine_id,occurred_at,note"],
+    ["religion_routines", "id,name,goal_id,project_id,kpi_id,target_frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,time_context,reminder_enabled,reminder_time,configuration_status,status,active"],
+    ["religion_logs", "routine_id,occurred_on,occurred_at,count,note"],
   ],
   arabic: [
     ["arabic_profiles", "self_assessed_level,weekly_target_minutes,current_focus,vocabulary_estimate"],
@@ -37,7 +39,7 @@ const scopeTables = {
     ["net_worth_snapshots", "snapshot_date,assets,liabilities,currency,note"],
   ],
   health: [
-    ["habits", "id,name,frequency,target_count,active"],
+    ["habits", "id,name,life_area,goal_id,project_id,kpi_id,frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,time_context,reminder_enabled,reminder_time,configuration_status,status,active"],
     ["habit_logs", "habit_id,occurred_on,count,note"],
     ["health_metrics", "id,name,unit,active"],
     ["health_entries", "metric_id,measured_at,value,note"],

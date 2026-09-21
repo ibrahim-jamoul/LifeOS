@@ -8,7 +8,7 @@ const userTables = [
   "religion_routines", "religion_logs", "arabic_profiles", "arabic_sessions", "quran_items", "quran_sessions",
   "financial_accounts", "financial_transactions", "budget_items", "financial_goals", "net_worth_snapshots",
   "habits", "habit_logs", "health_metrics", "health_entries", "workouts", "documents", "memories",
-  "memory_assets", "ai_threads", "ai_messages", "activity_log",
+  "memory_assets", "resources", "ai_threads", "ai_messages", "activity_log",
 ] as const;
 
 export async function GET() {

@@ -96,6 +96,74 @@ function formatUtcDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Resolves local midnight for an ISO calendar day to an exact UTC instant. */
+export function startOfCalendarDay(dateOnly: string, timeZone: string): Date {
+  const desired = parseIsoDateOnly(dateOnly);
+  if (!desired) throw new RangeError("Expected an ISO calendar date");
+  const desiredWallClock = Date.UTC(desired.year, desired.month - 1, desired.day, 0, 0, 0);
+  let candidate = new Date(desiredWallClock);
+
+  // Iterating accounts for the time-zone offset (including DST) without
+  // assuming that the host process uses the user's time zone.
+  for (let iteration = 0; iteration < 3; iteration += 1) {
+    const parts = wallClockParts(candidate, timeZone);
+    const representedWallClock = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    const correction = desiredWallClock - representedWallClock;
+    if (correction === 0) break;
+    candidate = new Date(candidate.getTime() + correction);
+  }
+  return candidate;
+}
+
+function wallClockParts(
+  value: Date,
+  timeZone: string,
+): CalendarDate & { hour: number; minute: number; second: number } {
+  const formatter = new Intl.DateTimeFormat("en-CA-u-ca-iso8601-nu-latn", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
+  const values: Partial<
+    Record<"year" | "month" | "day" | "hour" | "minute" | "second", number>
+  > = {};
+  for (const part of formatter.formatToParts(value)) {
+    if (
+      part.type === "year"
+      || part.type === "month"
+      || part.type === "day"
+      || part.type === "hour"
+      || part.type === "minute"
+      || part.type === "second"
+    ) {
+      values[part.type] = Number(part.value);
+    }
+  }
+  if (
+    values.year === undefined
+    || values.month === undefined
+    || values.day === undefined
+    || values.hour === undefined
+    || values.minute === undefined
+    || values.second === undefined
+  ) {
+    throw new RangeError("Unable to resolve wall-clock time in time zone");
+  }
+  return {
+    year: values.year,
+    month: values.month,
+    day: values.day,
+    hour: values.hour,
+    minute: values.minute,
+    second: values.second,
+  };
+}
+
 export function isTerminalStatus(
   status: string | null | undefined,
   terminalStatuses: readonly string[] = DEFAULT_TERMINAL_STATUSES,

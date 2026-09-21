@@ -14,6 +14,9 @@ Cette implémentation n’embarque aucune donnée de démonstration. Toutes les 
 - Religion, Arabe et Coran, avec minutes hebdomadaires et file de révision.
 - Finances multi-devise sans conversion implicite ; transferts atomiques exclus des revenus/dépenses.
 - Habitudes, métriques santé et tendances fondées uniquement sur les points saisis.
+- Classement transversal PRO / PERSO / RELIGION, routines cochables et historique par période.
+- Import reproductible du référentiel personnel, sans écrasement ni doublons.
+- Ressources nommées reliées aux objectifs, projets et sujets d’étude.
 - Coffres Documents et Souvenirs privés, URLs signées temporaires et suppression cohérente objet/métadonnées.
 - Assistant IA optionnel, strictement serveur, lecture seule et limité au périmètre choisi.
 - Export JSON de toutes les lignes appartenant au compte.
@@ -40,8 +43,8 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 Dans Supabase :
 
-1. appliquez `supabase/migrations/001_initial_schema.sql` ;
-2. appliquez `supabase/migrations/002_security_integrity.sql` ;
+1. liez le projet avec la CLI Supabase ;
+2. appliquez toutes les migrations versionnées avec `npx supabase db push` ;
 3. créez deux buckets **privés**, nommés exactement `documents` et `memories` ;
 4. activez Email/Password dans Auth ;
 5. ajoutez `http://localhost:3000/auth/callback` aux URLs de redirection locales.
@@ -68,8 +71,30 @@ Ouvrez `http://localhost:3000`. Le premier accès à `/app/*` appelle l’initia
 | `AI_API_KEY` | serveur | non | active l’assistant IA |
 | `AI_MODEL` | serveur | avec IA | identifiant du modèle |
 | `AI_BASE_URL` | serveur | non | base OpenAI-compatible, défaut `https://api.openai.com/v1` |
+| `LIFEOS_IMPORT_USER_ID` | import serveur | import seulement | UUID du compte personnel cible |
+| `LIFEOS_REFERENCE_DOCX` | import serveur | non | chemin du Word, sinon celui déclaré dans le JSON |
 
 Ne préfixez jamais une clé secrète avec `NEXT_PUBLIC_`.
+
+## Import du référentiel personnel
+
+Le jeu structuré est dans `initial_data/referentiel_2026-09-21.json`. Lancez
+d’abord une simulation, puis l’application explicite :
+
+```bash
+npm run import:referentiel -- --user UUID_DU_COMPTE
+npm run import:referentiel -- --apply --user UUID_DU_COMPTE
+```
+
+L’importeur utilise des identifiants déterministes, rapproche les titres
+normalisés, complète seulement les champs vides et refuse d’écraser les valeurs
+existantes. Le Word est vérifié par empreinte SHA-256 avant d’être réutilisé et
+reste dans le bucket privé `documents`. Un second passage doit annoncer zéro
+insertion, zéro complément et zéro relation nouvelle.
+
+Le détail de l’interprétation se trouve dans
+`initial_data/REFERENTIEL_MAPPING_2026-09-21.md`. L’état complet de la mission et
+les suites possibles se trouvent dans `PASSATION_LIFEOS_2026-09-21.md`.
 
 ## Déploiement Vercel
 
