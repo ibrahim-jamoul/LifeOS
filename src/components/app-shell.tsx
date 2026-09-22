@@ -6,9 +6,7 @@ import { useEffect, useState } from "react";
 import {
   Bell,
   BookOpen,
-  Bot,
   BrainCircuit,
-  ChevronDown,
   CircleDollarSign,
   FileLock2,
   Gauge,
@@ -16,7 +14,6 @@ import {
   Languages,
   Menu,
   MoonStar,
-  Plus,
   Settings,
   Sparkles,
   Target,
@@ -32,34 +29,24 @@ type AppShellProps = {
 };
 
 const navigation = [
-  { href: "/app/dashboard", label: "Dashboard", icon: Gauge },
+  { href: "/app/dashboard", label: "Aujourd’hui", icon: Gauge },
   { href: "/app/religion", label: "Religion", icon: MoonStar },
   { href: "/app/arabic", label: "Arabe", icon: Languages },
   { href: "/app/quran", label: "Coran", icon: BookOpen },
   { href: "/app/goals", label: "Objectifs & KPI", icon: Target },
-  { href: "/app/assistant", label: "Assistant IA", icon: Bot },
   { href: "/app/finances", label: "Finances", icon: CircleDollarSign },
   { href: "/app/health", label: "Santé & habitudes", icon: HeartPulse },
   { href: "/app/documents", label: "Documents", icon: FileLock2 },
   { href: "/app/memories", label: "Souvenirs", icon: Sparkles },
 ] as const;
 
-const quickLinks = [
-  { label: "Tâche", href: "/app/goals/tasks?new=1" },
-  { label: "Mesure KPI", href: "/app/goals/kpi-entries?new=1" },
-  { label: "Décision", href: "/app/goals/decisions?new=1" },
-  { label: "Transaction", href: "/app/finances/transactions?new=1" },
-  { label: "Session d’étude", href: "/app/religion/sessions?new=1" },
-] as const;
 
 export function AppShell({ children, email, displayName, unreadAlerts }: AppShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [captureOpen, setCaptureOpen] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
-    setCaptureOpen(false);
   }, [pathname]);
 
   return (
@@ -75,7 +62,7 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
             <span className="grid size-10 place-items-center rounded-xl bg-emerald-100 font-extrabold text-emerald-950">LO</span>
             <span>
               <strong className="block text-lg tracking-tight">LifeOS</strong>
-              <span className="text-xs text-emerald-100/70">Piloter l’essentiel</span>
+              <span className="text-xs text-emerald-100/70">Tu exécutes. LifeOS organise.</span>
             </span>
           </Link>
           <button className="rounded-lg p-2 lg:hidden" onClick={() => setMenuOpen(false)} aria-label="Fermer la navigation">
@@ -123,21 +110,6 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
           </button>
 
           <div className="relative ml-auto flex items-center gap-2">
-            <button className="button-primary" onClick={() => setCaptureOpen((value) => !value)} aria-expanded={captureOpen}>
-              <Plus size={18} />
-              <span className="hidden sm:inline">Capturer</span>
-              <ChevronDown size={15} />
-            </button>
-            {captureOpen ? (
-              <div className="absolute right-20 top-12 z-40 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl sm:right-24">
-                {quickLinks.map((link) => (
-                  <Link key={link.href} className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-100" href={link.href}>
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            ) : null}
-
             <Link href="/app/alerts" className="button-secondary relative size-10 px-0" aria-label={`${unreadAlerts} alertes non lues`}>
               <Bell size={19} />
               {unreadAlerts > 0 ? (

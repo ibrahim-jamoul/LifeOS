@@ -2,6 +2,8 @@
 
 LifeOS est une application personnelle de pilotage, prête pour Next.js, Vercel et Supabase. Elle relie vision, objectifs, projets, tâches, KPI, reviews et décisions aux neuf branches du produit : Religion, Arabe, Coran, pilotage, assistant IA, finances, santé/habitudes, documents et souvenirs.
 
+Le mode quotidien principal est désormais **LifeOS Manager** : la vue Aujourd’hui calcule une file d’exécution depuis les données existantes, tandis que les écrans CRUD restent disponibles comme administration secondaire.
+
 Cette implémentation n’embarque aucune donnée de démonstration. Toutes les mutations sont authentifiées, validées côté serveur et protégées par RLS. Les fichiers sont envoyés directement vers des buckets Supabase privés sous un préfixe appartenant à l’utilisateur.
 
 ## Fonctionnalités livrées
@@ -9,7 +11,8 @@ Cette implémentation n’embarque aucune donnée de démonstration. Toutes les 
 - Auth Supabase SSR : inscription, connexion, déconnexion et réinitialisation du mot de passe.
 - Initialisation idempotente des neuf domaines au premier accès.
 - CRUD complet pour objectifs, projets multi-objectifs, tâches, KPI/mesures, weekly reviews et décisions.
-- Dashboard réel : tâches du jour/semaine/en retard, projets FOCUS, alertes, santé des objectifs, KPI et activité récente.
+- **LifeOS Manager / Aujourd’hui** : top 3 calculé, tâches + routines, ordre dynamique selon échéances/planification/priorités/contexte horaire, validation en un geste et report opérationnel sans déplacer les vraies échéances.
+- Dashboard secondaire : projets FOCUS, alertes, santé des objectifs, KPI et activité récente.
 - Alertes dérivées à la lecture et notifications persistées sans doublons, avec lecture, snooze et dismiss.
 - Religion, Arabe et Coran, avec minutes hebdomadaires et file de révision.
 - Finances multi-devise sans conversion implicite ; transferts atomiques exclus des revenus/dépenses.
@@ -148,4 +151,4 @@ Il contrôle l’initialisation idempotente, les lectures/modifications/suppress
 - Les documents sont ouverts avec des URLs signées de cinq minutes.
 - L’export JSON est authentifié et ne contient pas les binaires Storage.
 
-Les documents `01` à `16` restent la spécification produit. Consultez `KNOWN_LIMITATIONS.md` avant une mise en production et `supabase/tests/RLS_TEST_PLAN.md` pour la recette manuelle exhaustive.
+Les documents `01` à `16` restent la spécification produit historique. Pour le fonctionnement quotidien et la philosophie d’automatisation, `17_MANAGER_MODE.md` est la référence la plus récente. Consultez `KNOWN_LIMITATIONS.md` avant une mise en production et `supabase/tests/RLS_TEST_PLAN.md` pour la recette manuelle exhaustive.

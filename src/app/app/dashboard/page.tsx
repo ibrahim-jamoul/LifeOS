@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, BarChart3, CalendarDays, CheckCircle2, CircleAlert, FolderKanban, ListTodo, Plus, Target } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, CalendarDays, CheckCircle2, CircleAlert, FolderKanban, Target } from "lucide-react";
+import { TodayManager } from "@/components/today-manager";
+import type { RoutineTodayItem } from "@/components/routines-today";
 import { getDerivedAlerts } from "@/lib/alerts";
-import { classifyDueStatus, getIsoWeek } from "@/lib/domain/dates";
+import { buildDailyPlan, type DailyTaskPriority } from "@/lib/domain/daily-plan";
+import { classifyDueStatus } from "@/lib/domain/dates";
 import { classifyKpiValue, type KpiClassification, type KpiTargetType } from "@/lib/domain/kpis";
 import { calculateProjectScore } from "@/lib/domain/projects";
 import { addCalendarDays, calendarDateInTimeZone, isRoutineActionableOn, nextRoutineOccurrence, routineCompletionWindow, scheduledRoutineDates } from "@/lib/domain/routines";
 import { createClient } from "@/lib/supabase/server";
-import { CompleteTaskButton } from "@/components/complete-task-button";
-import { RoutinesToday, type RoutineTodayItem } from "@/components/routines-today";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Aujourd’hui" };
 export const dynamic = "force-dynamic";
 
 type Row = Record<string, unknown>;
@@ -27,10 +28,25 @@ export default async function DashboardPage() {
     .maybeSingle();
   const timezone = typeof profileResult.data?.timezone === "string" ? profileResult.data.timezone : "Europe/Paris";
   const today = calendarDateInTimeZone(now, timezone);
+  const tomorrow = addCalendarDays(today, 1);
+  const nextWeek = addCalendarDays(today, 7);
+  const localHour = localHourInTimeZone(now, timezone);
   const routineWindowStart = [addCalendarDays(today, -13), `${today.slice(0, 7)}-01`].sort()[0]!;
 
-  const [tasksResult, goalsResult, projectsResult, kpisResult, entriesResult, activityResult, habitsResult, religionRoutinesResult, habitLogsResult, religionLogsResult, alerts] = await Promise.all([
-    supabase.from("tasks").select("id,title,status,priority,due_on,due_at,project_id,estimate_minutes").eq("user_id", userId).not("status", "in", "(done,cancelled)").order("due_at", { ascending: true, nullsFirst: false }).limit(100),
+  const [
+    tasksResult,
+    goalsResult,
+    projectsResult,
+    kpisResult,
+    entriesResult,
+    activityResult,
+    habitsResult,
+    religionRoutinesResult,
+    habitLogsResult,
+    religionLogsResult,
+    alerts,
+  ] = await Promise.all([
+    supabase.from("tasks").select("id,title,status,priority,life_area,planned_on,due_on,due_at,project_id,estimate_minutes,created_at").eq("user_id", userId).not("status", "in", "(done,cancelled)").limit(150),
     supabase.from("goals").select("id,title,status,priority,target_date,progress_percent").eq("user_id", userId).in("status", ["active", "at_risk"]).order("priority", { ascending: false }).limit(20),
     supabase.from("projects").select("id,title,status,priority,target_date,next_action,next_milestone,progress_percent,impact,urgency,confidence,effort,last_activity_at,updated_at").eq("user_id", userId).in("status", ["focus", "active", "blocked"]).order("target_date", { ascending: true, nullsFirst: false }).limit(30),
     supabase.from("kpis").select("id,name,unit,target_type,target_value,target_min,target_max,cadence,goal_id").eq("user_id", userId).eq("active", true).limit(40),
@@ -48,20 +64,13 @@ export default async function DashboardPage() {
   const projects = (projectsResult.data ?? []) as Row[];
   const kpis = (kpisResult.data ?? []) as Row[];
   const kpiEntries = (entriesResult.data ?? []) as Row[];
-  const currentWeek = getIsoWeek(now, timezone);
-  const taskDate = (task: Row) => typeof task.due_on === "string" ? task.due_on : typeof task.due_at === "string" ? calendarDate(new Date(task.due_at), timezone) : null;
-  const todayTasks = tasks.filter((task) => taskDate(task) === today);
-  const overdueTasks = tasks.filter((task) => {
-    if (typeof task.due_on === "string") return task.due_on < today;
-    return classifyDueStatus({ dueAt: typeof task.due_at === "string" ? task.due_at : null, status: String(task.status ?? ""), now, timeZone: timezone }) === "overdue";
-  });
-  const weekTasks = tasks.filter((task) => {
-    const due = taskDate(task);
-    return due !== null && due >= currentWeek.startsOn && due <= currentWeek.endsOn;
-  });
   const focusProjects = projects.filter((project) => project.status === "focus");
+  const focusProjectIds = new Set(focusProjects.map((project) => String(project.id)));
   const latestEntries = new Map<string, Row>();
-  for (const entry of kpiEntries) if (typeof entry.kpi_id === "string" && !latestEntries.has(entry.kpi_id)) latestEntries.set(entry.kpi_id, entry);
+  for (const entry of kpiEntries) {
+    if (typeof entry.kpi_id === "string" && !latestEntries.has(entry.kpi_id)) latestEntries.set(entry.kpi_id, entry);
+  }
+
   const routineSummary = buildRoutineSummary({
     today,
     windowStart: addCalendarDays(today, -6),
@@ -71,91 +80,152 @@ export default async function DashboardPage() {
     religionLogs: (religionLogsResult.data ?? []) as Row[],
   });
 
+  const dailyPlan = buildDailyPlan({
+    today,
+    localHour,
+    tasks: tasks.flatMap((task) => {
+      if (typeof task.id !== "string" || typeof task.title !== "string") return [];
+      const dueOn = typeof task.due_on === "string"
+        ? task.due_on
+        : typeof task.due_at === "string"
+          ? calendarDate(new Date(task.due_at), timezone)
+          : null;
+      return [{
+        id: task.id,
+        title: task.title,
+        status: String(task.status ?? "todo"),
+        priority: normalizePriority(task.priority),
+        lifeArea: normalizeLifeArea(task.life_area),
+        projectId: typeof task.project_id === "string" ? task.project_id : null,
+        plannedOn: typeof task.planned_on === "string" ? task.planned_on : null,
+        dueOn,
+        estimateMinutes: numberOrNull(task.estimate_minutes),
+        focusProject: typeof task.project_id === "string" && focusProjectIds.has(task.project_id),
+      }];
+    }),
+    routines: routineSummary.items.map((item) => ({
+      id: item.id,
+      routineType: item.routineType,
+      name: item.name,
+      completed: item.completed,
+      lifeArea: item.lifeArea ?? null,
+      durationMinutes: item.durationMinutes ?? null,
+      timeContext: item.timeContext ?? null,
+      periodLabel: item.periodLabel ?? null,
+    })),
+  });
+
+  const overdueTasks = tasks.filter((task) => {
+    if (typeof task.due_on === "string") return task.due_on < today;
+    return classifyDueStatus({ dueAt: typeof task.due_at === "string" ? task.due_at : null, status: String(task.status ?? ""), now, timeZone: timezone }) === "overdue";
+  });
+
   return (
     <div className="grid gap-7">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">{new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeZone: timezone }).format(now)}</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Bonjour{profileResult.data?.display_name ? `, ${profileResult.data.display_name}` : ""}</h1>
-          <p className="mt-2 text-sm text-slate-600">Votre cockpit : exceptions, actions, progression et arbitrages.</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link className="button-secondary" href="/app/goals/reviews"><CalendarDays size={17} />Weekly review</Link>
-          <Link className="button-primary" href="/app/goals/tasks?new=1"><Plus size={17} />Nouvelle tâche</Link>
-        </div>
+      <header className="flex flex-col gap-2">
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">{new Intl.DateTimeFormat("fr-FR", { dateStyle: "full", timeZone: timezone }).format(now)}</p>
+        <h1 className="text-3xl font-bold tracking-tight">Bonjour{profileResult.data?.display_name ? `, ${profileResult.data.display_name}` : ""}</h1>
+        <p className="text-sm text-slate-600">Tu exécutes. LifeOS organise, priorise et garde l’historique.</p>
       </header>
+
+      <TodayManager
+        today={today}
+        tomorrow={tomorrow}
+        nextWeek={nextWeek}
+        top={dailyPlan.top}
+        remaining={dailyPlan.remaining}
+        completedRoutines={dailyPlan.completedRoutines}
+        totalRoutines={routineSummary.items.length}
+        localHour={localHour}
+      />
 
       {alerts.some((alert) => alert.severity === "critical") ? (
         <section className="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <div className="flex items-start gap-3"><CircleAlert className="mt-0.5 shrink-0 text-red-700" /><div><h2 className="font-bold text-red-950">{alerts.filter((alert) => alert.severity === "critical").length} alerte(s) critique(s)</h2><p className="mt-1 text-sm text-red-800">{alerts.find((alert) => alert.severity === "critical")?.title} — {alerts.find((alert) => alert.severity === "critical")?.body}</p><Link className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-red-800" href="/app/alerts">Traiter les alertes <ArrowRight size={15} /></Link></div></div>
+          <div className="flex items-start gap-3">
+            <CircleAlert className="mt-0.5 shrink-0 text-red-700" />
+            <div>
+              <h2 className="font-bold text-red-950">{alerts.filter((alert) => alert.severity === "critical").length} alerte(s) critique(s)</h2>
+              <p className="mt-1 text-sm text-red-800">{alerts.find((alert) => alert.severity === "critical")?.title} — {alerts.find((alert) => alert.severity === "critical")?.body}</p>
+              <Link className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-red-800" href="/app/alerts">Traiter les alertes <ArrowRight size={15} /></Link>
+            </div>
+          </div>
         </section>
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric title="Aujourd’hui" value={todayTasks.length} caption="tâches dues" icon={<ListTodo />} tone="emerald" href="/app/goals/tasks?view=today" />
-        <Metric title="En retard" value={overdueTasks.length} caption="actions à rattraper" icon={<AlertTriangle />} tone={overdueTasks.length ? "red" : "slate"} href="/app/goals/tasks?view=overdue" />
-        <Metric title="Objectifs actifs" value={goals.length} caption="résultats suivis" icon={<Target />} tone="blue" href="/app/goals/objectives" />
-        <Metric title="Alertes" value={alerts.length} caption="exceptions actionnables" icon={<CircleAlert />} tone={alerts.length ? "amber" : "slate"} href="/app/alerts" />
+        <Metric title="À exécuter" value={dailyPlan.all.length} caption="actions restantes" icon={<CheckCircle2 />} tone="emerald" href="#" />
+        <Metric title="En retard" value={overdueTasks.length} caption="échéances réelles" icon={<AlertTriangle />} tone={overdueTasks.length ? "red" : "slate"} href="/app/goals/tasks?view=overdue" />
+        <Metric title="Alertes" value={alerts.length} caption="exceptions" icon={<CircleAlert />} tone={alerts.length ? "amber" : "slate"} href="/app/alerts" />
+        <Metric title="FOCUS" value={focusProjects.length} caption="projets actifs" icon={<FolderKanban />} tone={focusProjects.length > 3 ? "amber" : "blue"} href="/app/goals/projects" />
       </section>
 
       {focusProjects.length > 3 ? (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950"><AlertTriangle className="mt-0.5 shrink-0" size={19} /><div><strong>Focus surchargé : {focusProjects.length} projets.</strong><p className="mt-1 text-sm">La recommandation est de trois maximum. LifeOS vous avertit mais ne décide pas à votre place.</p></div></div>
+        <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950">
+          <AlertTriangle className="mt-0.5 shrink-0" size={19} />
+          <div><strong>Focus surchargé : {focusProjects.length} projets.</strong><p className="mt-1 text-sm">LifeOS signale la surcharge mais ne change pas tes priorités sans validation.</p></div>
+        </div>
       ) : null}
 
-      <DashboardSection title="Routines du jour" href="/app/health/habits" icon={<CalendarDays size={19} />}>
-        <RoutinesToday
-          date={today}
-          items={routineSummary.items}
-          missedLast7={routineSummary.missedLast7}
-          configurationNeeded={routineSummary.configurationNeeded}
-        />
-      </DashboardSection>
-
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_.85fr]">
-        <DashboardSection title="Aujourd’hui et cette semaine" href="/app/goals/tasks" icon={<ListTodo size={19} />}>
-          {todayTasks.length === 0 && weekTasks.length === 0 ? <EmptyLine text="Aucune tâche datée cette semaine." href="/app/goals/tasks?new=1" label="Planifier une tâche" /> : (
-            <ul className="divide-y divide-slate-100">
-              {[...new Map([...overdueTasks, ...todayTasks, ...weekTasks].map((task) => [task.id, task])).values()].slice(0, 8).map((task) => (
-                <li key={String(task.id)} className="flex items-center gap-3 py-3">
-                  <CompleteTaskButton taskId={String(task.id)} />
-                  <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{String(task.title)}</p><p className={`mt-0.5 text-xs ${overdueTasks.includes(task) ? "font-semibold text-red-700" : "text-slate-500"}`}>{typeof task.due_on === "string" ? formatDate(task.due_on, timezone) : typeof task.due_at === "string" ? formatDate(task.due_at, timezone) : "Sans échéance"} · {String(task.priority)}</p></div>
+      <div className="grid gap-6 xl:grid-cols-[.9fr_1.1fr]">
+        <DashboardSection title="Exceptions à traiter" href="/app/alerts" icon={<CircleAlert size={19} />}>
+          {alerts.length === 0 ? (
+            <div className="flex items-center gap-2 py-6 text-sm text-emerald-800"><CheckCircle2 size={19} />Aucune exception active.</div>
+          ) : (
+            <ul className="grid gap-2 py-2">
+              {alerts.slice(0, 6).map((alert) => (
+                <li key={alert.dedupeKey}>
+                  <Link href={alert.href} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 hover:bg-slate-100">
+                    <span className={`mt-1 size-2 shrink-0 rounded-full ${alert.severity === "critical" ? "bg-red-600" : alert.severity === "warning" ? "bg-amber-500" : "bg-blue-500"}`} />
+                    <span><strong className="block text-sm">{alert.title}</strong><span className="text-xs text-slate-600">{alert.body}</span></span>
+                  </Link>
                 </li>
               ))}
             </ul>
           )}
         </DashboardSection>
 
-        <DashboardSection title="Alertes prioritaires" href="/app/alerts" icon={<CircleAlert size={19} />}>
-          {alerts.length === 0 ? <div className="flex items-center gap-2 py-6 text-sm text-emerald-800"><CheckCircle2 size={19} />Aucune exception active.</div> : (
-            <ul className="grid gap-2 py-2">{alerts.slice(0, 6).map((alert) => <li key={alert.dedupeKey}><Link href={alert.href} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 hover:bg-slate-100"><span className={`mt-1 size-2 shrink-0 rounded-full ${alert.severity === "critical" ? "bg-red-600" : alert.severity === "warning" ? "bg-amber-500" : "bg-blue-500"}`} /><span><strong className="block text-sm">{alert.title}</strong><span className="text-xs text-slate-600">{alert.body}</span></span></Link></li>)}</ul>
+        <DashboardSection title="Projets FOCUS" href="/app/goals/projects" icon={<FolderKanban size={19} />}>
+          {focusProjects.length === 0 ? (
+            <p className="py-6 text-sm text-slate-500">Aucun projet n’est actuellement en FOCUS.</p>
+          ) : (
+            <div className="grid gap-3 pt-3 md:grid-cols-2">{focusProjects.slice(0, 4).map((project) => <ProjectSnapshot key={String(project.id)} project={project} now={now} timezone={timezone} />)}</div>
           )}
         </DashboardSection>
       </div>
 
-      <DashboardSection title="Portefeuille FOCUS" href="/app/goals/projects" icon={<FolderKanban size={19} />}>
-        {focusProjects.length === 0 ? <EmptyLine text="Aucun projet n’est actuellement en FOCUS." href="/app/goals/projects?new=1" label="Créer un projet" /> : (
-          <div className="grid gap-3 pt-3 md:grid-cols-2 xl:grid-cols-3">{focusProjects.slice(0, 6).map((project) => <ProjectSnapshot key={String(project.id)} project={project} now={now} timezone={timezone} />)}</div>
-        )}
-      </DashboardSection>
-
       <div className="grid gap-6 xl:grid-cols-2">
         <DashboardSection title="Santé des objectifs" href="/app/goals/objectives" icon={<Target size={19} />}>
-          {goals.length === 0 ? <EmptyLine text="Créez votre premier résultat recherché." href="/app/goals/objectives?new=1" label="Créer un objectif" /> : (
-            <div className="grid gap-3 pt-3">{goals.slice(0, 6).map((goal) => <GoalSnapshot key={String(goal.id)} goal={goal} now={now} timezone={timezone} />)}</div>
+          {goals.length === 0 ? <p className="py-5 text-sm text-slate-500">Aucun objectif actif.</p> : (
+            <div className="grid gap-3 pt-3">{goals.slice(0, 5).map((goal) => <GoalSnapshot key={String(goal.id)} goal={goal} now={now} timezone={timezone} />)}</div>
           )}
         </DashboardSection>
 
         <DashboardSection title="Signaux KPI" href="/app/goals/kpis" icon={<BarChart3 size={19} />}>
-          {kpis.length === 0 ? <EmptyLine text="Aucun KPI actif; aucune valeur n’est inventée." href="/app/goals/kpis?new=1" label="Créer un KPI" /> : (
-            <div className="grid gap-3 pt-3">{kpis.slice(0, 6).map((kpi) => <KpiSnapshot key={String(kpi.id)} kpi={kpi} entry={latestEntries.get(String(kpi.id))} />)}</div>
+          {kpis.length === 0 ? <p className="py-5 text-sm text-slate-500">Aucun KPI actif; aucune valeur n’est inventée.</p> : (
+            <div className="grid gap-3 pt-3">{kpis.slice(0, 5).map((kpi) => <KpiSnapshot key={String(kpi.id)} kpi={kpi} entry={latestEntries.get(String(kpi.id))} />)}</div>
           )}
         </DashboardSection>
       </div>
 
-      <DashboardSection title="Activité récente" href="/app/goals" icon={<CalendarDays size={19} />}>
-        {(activityResult.data ?? []).length === 0 ? <p className="py-5 text-sm text-slate-500">L’historique apparaîtra après vos premières actions.</p> : (
-          <ol className="grid gap-2 pt-3">{((activityResult.data ?? []) as Row[]).map((activity) => <li key={String(activity.id)} className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-3 py-2 text-sm"><span><strong>{String(activity.entity_type).replaceAll("_", " ")}</strong> · {String(activity.action)}{activity.summary ? ` — ${String(activity.summary)}` : ""}</span><time className="shrink-0 text-xs text-slate-500">{typeof activity.created_at === "string" ? formatDate(activity.created_at, timezone) : ""}</time></li>)}</ol>
-        )}
+      <DashboardSection title="Revue et historique" href="/app/goals/reviews" icon={<CalendarDays size={19} />}>
+        <div className="grid gap-4 pt-3 lg:grid-cols-[.75fr_1.25fr]">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Cette semaine</p>
+            <p className="mt-2 text-sm text-slate-700">{routineSummary.missedLast7 === 0 ? "Aucune occurrence planifiée manquée sur les 7 derniers jours." : `${routineSummary.missedLast7} occurrence(s) planifiée(s) non validée(s) sur les 7 derniers jours.`}</p>
+            {routineSummary.configurationNeeded > 0 ? <p className="mt-2 text-xs text-amber-800">{routineSummary.configurationNeeded} routine(s) restent à configurer.</p> : null}
+            <Link className="button-secondary mt-4" href="/app/goals/reviews">Ouvrir la revue <ArrowRight size={15} /></Link>
+          </div>
+          <div>
+            {(activityResult.data ?? []).length === 0 ? <p className="py-5 text-sm text-slate-500">L’historique apparaîtra après tes premières actions.</p> : (
+              <ol className="grid gap-2">{((activityResult.data ?? []) as Row[]).slice(0, 6).map((activity) => (
+                <li key={String(activity.id)} className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-3 py-2 text-sm">
+                  <span><strong>{activityLabel(String(activity.entity_type))}</strong> · {actionLabel(String(activity.action))}{activity.summary ? ` — ${String(activity.summary)}` : ""}</span>
+                  <time className="shrink-0 text-xs text-slate-500">{typeof activity.created_at === "string" ? formatDate(activity.created_at, timezone) : ""}</time>
+                </li>
+              ))}</ol>
+            )}
+          </div>
+        </div>
       </DashboardSection>
     </div>
   );
@@ -174,6 +244,7 @@ function buildRoutineSummary(input: { today: string; windowStart: string; habits
     ...input.habits.map((row) => normalizeRoutine(row, "habit")),
     ...input.religionRoutines.map((row) => normalizeRoutine(row, "religion")),
   ].filter((routine): routine is NonNullable<ReturnType<typeof normalizeRoutine>> => routine !== null);
+
   const yesterday = addCalendarDays(input.today, -1);
   let missedLast7 = 0;
   for (const routine of normalized) {
@@ -196,8 +267,16 @@ function buildRoutineSummary(input: { today: string; windowStart: string; habits
       });
       const completedOn = completedEntry?.[0].slice(-10) ?? null;
       const completedCount = completedEntry?.[1] ?? 0;
-      return { ...routine.item, completed: completedCount > 0, completedOn, completedCount, periodLabel: completionWindow?.label ?? null, nextOccurrence: nextRoutineOccurrence(routine.schedule, input.today, false) };
+      return {
+        ...routine.item,
+        completed: completedCount > 0,
+        completedOn,
+        completedCount,
+        periodLabel: completionWindow?.label ?? null,
+        nextOccurrence: nextRoutineOccurrence(routine.schedule, input.today, false),
+      };
     });
+
   const configurationNeeded = normalized.filter((routine) => routine.item.configurationStatus && routine.item.configurationStatus !== "ready").length;
   return { items, missedLast7, configurationNeeded };
 }
@@ -216,7 +295,7 @@ function normalizeRoutine(row: Row, routineType: "habit" | "religion") {
     archivedAt: typeof row.archived_at === "string" ? row.archived_at : null,
   };
   const rawLifeArea = routineType === "religion" ? "religion" : row.life_area;
-  const lifeArea = rawLifeArea === "pro" || rawLifeArea === "perso" || rawLifeArea === "religion" ? rawLifeArea : null;
+  const lifeArea = normalizeLifeArea(rawLifeArea);
   const rawConfiguration = row.configuration_status;
   const configurationStatus = rawConfiguration === "ready" || rawConfiguration === "to_complete" || rawConfiguration === "to_validate" || rawConfiguration === "to_configure" ? rawConfiguration : null;
   const item: RoutineTodayItem = {
@@ -236,14 +315,14 @@ function normalizeRoutine(row: Row, routineType: "habit" | "religion") {
 
 function Metric({ title, value, caption, icon, tone, href }: { title: string; value: number; caption: string; icon: React.ReactNode; tone: "emerald" | "red" | "blue" | "amber" | "slate"; href: string }) {
   const tones = { emerald: "bg-emerald-50 text-emerald-800", red: "bg-red-50 text-red-800", blue: "bg-blue-50 text-blue-800", amber: "bg-amber-50 text-amber-900", slate: "bg-slate-100 text-slate-700" };
-  return <Link href={href} className="card group flex items-center gap-4 transition hover:-translate-y-0.5 hover:shadow-md"><span className={`grid size-12 place-items-center rounded-2xl ${tones[tone]}`}>{icon}</span><span><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">{title}</span><strong className="text-2xl">{value}</strong><span className="ml-2 text-xs text-slate-500">{caption}</span></span></Link>;
+  const content = <><span className={`grid size-12 place-items-center rounded-2xl ${tones[tone]}`}>{icon}</span><span><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">{title}</span><strong className="text-2xl">{value}</strong><span className="ml-2 text-xs text-slate-500">{caption}</span></span></>;
+  if (href === "#") return <div className="card flex items-center gap-4">{content}</div>;
+  return <Link href={href} className="card group flex items-center gap-4 transition hover:-translate-y-0.5 hover:shadow-md">{content}</Link>;
 }
 
 function DashboardSection({ title, href, icon, children }: { title: string; href: string; icon: React.ReactNode; children: React.ReactNode }) {
   return <section className="card"><header className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 font-bold">{icon}{title}</h2><Link href={href} className="flex items-center gap-1 text-xs font-bold text-emerald-800">Tout voir <ArrowRight size={14} /></Link></header>{children}</section>;
 }
-
-function EmptyLine({ text, href, label }: { text: string; href: string; label: string }) { return <div className="py-7 text-center"><p className="text-sm text-slate-500">{text}</p><Link className="button-secondary mt-3" href={href}><Plus size={16} />{label}</Link></div>; }
 
 function ProjectSnapshot({ project, now, timezone }: { project: Row; now: Date; timezone: string }) {
   const status = project.status === "blocked" || classifyDueStatus({ dueAt: typeof project.target_date === "string" ? project.target_date : null, status: String(project.status), now, timeZone: timezone }) === "overdue" ? "red"
@@ -268,7 +347,22 @@ function KpiSnapshot({ kpi, entry }: { kpi: Row; entry?: Row }) {
   return <article className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-3"><div><strong className="text-sm">{String(kpi.name)}</strong><p className="mt-0.5 text-xs text-slate-500">{entry ? `${String(entry.value)} ${String(kpi.unit ?? "")}` : "Aucune mesure"}</p></div><KpiBadge state={state} /></article>;
 }
 
-function KpiBadge({ state }: { state: KpiClassification }) { const styles: Record<KpiClassification, string> = { on_track: "bg-emerald-100 text-emerald-800", watch: "bg-amber-100 text-amber-900", off_track: "bg-red-100 text-red-800", insufficient_data: "bg-slate-100 text-slate-700" }; return <span className={`rounded-full px-2 py-1 text-xs font-bold ${styles[state]}`}>{state.replaceAll("_", " ")}</span>; }
+function KpiBadge({ state }: { state: KpiClassification }) {
+  const styles: Record<KpiClassification, string> = { on_track: "bg-emerald-100 text-emerald-800", watch: "bg-amber-100 text-amber-900", off_track: "bg-red-100 text-red-800", insufficient_data: "bg-slate-100 text-slate-700" };
+  return <span className={`rounded-full px-2 py-1 text-xs font-bold ${styles[state]}`}>{state.replaceAll("_", " ")}</span>;
+}
+
+function normalizePriority(value: unknown): DailyTaskPriority {
+  return value === "critical" || value === "high" || value === "medium" || value === "low" || value === "unset" ? value : "unset";
+}
+
+function normalizeLifeArea(value: unknown): "pro" | "perso" | "religion" | null {
+  return value === "pro" || value === "perso" || value === "religion" ? value : null;
+}
+
 function numberOrNull(value: unknown): number | null { return typeof value === "number" && Number.isFinite(value) ? value : null; }
 function calendarDate(value: Date, timeZone: string): string { return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(value); }
 function formatDate(value: string, timeZone: string): string { return new Intl.DateTimeFormat("fr-FR", { timeZone, dateStyle: "medium", ...(value.length > 10 ? { timeStyle: "short" as const } : {}) }).format(new Date(value.length === 10 ? `${value}T12:00:00` : value)); }
+function localHourInTimeZone(value: Date, timeZone: string): number { return Number(new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", hourCycle: "h23" }).format(value)); }
+function activityLabel(value: string): string { return value === "tasks" ? "Tâche" : value.replaceAll("_", " "); }
+function actionLabel(value: string): string { return value === "completed" ? "terminée" : value === "rescheduled" ? "replanifiée" : value; }

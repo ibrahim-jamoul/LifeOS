@@ -50,6 +50,24 @@ describe("reference model validation", () => {
     expect(result.success).toBe(false);
   });
 
+  it("keeps an operational planning date separate from the real deadline", () => {
+    const result = schema("tasks").safeParse({
+      title: "Action planifiée",
+      life_area: "pro",
+      project_id: "",
+      status: "todo",
+      priority: "high",
+      configuration_status: "ready",
+      planned_on: "2026-10-30",
+      due_on: "2026-10-31",
+      due_at: "",
+      estimate_minutes: 45,
+      actual_minutes: "",
+      notes: "",
+    });
+    expect(result.success).toBe(true);
+  });
+
   it("keeps an unscheduled weekly routine editable while its configuration is incomplete", () => {
     const base = {
       name: "Séance hebdomadaire",

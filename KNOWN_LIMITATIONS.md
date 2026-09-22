@@ -18,3 +18,12 @@ is accepted silently.
   doivent être arbitrées manuellement si l’utilisateur souhaite les remplacer.
 - L’IA reste facultative et désactivée tant que les variables serveur du
   fournisseur ne sont pas configurées.
+
+## Manager Mode v1 — limites explicites
+
+- La vue Aujourd’hui calcule et ordonne les tâches/routines déjà structurées ; elle ne transforme pas encore automatiquement un simple texte `project.next_action` en nouvelle tâche persistée.
+- Le bouton de report agit sur `tasks.planned_on` et laisse volontairement les vraies échéances (`due_on` / `due_at`) inchangées. Une tâche reportée peut donc rester signalée en retard dans les alertes.
+- Les routines possèdent actuellement une action `Fait`. Une occurrence non validée reste factuellement non réalisée ; un statut explicite `Ignorée volontairement` pourra être ajouté dans un lot séparé si nécessaire.
+- La revue hebdomadaire exploite déjà l'historique existant, mais la génération d'un brouillon complet prérempli n'est pas encore automatisée dans ce lot.
+- La base de connaissances massive Arabe + Religion hors Coran est volontairement différée. Elle ne doit pas être ajoutée avant stabilisation du moteur quotidien.
+- L'ancienne page Assistant IA reste dans le code pour éviter une suppression risquée, mais elle n'est plus exposée dans la navigation principale.

@@ -32,11 +32,12 @@ If current official documentation makes a specific implementation obsolete, use 
 When files conflict, follow this order:
 
 1. `AGENTS.md`
-2. `03_FUNCTIONAL_SPEC.md`
-3. `07_SECURITY_PRIVACY.md`
-4. `supabase/migrations/*.sql`
-5. `10_ACCEPTANCE_TESTS.md`
-6. remaining product documents.
+2. `17_MANAGER_MODE.md` for daily UX / automation / planning semantics
+3. `03_FUNCTIONAL_SPEC.md`
+4. `07_SECURITY_PRIVACY.md`
+5. `supabase/migrations/*.sql`
+6. `10_ACCEPTANCE_TESTS.md`
+7. remaining product documents.
 
 If a requirement is ambiguous, choose the simplest implementation that preserves the product intent. Record the choice in `DECISIONS.md` instead of stopping the build.
 
@@ -60,7 +61,7 @@ If a requirement is ambiguous, choose the simplest implementation that preserves
 
 - Main navigation exposes Dashboard + 9 branches.
 - Global command/search may be added but is not required for first pass.
-- The user must be able to create a record in <= 2 interactions from the relevant page.
+- Daily usage should require near-zero data entry: prefer computed actions and one-tap validation. CRUD creation remains available as a secondary administration path.
 - A branch home page must always show: current state, next action, recent activity.
 - Empty states must offer a direct CTA.
 - Forms use sensible defaults.
