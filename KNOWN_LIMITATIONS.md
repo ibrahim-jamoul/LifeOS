@@ -27,3 +27,10 @@ is accepted silently.
 - La revue hebdomadaire exploite déjà l'historique existant, mais la génération d'un brouillon complet prérempli n'est pas encore automatisée dans ce lot.
 - La base de connaissances massive Arabe + Religion hors Coran est volontairement différée. Elle ne doit pas être ajoutée avant stabilisation du moteur quotidien.
 - L'ancienne page Assistant IA reste dans le code pour éviter une suppression risquée, mais elle n'est plus exposée dans la navigation principale.
+
+## V2 Core Experience — 2026-09-22
+
+- Progression et Insights sont calculés à partir des données déjà historisées. Une période sans logs ne peut pas être reconstruite rétroactivement.
+- Les routines `flexible` / `contextual` sans calendrier explicite restent hors taux d'exécution global afin d'éviter de fabriquer des échecs.
+- Le moteur quotidien n'optimise pas encore les quotas hebdomadaires complexes (par exemple candidatures/semaine) à partir des KPI ; il exploite les tâches/routines réellement planifiées.
+- La capture rapide ne fait pas encore de parsing IA multi-entités (dépense, décision, séance, ressource). Elle privilégie une mutation sûre et réversible : création d'une tâche.

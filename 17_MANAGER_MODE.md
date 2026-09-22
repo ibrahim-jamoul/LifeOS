@@ -1,6 +1,6 @@
 # LifeOS — Manager Mode (source produit courante)
 
-Dernière mise à jour : 21 septembre 2026.
+Dernière mise à jour : 22 septembre 2026.
 
 Ce document complète et, en cas de conflit UX sur l'usage quotidien, **prend le pas sur les anciennes spécifications de dashboard/capture**.
 
@@ -63,3 +63,18 @@ Exemple : une tâche échue le 21/09 peut être replanifiée au 22/09. Son éch�
 - aucun moteur opaque qui invente des heures ou des objectifs.
 
 Les prochains lots doivent rester additifs et testables.
+
+
+## V2 — boucle complète de pilotage
+
+La navigation opérationnelle est désormais structurée ainsi :
+
+`Aujourd’hui -> Progression -> Insights -> Revue -> ajustement`
+
+- **Aujourd’hui** reste volontairement minimal et centré sur l’exécution.
+- **Progression** agrège l’historique sur des périodes comparables et montre PRO / PERSO / RELIGION sans score opaque unique.
+- **Insights** détecte notamment les reports répétés, routines peu réalisées et projets actifs sans mouvement.
+- **Revue** préremplit les faits observables ; l’utilisateur ne saisit que les causes et décisions impossibles à déduire.
+- **Explorer** conserve tous les écrans CRUD historiques pour administration et correction.
+
+Les taux globaux ne doivent utiliser que des occurrences réellement mesurables. Une donnée absente n’est jamais interprétée comme zéro. Les routines flexibles/contextuelles sans calendrier explicite ne doivent pas créer artificiellement des échecs.

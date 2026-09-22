@@ -59,8 +59,8 @@ If a requirement is ambiguous, choose the simplest implementation that preserves
 
 ## UX rules
 
-- Main navigation exposes Dashboard + 9 branches.
-- Global command/search may be added but is not required for first pass.
+- Main navigation exposes **Aujourd’hui + Progression + Insights + Revue + Explorer**. The historical branch CRUD screens remain accessible through Explorer as an administration path.
+- Global quick capture is part of the main shell; it must prefer safe deterministic mutations over silent AI classification.
 - Daily usage should require near-zero data entry: prefer computed actions and one-tap validation. CRUD creation remains available as a secondary administration path.
 - A branch home page must always show: current state, next action, recent activity.
 - Empty states must offer a direct CTA.

@@ -12,3 +12,6 @@ test-results/
 .vercel/
 supabase/.branches/
 supabase/.temp/
+
+.vercel
+.env*

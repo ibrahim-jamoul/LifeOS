@@ -67,3 +67,12 @@ The importer uses deterministic IDs and normalized-title matching. It inserts
 missing records, fills blank fields and reports conflicts without overwriting
 existing user values. The private reference document is reused only when its
 SHA-256 content matches the supplied Word file.
+
+## 2026-09-22 — V2 Core Experience
+
+- La navigation quotidienne est réduite à Aujourd'hui, Progression, Insights, Revue et Explorer.
+- Les CRUD existants sont conservés comme administration secondaire pour protéger le modèle actuel et le rollback.
+- Les analytics globaux ne considèrent que des occurrences mesurables ; aucune donnée absente n'est convertie en zéro.
+- Les routines flexibles/contextuelles sans calendrier explicite ne sont pas utilisées dans le taux d'exécution.
+- La capture rapide V2 reste déterministe et crée une tâche ; une future classification IA devra afficher une proposition avant toute mutation.
+- Aucun score unique de « qualité de vie » n'est créé : LifeOS expose des indicateurs explicables et séparés.

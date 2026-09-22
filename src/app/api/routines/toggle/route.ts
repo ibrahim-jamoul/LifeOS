@@ -57,8 +57,8 @@ export async function POST(request: Request) {
   const { routineType, routineId, occurredOn, completed } = parsed.data;
   const source = routineSources[routineType];
   const routineColumns = routineType === "habit"
-    ? "id,target_count,active,status,frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at"
-    : "id,target_count,active,status,target_frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at";
+    ? "id,name,target_count,active,status,frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at"
+    : "id,name,target_count,active,status,target_frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at";
   const { data: routine, error: routineError } = await auth.supabase
     .from(source.routineTable)
     .select(routineColumns)
@@ -111,6 +111,14 @@ export async function POST(request: Request) {
       .eq(source.foreignKey, routineId)
       .eq("occurred_on", occurredOn);
     if (error) return databaseError(error);
+    const { error: activityError } = await auth.supabase.from("activity_log").insert({
+      user_id: auth.userId,
+      entity_type: source.routineTable,
+      entity_id: routineId,
+      action: "unchecked",
+      summary: String(routine.name ?? `${routineType}:${routineId}`).slice(0, 160),
+    });
+    if (activityError) console.error("LifeOS routine activity log failed", { code: activityError.code });
     return apiData({ routineType, routineId, occurredOn, completed: false, count: 0 });
   }
 
@@ -129,6 +137,15 @@ export async function POST(request: Request) {
     .select("id,count")
     .single();
   if (error || !data) return databaseError(error);
+
+  const { error: activityError } = await auth.supabase.from("activity_log").insert({
+    user_id: auth.userId,
+    entity_type: source.routineTable,
+    entity_id: routineId,
+    action: "completed",
+    summary: String(routine.name ?? `${routineType}:${routineId}`).slice(0, 160),
+  });
+  if (activityError) console.error("LifeOS routine activity log failed", { code: activityError.code });
 
   return apiData({
     routineType,

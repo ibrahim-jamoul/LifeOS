@@ -18,6 +18,15 @@ export async function POST(_request: Request, { params }: RouteContext) {
   if (error) return databaseError(error);
   if (!data) return apiError("NOT_FOUND", "Tâche introuvable ou déjà clôturée.", 404);
 
+  if (typeof data.project_id === "string") {
+    const { error: projectActivityError } = await auth.supabase
+      .from("projects")
+      .update({ last_activity_at: completedAt })
+      .eq("id", data.project_id)
+      .eq("user_id", auth.userId);
+    if (projectActivityError) console.error("LifeOS project activity refresh failed", { code: projectActivityError.code });
+  }
+
   const { error: logError } = await auth.supabase.from("activity_log").insert({
     user_id: auth.userId,
     entity_type: "tasks",
