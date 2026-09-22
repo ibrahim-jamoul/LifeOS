@@ -56,9 +56,12 @@ export async function POST(request: Request) {
 
   const { routineType, routineId, occurredOn, completed } = parsed.data;
   const source = routineSources[routineType];
+  const routineColumns = routineType === "habit"
+    ? "id,target_count,active,status,frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at"
+    : "id,target_count,active,status,target_frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at";
   const { data: routine, error: routineError } = await auth.supabase
     .from(source.routineTable)
-    .select("id,target_count,active,status,frequency,target_frequency,schedule_weekday,schedule_day_of_month,start_on,end_on,paused_at,archived_at")
+    .select(routineColumns)
     .eq("id", routineId)
     .eq("user_id", auth.userId)
     .maybeSingle();
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
   if (occurredOn > calendarDateInTimeZone(new Date(), timezone)) {
     return apiError("FUTURE_COMPLETION", "Une routine future ne peut pas être cochée à l’avance.", 409);
   }
-  const frequency = routineType === "habit" ? routine.frequency : routine.target_frequency;
+  const frequency = "frequency" in routine ? routine.frequency : routine.target_frequency;
   if (!isRoutineActionableOn({
     frequency: String(frequency ?? ""),
     active: routine.active,
