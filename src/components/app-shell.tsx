@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, BrainCircuit, ChartNoAxesCombined, Compass, Gauge, Lightbulb, Menu, NotebookPen, Settings, X } from "lucide-react";
+import { Bell, BrainCircuit, ChartNoAxesCombined, Compass, Gauge, GaugeCircle, Lightbulb, Menu, NotebookPen, Settings, X } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { QuickCapture } from "@/components/quick-capture";
 
@@ -17,6 +17,7 @@ type AppShellProps = {
 const navigation = [
   { href: "/app/dashboard", label: "Aujourd’hui", icon: Gauge },
   { href: "/app/progression", label: "Progression", icon: ChartNoAxesCombined },
+  { href: "/app/kpis", label: "KPI", icon: GaugeCircle },
   { href: "/app/insights", label: "Insights", icon: Lightbulb },
   { href: "/app/review", label: "Revue", icon: NotebookPen },
   { href: "/app/explorer", label: "Explorer", icon: Compass },

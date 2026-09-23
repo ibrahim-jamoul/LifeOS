@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CircleAlert, Lightbulb } from "lucide-react";
 import { TodayManager } from "@/components/today-manager";
+import { GoalsPanel, UpcomingPanel, type GoalSummary, type UpcomingItem } from "@/components/dashboard-panels";
 import type { RoutineTodayItem } from "@/components/routines-today";
 import { getDerivedAlerts } from "@/lib/alerts";
 import { buildDailyPlan, type DailyTaskPriority } from "@/lib/domain/daily-plan";
@@ -35,9 +36,11 @@ export default async function DashboardPage() {
   const localHour = localHourInTimeZone(now, timezone);
   const routineWindowStart = [addCalendarDays(today, -13), `${today.slice(0, 7)}-01`].sort()[0]!;
 
-  const [tasksResult, projectsResult, habitsResult, religionRoutinesResult, habitLogsResult, religionLogsResult, alerts] = await Promise.all([
+  const [tasksResult, projectsResult, goalsResult, goalProjectsResult, habitsResult, religionRoutinesResult, habitLogsResult, religionLogsResult, alerts] = await Promise.all([
     supabase.from("tasks").select("id,title,status,priority,life_area,planned_on,due_on,due_at,project_id,estimate_minutes").eq("user_id", userId).not("status", "in", "(done,cancelled)").limit(300),
-    supabase.from("projects").select("id,status").eq("user_id", userId).in("status", ["focus", "active", "blocked"]).limit(200),
+    supabase.from("projects").select("id,title,status").eq("user_id", userId).in("status", ["focus", "active", "blocked"]).limit(200),
+    supabase.from("goals").select("id,title,life_area,status,progress_percent,target_date,horizon").eq("user_id", userId).in("status", ["active", "at_risk"]).limit(200),
+    supabase.from("goal_projects").select("goal_id,project_id").eq("user_id", userId).limit(1000),
     supabase.from("habits").select("id,name,life_area,frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,time_context,configuration_status,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(300),
     supabase.from("religion_routines").select("id,name,target_frequency,target_count,target_unit,duration_minutes,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,time_context,configuration_status,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(300),
     supabase.from("habit_logs").select("habit_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineWindowStart).lte("occurred_on", today).limit(3000),
@@ -56,6 +59,21 @@ export default async function DashboardPage() {
     habitLogs: (habitLogsResult.data ?? []) as Row[],
     religionLogs: (religionLogsResult.data ?? []) as Row[],
   });
+
+  const upcoming: UpcomingItem[] = tasks.flatMap((task) => {
+    if (typeof task.id !== "string" || typeof task.title !== "string" || typeof task.planned_on !== "string" || task.planned_on <= today) return [];
+    return [{ id: task.id, title: task.title, plannedOn: task.planned_on, lifeArea: normalizeLifeArea(task.life_area), estimateMinutes: numberOrNull(task.estimate_minutes) }];
+  }).sort((left, right) => left.plannedOn.localeCompare(right.plannedOn) || left.title.localeCompare(right.title, "fr")).slice(0, 24);
+
+  const openTasksByProject = new Map<string, number>();
+  for (const task of tasks) if (typeof task.project_id === "string" && !["done", "cancelled"].includes(String(task.status ?? "todo"))) openTasksByProject.set(task.project_id, (openTasksByProject.get(task.project_id) ?? 0) + 1);
+  const projectIdsByGoal = new Map<string, string[]>();
+  for (const link of (goalProjectsResult.data ?? []) as Row[]) if (typeof link.goal_id === "string" && typeof link.project_id === "string") projectIdsByGoal.set(link.goal_id, [...(projectIdsByGoal.get(link.goal_id) ?? []), link.project_id]);
+  const goals: GoalSummary[] = ((goalsResult.data ?? []) as Row[]).flatMap((goal) => {
+    if (typeof goal.id !== "string" || typeof goal.title !== "string") return [];
+    const remainingMissions = (projectIdsByGoal.get(goal.id) ?? []).reduce((sum, projectId) => sum + (openTasksByProject.get(projectId) ?? 0), 0);
+    return [{ id: goal.id, title: goal.title, lifeArea: normalizeLifeArea(goal.life_area), progressPercent: numberOrNull(goal.progress_percent) ?? 0, targetDate: typeof goal.target_date === "string" ? goal.target_date : null, status: String(goal.status ?? "active"), remainingMissions }];
+  }).sort((left, right) => (left.targetDate ?? "9999-12-31").localeCompare(right.targetDate ?? "9999-12-31"));
 
   const dailyPlan = buildDailyPlan({
     today,
@@ -106,6 +124,11 @@ export default async function DashboardPage() {
       ) : null}
 
       <TodayManager today={today} tomorrow={tomorrow} nextWeek={nextWeek} top={dailyPlan.top} remaining={dailyPlan.remaining} completedRoutines={dailyPlan.completedRoutines} totalRoutines={routineSummary.items.length} localHour={localHour} />
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <UpcomingPanel today={today} items={upcoming} />
+        <GoalsPanel goals={goals} />
+      </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <Link href="/app/progression" className="card group"><span className="text-xs font-bold uppercase tracking-[0.15em] text-slate-500">Après l’exécution</span><strong className="mt-2 block">Voir ma progression</strong><span className="mt-1 block text-sm text-slate-600">Historique, régularité et évolution dans le temps.</span></Link>

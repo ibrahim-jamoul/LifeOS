@@ -23,6 +23,17 @@ export default async function ReviewPage() {
     <div className="grid gap-7">
       <header><p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">Mesurer → décider → ajuster</p><h1 className="mt-1 text-3xl font-bold tracking-tight">Revue hebdomadaire</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">LifeOS préremplit les faits observables. Tu complètes uniquement le contexte, les arbitrages et les trois priorités suivantes.</p></header>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Mini label="Exécution" value={overview.current.rate === null?"—":`${overview.current.rate}%`} /><Mini label="Réalisé" value={`${overview.current.completed}/${overview.current.expected}`} /><Mini label="Reports répétés" value={String(overview.repeatedlyRescheduled.length)} /><Mini label="Projets stagnants" value={String(overview.inactiveProjects.length)} /></section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <div className="card"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">Actions par domaine</h2><Link href="/app/progression" className="text-sm font-bold text-emerald-800">Détail <ArrowRight className="inline" size={14}/></Link></div><div className="mt-4 grid gap-3">{overview.current.areas.map((area) => <MetricRow key={String(area.lifeArea)} label={(area.lifeArea ?? "non classé").toUpperCase()} value={`${area.completed}/${area.expected}`} rate={area.rate}/>)}</div></div>
+        <div className="card"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">Routines</h2><Link href="/app/health/habits" className="text-sm font-bold text-emerald-800">Gérer <ArrowRight className="inline" size={14}/></Link></div><div className="mt-4 grid gap-3">{overview.current.routines.slice(0,8).map((routine) => <MetricRow key={`${routine.routineType}:${routine.id}`} label={routine.name} value={`${routine.completed}/${routine.expected}`} rate={routine.rate}/>)}</div></div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <div className="card"><h2 className="text-lg font-bold">Retards / reports</h2><p className="mt-2 text-sm text-slate-600">{overview.repeatedlyRescheduled.length ? `${overview.repeatedlyRescheduled.length} tâche(s) ont été reportées au moins deux fois cette semaine.` : "Aucune tâche ouverte reportée à répétition."}</p></div>
+        <div className="card"><h2 className="text-lg font-bold">Objectifs actifs</h2><div className="mt-3 grid gap-2">{overview.activeGoals.slice(0,8).map((goal) => <div key={String(goal.id)} className="flex items-center justify-between gap-3 text-sm"><span className="truncate font-medium">{String(goal.title ?? "Objectif")}</span><span className="shrink-0 text-slate-500">{Number(goal.progress_percent ?? 0)}%</span></div>)}</div></div>
+      </section>
+
       <WeeklyReviewComposer weekStart={week.startsOn} autoWins={wins} autoMisses={misses} autoRisks={risks} existing={{ causes: existing?.causes, pauseOrStop: existing?.pause_or_stop, top3: existing?.next_week_top3, notes: existing?.notes }} />
       <div className="text-sm text-slate-600">Besoin du détail brut ? <Link href="/app/goals/reviews" className="inline-flex items-center gap-1 font-bold text-emerald-800">Historique des revues <ArrowRight size={14}/></Link></div>
     </div>
@@ -48,3 +59,4 @@ function buildRisks(overview: Awaited<ReturnType<typeof loadLifeOverview>>): str
   return lines.join("\n");
 }
 function Mini({label,value}:{label:string;value:string}){return <div className="card"><span className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</span><strong className="mt-1 block text-2xl">{value}</strong></div>}
+function MetricRow({label,value,rate}:{label:string;value:string;rate:number|null}){return <div><div className="flex items-center justify-between gap-3 text-sm"><span className="min-w-0 truncate font-medium">{label}</span><span className="shrink-0 text-slate-500">{value}{rate===null?"":` · ${rate}%`}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-emerald-700" style={{width:`${Math.max(0,Math.min(rate ?? 0,100))}%`}}/></div></div>}
