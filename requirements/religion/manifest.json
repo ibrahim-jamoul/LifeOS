@@ -1,0 +1,21 @@
+{
+  "package": "LifeOS Religion V1",
+  "created_for": "Implementation handoff",
+  "date": "2026-09-24",
+  "scope": [
+    "Religion Today view",
+    "Quran learning/revision",
+    "Quran revision attention points",
+    "Arabic sessions",
+    "Islamic study topics/sessions",
+    "Dua and adhkar",
+    "Religion resources",
+    "Progress tracking",
+    "Future global goals/KPI integration"
+  ],
+  "source_files": [
+    "references/Referentiel_perso_complet.docx",
+    "references/Referentiel_Religion_extrait.md",
+    "references/vision_religion_v1.png"
+  ]
+}

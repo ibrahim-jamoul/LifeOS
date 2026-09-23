@@ -1,0 +1,13 @@
+{
+  "name": "LifeOS-main-V3-bis-2026-09-24",
+  "version": "3-bis",
+  "date": "2026-09-24",
+  "purpose": "Jointure des prerequis Religion V1 et couche IA centrale avec LifeOS V3",
+  "authoritative_inputs": [
+    "requirements/religion/",
+    "requirements/ai/AI_CENTRAL_PROMPT_V1.md"
+  ],
+  "implementation_status": "specification_and_integration_package",
+  "destructive_changes_allowed": false,
+  "requires_v3_code_audit_before_implementation": true
+}
