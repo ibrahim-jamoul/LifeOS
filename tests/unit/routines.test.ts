@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 
+import { buildDailyPlan } from "../../src/lib/domain/daily-plan";
 import {
   addCalendarDays,
   calendarDateInTimeZone,
   isoWeekday,
   isRoutineActionableOn,
+  isRoutineCalendarConfigured,
   isRoutineScheduledOn,
   nextRoutineOccurrence,
+  routineCompletedForOccurrence,
   routineCompletionWindow,
+  routineReasonForDate,
   scheduledRoutineDates,
+  scheduledRoutineWindows,
 } from "../../src/lib/domain/routines";
 
 describe("calendarDateInTimeZone", () => {
@@ -19,13 +24,15 @@ describe("calendarDateInTimeZone", () => {
   });
 });
 
-describe("isRoutineScheduledOn", () => {
-  it("schedules daily routines only inside their active date window", () => {
+describe("routine calendar eligibility", () => {
+  it("shows an active daily routine every day inside its date window even when optional configuration remains", () => {
     const routine = { frequency: "daily", startOn: "2026-09-20", endOn: "2026-09-22" };
+    expect(isRoutineCalendarConfigured(routine)).toBe(true);
     expect(isRoutineScheduledOn(routine, "2026-09-19")).toBe(false);
     expect(isRoutineScheduledOn(routine, "2026-09-20")).toBe(true);
     expect(isRoutineScheduledOn(routine, "2026-09-22")).toBe(true);
     expect(isRoutineScheduledOn(routine, "2026-09-23")).toBe(false);
+    expect(routineReasonForDate(routine, "2026-09-21")).toBe("Routine quotidienne");
   });
 
   it("excludes inactive, paused, and archived routines", () => {
@@ -34,30 +41,96 @@ describe("isRoutineScheduledOn", () => {
     expect(isRoutineScheduledOn({ frequency: "daily", archivedAt: "2026-09-20T10:00:00Z" }, "2026-09-21")).toBe(false);
   });
 
-  it("matches ISO weekdays, including Sunday as day seven", () => {
-    expect(isoWeekday("2026-09-21")).toBe(1);
-    expect(isoWeekday("2026-09-27")).toBe(7);
-    expect(isRoutineScheduledOn({ frequency: "weekly", scheduleWeekday: 5 }, "2026-09-25")).toBe(true);
-    expect(isRoutineScheduledOn({ frequency: "weekly", scheduleWeekday: 5 }, "2026-09-26")).toBe(false);
+  it("shows a Friday routine on Friday only", () => {
+    const friday = { frequency: "weekly", scheduleWeekday: 5 };
+    expect(isoWeekday("2026-09-25")).toBe(5);
+    expect(isRoutineScheduledOn(friday, "2026-09-25")).toBe(true);
+    expect(isRoutineScheduledOn(friday, "2026-09-26")).toBe(false);
+    expect(routineReasonForDate(friday, "2026-09-25")).toBe("Prévu ce vendredi");
+  });
+
+  it("keeps an undated weekly routine out of Aujourd'hui", () => {
+    const routine = { frequency: "weekly" };
+    expect(isRoutineCalendarConfigured(routine)).toBe(false);
+    expect(isRoutineActionableOn(routine, "2026-09-23")).toBe(false);
+    expect(routineCompletionWindow(routine, "2026-09-23")).toBeNull();
+    expect(nextRoutineOccurrence(routine, "2026-09-23")).toBeNull();
+  });
+
+  it("keeps an undated monthly routine out of Aujourd'hui", () => {
+    const routine = { frequency: "monthly" };
+    expect(isRoutineCalendarConfigured(routine)).toBe(false);
+    expect(isRoutineActionableOn(routine, "2026-09-23")).toBe(false);
+    expect(routineCompletionWindow(routine, "2026-09-23")).toBeNull();
+    expect(nextRoutineOccurrence(routine, "2026-09-23")).toBeNull();
+  });
+
+  it("keeps flexible and contextual routines out without explicit planning", () => {
+    expect(isRoutineActionableOn({ frequency: "flexible" }, "2026-09-23")).toBe(false);
+    expect(isRoutineActionableOn({ frequency: "contextual" }, "2026-09-23")).toBe(false);
   });
 
   it("matches explicit monthly days without inventing missing month dates", () => {
     expect(isRoutineScheduledOn({ frequency: "monthly", scheduleDayOfMonth: 31 }, "2026-04-30")).toBe(false);
     expect(isRoutineScheduledOn({ frequency: "monthly", scheduleDayOfMonth: 31 }, "2026-05-31")).toBe(true);
   });
+});
 
-  it("does not put flexible or contextual routines on the calendar", () => {
-    expect(isRoutineScheduledOn({ frequency: "flexible" }, "2026-09-21")).toBe(false);
-    expect(isRoutineScheduledOn({ frequency: "contextual" }, "2026-09-21")).toBe(false);
-    expect(isRoutineScheduledOn({ frequency: "weekly" }, "2026-09-21")).toBe(false);
+describe("multi-day execution windows", () => {
+  const quranWeekend = {
+    frequency: "weekly",
+    scheduleWindowWeekdays: [6, 7],
+    scheduleMonthWeeks: [1, 2, 3],
+  } as const;
+
+  it("offers one weekend occurrence on both Saturday and Sunday during weeks 1-3", () => {
+    expect(isRoutineScheduledOn(quranWeekend, "2026-09-19")).toBe(true);
+    expect(isRoutineScheduledOn(quranWeekend, "2026-09-20")).toBe(true);
+    expect(routineCompletionWindow(quranWeekend, "2026-09-19")).toEqual({ startsOn: "2026-09-19", endsOn: "2026-09-20", label: "week" });
+    expect(routineCompletionWindow(quranWeekend, "2026-09-20")).toEqual({ startsOn: "2026-09-19", endsOn: "2026-09-20", label: "week" });
+    expect(routineReasonForDate(quranWeekend, "2026-09-20")).toBe("Prévu ce week-end");
+    expect(scheduledRoutineWindows(quranWeekend, "2026-09-19", "2026-09-20")).toHaveLength(1);
   });
 
-  it("keeps period-based and flexible routines actionable without inventing a day", () => {
-    expect(isRoutineActionableOn({ frequency: "weekly" }, "2026-09-23")).toBe(true);
-    expect(isRoutineActionableOn({ frequency: "monthly" }, "2026-09-23")).toBe(true);
-    expect(isRoutineActionableOn({ frequency: "flexible" }, "2026-09-23")).toBe(true);
-    expect(routineCompletionWindow({ frequency: "weekly" }, "2026-09-23")).toEqual({ startsOn: "2026-09-21", endsOn: "2026-09-27", label: "week" });
-    expect(routineCompletionWindow({ frequency: "monthly" }, "2026-09-23")).toEqual({ startsOn: "2026-09-01", endsOn: "2026-09-30", label: "month" });
+  it("does not offer the new-page/Tafsir window in week 4", () => {
+    expect(isRoutineScheduledOn(quranWeekend, "2026-09-26")).toBe(false);
+    expect(isRoutineScheduledOn(quranWeekend, "2026-09-27")).toBe(false);
+  });
+
+  it("removes the Sunday item from Aujourd'hui when the same weekend occurrence was validated Saturday", () => {
+    const completed = routineCompletedForOccurrence(quranWeekend, "2026-09-20", ["2026-09-19"]);
+    expect(completed).toBe(true);
+
+    const plan = buildDailyPlan({
+      today: "2026-09-20",
+      localHour: 9,
+      tasks: [],
+      routines: [{
+        id: "quran",
+        routineType: "religion",
+        name: "Nouvelle page de Coran",
+        completed,
+        lifeArea: "religion",
+        durationMinutes: null,
+        timeContext: "week-end",
+        periodLabel: "week",
+        scheduleReason: "Prévu ce week-end",
+      }],
+    });
+    expect(plan.all).toEqual([]);
+  });
+
+  it("offers the monthly Quran review on week 4/5 weekends as one monthly occurrence", () => {
+    const monthlyReview = {
+      frequency: "monthly",
+      scheduleWindowWeekdays: [6, 7],
+      scheduleMonthWeeks: [4, 5],
+    } as const;
+    expect(isRoutineScheduledOn(monthlyReview, "2026-09-20")).toBe(false);
+    expect(isRoutineScheduledOn(monthlyReview, "2026-09-26")).toBe(true);
+    expect(isRoutineScheduledOn(monthlyReview, "2026-09-27")).toBe(true);
+    expect(routineCompletionWindow(monthlyReview, "2026-09-26")).toEqual({ startsOn: "2026-09-01", endsOn: "2026-09-30", label: "month" });
+    expect(routineCompletedForOccurrence(monthlyReview, "2026-09-27", ["2026-09-26"])).toBe(true);
   });
 });
 
@@ -68,14 +141,14 @@ describe("routine occurrence helpers", () => {
     expect(nextRoutineOccurrence(friday, "2026-09-25", false)).toBe("2026-10-02");
   });
 
+  it("skips the second day of a multi-day window when asking for the next occurrence", () => {
+    const weekend = { frequency: "weekly", scheduleWindowWeekdays: [6, 7] };
+    expect(nextRoutineOccurrence(weekend, "2026-09-26", false)).toBe("2026-10-03");
+  });
+
   it("honours the end date and finds sparse monthly occurrences", () => {
     expect(nextRoutineOccurrence({ frequency: "daily", endOn: "2026-09-20" }, "2026-09-21")).toBeNull();
     expect(nextRoutineOccurrence({ frequency: "monthly", scheduleDayOfMonth: 31 }, "2026-04-01")).toBe("2026-05-31");
-  });
-
-  it("moves an undated weekly or monthly recurrence to the next period boundary", () => {
-    expect(nextRoutineOccurrence({ frequency: "weekly" }, "2026-09-23", false)).toBe("2026-09-28");
-    expect(nextRoutineOccurrence({ frequency: "monthly" }, "2026-09-23", false)).toBe("2026-10-01");
   });
 
   it("returns scheduled dates in an inclusive range", () => {

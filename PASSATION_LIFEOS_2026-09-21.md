@@ -269,3 +269,8 @@ personnels, pas d’un blocage :
 - Limites connues : `KNOWN_LIMITATIONS.md`
 - Décisions techniques : `DECISIONS.md`
 - Rollback : `ROLLBACK_REFERENCE_MODEL.md`
+
+
+## Addendum — sémantique Aujourd’hui (22/09/2026)
+
+Ce document décrit l’état de passation du 21/09. Pour la logique courante du cockpit **Aujourd’hui**, `17_MANAGER_MODE.md` est désormais la référence prioritaire : un projet `FOCUS` ne crée aucune éligibilité, les routines weekly/monthly sans calendrier explicite ainsi que flexible/contextual restent hors Aujourd’hui, et les fenêtres week-end sont représentées par des champs structurés.

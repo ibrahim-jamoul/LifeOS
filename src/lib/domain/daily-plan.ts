@@ -23,6 +23,7 @@ export type DailyPlanRoutineInput = {
   durationMinutes: number | null;
   timeContext: string | null;
   periodLabel: "day" | "week" | "month" | null;
+  scheduleReason: string;
 };
 
 export type DailyPlanItem = {
@@ -32,7 +33,7 @@ export type DailyPlanItem = {
   lifeArea: DailyLifeArea;
   score: number;
   reason: string;
-  state: "overdue" | "due_today" | "planned" | "routine" | "suggested";
+  state: "overdue" | "due_today" | "planned" | "routine";
   durationMinutes: number | null;
   priority: DailyTaskPriority | null;
   taskId: string | null;
@@ -58,6 +59,8 @@ const priorityWeight: Readonly<Record<DailyTaskPriority, number>> = {
   low: 10,
   unset: 0,
 };
+
+const FOCUS_PRIORITY_BONUS = 25;
 
 export function buildDailyPlan(input: {
   today: string;
@@ -93,17 +96,18 @@ function taskToPlanItem(task: DailyPlanTaskInput, today: string): DailyPlanItem 
   const dueOn = task.dueOn;
   const plannedOn = task.plannedOn;
 
-  // A future operational plan removes the task from today without mutating
-  // its real deadline. Deadline alerts remain handled independently.
+  // planned_on is the operational source of truth. A deliberate future
+  // reschedule removes the task from today's execution list without mutating
+  // its real deadline; deadline alerts remain handled independently.
   if (plannedOn && plannedOn > today) return null;
 
   let base = 0;
   let reason = "";
-  let state: DailyPlanItem["state"] = "suggested";
+  let state: DailyPlanItem["state"] = "planned";
 
   if (dueOn && dueOn < today) {
     base = 1_000;
-    reason = "Échéance dépassée";
+    reason = "En retard";
     state = "overdue";
   } else if (dueOn === today) {
     base = 930;
@@ -111,26 +115,24 @@ function taskToPlanItem(task: DailyPlanTaskInput, today: string): DailyPlanItem 
     state = "due_today";
   } else if (plannedOn && plannedOn < today) {
     base = 860;
-    reason = "Planifiée précédemment";
-    state = "planned";
+    reason = "En retard · à replanifier";
+    state = "overdue";
   } else if (plannedOn === today) {
     base = 820;
-    reason = "Planifiée aujourd’hui";
+    reason = "Planifié aujourd’hui";
     state = "planned";
-  } else if (task.focusProject && (!plannedOn || plannedOn <= today)) {
-    base = 470;
-    reason = "Projet FOCUS";
-    state = "suggested";
   } else {
+    // Project importance (including FOCUS) never creates today's eligibility.
     return null;
   }
 
+  const focusPriority = task.focusProject ? FOCUS_PRIORITY_BONUS : 0;
   return {
     id: `task:${task.id}`,
     kind: "task",
     title: task.title,
     lifeArea: task.lifeArea,
-    score: base + priority,
+    score: base + priority + focusPriority,
     reason,
     state,
     durationMinutes: task.estimateMinutes,
@@ -154,7 +156,7 @@ function routineToPlanItem(routine: DailyPlanRoutineInput, localHour: number): D
     title: routine.name,
     lifeArea: routine.lifeArea,
     score: 650 + contextWeight + periodWeight,
-    reason: routineReason(routine),
+    reason: routine.scheduleReason,
     state: "routine",
     durationMinutes: routine.durationMinutes,
     priority: null,
@@ -179,13 +181,6 @@ function routineTimeWeight(timeContext: string | null, localHour: number): numbe
   if (evening) return localHour >= 18 ? 110 : -45;
   if (daytime) return localHour >= 11 && localHour < 19 ? 80 : -15;
   return 0;
-}
-
-function routineReason(routine: DailyPlanRoutineInput): string {
-  if (routine.timeContext) return routine.timeContext;
-  if (routine.periodLabel === "week") return "À faire cette semaine";
-  if (routine.periodLabel === "month") return "À faire ce mois";
-  return "Routine du jour";
 }
 
 function compareItems(left: DailyPlanItem, right: DailyPlanItem): number {

@@ -1,4 +1,4 @@
-import { addCalendarDays, scheduledRoutineDates, type RoutineSchedule } from "@/lib/domain/routines";
+import { addCalendarDays, scheduledRoutineWindows, type RoutineSchedule } from "@/lib/domain/routines";
 
 export type LifeArea = "pro" | "perso" | "religion" | null;
 
@@ -175,7 +175,7 @@ function summarizeRoutine(routine: AnalyticsRoutine, logs: readonly AnalyticsRou
 }
 
 function expectedRoutineWindows(schedule: RoutineSchedule, period: Period): Period[] {
-  if (schedule.frequency === "weekly" && schedule.scheduleWeekday == null) {
+  if (schedule.frequency === "weekly" && schedule.scheduleWeekday == null && !(schedule.scheduleWindowWeekdays?.length)) {
     const windows: Period[] = [];
     let cursor = startOfIsoWeek(period.start);
     while (cursor <= period.end) {
@@ -186,7 +186,7 @@ function expectedRoutineWindows(schedule: RoutineSchedule, period: Period): Peri
     }
     return windows;
   }
-  if (schedule.frequency === "monthly" && schedule.scheduleDayOfMonth == null) {
+  if (schedule.frequency === "monthly" && schedule.scheduleDayOfMonth == null && !(schedule.scheduleWindowWeekdays?.length)) {
     const windows: Period[] = [];
     let cursor = `${period.start.slice(0, 7)}-01`;
     while (cursor <= period.end) {
@@ -200,7 +200,7 @@ function expectedRoutineWindows(schedule: RoutineSchedule, period: Period): Peri
     return windows;
   }
   if (schedule.frequency === "flexible" || schedule.frequency === "contextual") return [];
-  return scheduledRoutineDates(schedule, period.start, period.end).map((date) => ({ start: date, end: date }));
+  return scheduledRoutineWindows(schedule, period.start, period.end).map((window) => ({ start: window.startsOn, end: window.endsOn }));
 }
 
 function routineAvailableDuring(schedule: RoutineSchedule, period: Period): boolean {

@@ -116,9 +116,9 @@ Les 27 tâches PRO déjà présentes sont reconnues par leur titre et uniquement
 | Arabe | Routine | RELIGION | Quotidienne, environ 30 min | Heure non définie | `to_configure` |
 | Apprentissage religieux | Routine | RELIGION | Quotidienne, minimum 1 apprentissage | Heure non définie | `to_configure` |
 | Révision du Coran | Routine | RELIGION | Quotidienne | Durée et heure absentes | `to_configure` |
-| Nouvelle page de Coran | Routine | RELIGION | Week-end, semaines 1 à 3 du mois | Jour/heure non définis | `to_configure` |
-| Tafsir de la page | Routine | RELIGION | Week-end | Jour/heure non définis | `to_configure` |
-| Consolidation des 3 pages | Routine | RELIGION | Quatrième semaine, et cinquième si elle existe | Jour/heure non définis | `to_configure` |
+| Nouvelle page de Coran | Routine | RELIGION | Fenêtre samedi + dimanche, 1re à 3e occurrence week-end du mois | Heure non définie | `to_configure` |
+| Tafsir de la page | Routine | RELIGION | Fenêtre samedi + dimanche, 1re à 3e occurrence week-end du mois | Heure non définie | `to_configure` |
+| Consolidation des 3 pages | Routine | RELIGION | Fenêtre samedi + dimanche, 4e et 5e occurrence week-end lorsqu’elle existe | Heure non définie | `to_configure` |
 | Seerah | Routine | RELIGION | 1 séance / semaine | Jour/heure non définis | `to_configure` |
 | Dhikr | Routine | RELIGION | Quotidienne, minimum personnel 1 000 | Heure non définie | `to_configure` |
 | Nouvelle du'a | Routine flexible | RELIGION | Une par jour lorsque possible | Pas de rappel rigide | `to_validate` |
@@ -127,7 +127,7 @@ Les 27 tâches PRO déjà présentes sont reconnues par leur titre et uniquement
 | Lecture / apprentissage du soir | Routine flexible | RELIGION | Le plus régulièrement possible, environ 22 h–00 h | Pas d'heure exacte | `to_validate` |
 | Revue religieuse | Routine | RELIGION | Mensuelle | Jour/heure non définis | `to_configure` |
 
-Le schéma hebdomadaire du Coran (semaines 1 à 3 : nouvelle page ; semaine 4/5 : révision) est conservé dans le contexte et les notes. Aucune occurrence automatique « semaine du mois » n'est prétendue tant que le moteur ne la représente pas nativement.
+Le schéma hebdomadaire du Coran est maintenant représenté explicitement par `schedule_window_weekdays=[6,7]` et `schedule_month_weeks` : `[1,2,3]` pour nouvelle page/Tafsir, `[4,5]` pour la révision mensuelle. `time_context` reste descriptif et aucune heure n’est inventée.
 
 ## Décisions et rappels
 

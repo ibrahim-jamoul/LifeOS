@@ -1,5 +1,7 @@
 # Rapport d'implémentation — LifeOS Manager v1
 
+> **Note 22/09/2026 :** la section ci-dessous décrit l’implémentation v1 historique. La définition courante d’Aujourd’hui est désormais celle de `17_MANAGER_MODE.md` : un projet FOCUS ne crée plus d’éligibilité et les routines hebdomadaires/mensuelles non datées ne sont plus injectées dans la journée.
+
 Date : 21 septembre 2026
 Base reconstruite : commit Git `d37b819` (`docs: finalize LifeOS handoff`)
 

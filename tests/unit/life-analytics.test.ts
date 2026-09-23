@@ -32,6 +32,24 @@ describe("life analytics", () => {
     expect(result.routineCompleted).toBe(1);
   });
 
+  it("counts a Saturday+Sunday routine window once and respects month-week filters", () => {
+    const result = summarizePeriod({
+      period: { start: "2026-09-19", end: "2026-09-27" },
+      tasks: [],
+      routines: [{
+        id: "quran",
+        name: "Nouvelle page",
+        lifeArea: "religion",
+        routineType: "religion",
+        schedule: { frequency: "weekly", active: true, scheduleWindowWeekdays: [6, 7], scheduleMonthWeeks: [1, 2, 3] },
+      }],
+      routineLogs: [{ routineId: "quran", routineType: "religion", occurredOn: "2026-09-19", count: 1 }],
+    });
+
+    expect(result.routineExpected).toBe(1);
+    expect(result.routineCompleted).toBe(1);
+  });
+
   it("detects repeated rescheduling within the selected period", () => {
     const counts = taskRescheduleCounts([
       { taskId: "t1", occurredOn: "2026-09-02" },

@@ -76,3 +76,12 @@ Reason:
 - easier direct ownership checks.
 
 Application mutations must ensure child and parent records belong to the same authenticated user.
+
+## Additive routine scheduling windows (Manager Mode — 2026-09-22)
+
+`habits` and `religion_routines` keep their existing frequency and single-day fields. Two additive columns represent multi-day execution windows without parsing descriptive text:
+
+- `schedule_window_weekdays smallint[]`: ISO weekdays `1..7` belonging to one logical occurrence (for example `{6,7}` for a weekend window);
+- `schedule_month_weeks smallint[]`: optional ordinal occurrences `1..5` of that weekday/window inside the month.
+
+These fields do not replace `schedule_weekday` / `schedule_day_of_month`. They are used only when a real execution window is explicitly known. `time_context` remains descriptive. No RLS policy changes are required because the columns belong to the existing user-owned tables.

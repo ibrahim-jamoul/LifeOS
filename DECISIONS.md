@@ -76,3 +76,11 @@ SHA-256 content matches the supplied Word file.
 - Les routines flexibles/contextuelles sans calendrier explicite ne sont pas utilisées dans le taux d'exécution.
 - La capture rapide V2 reste déterministe et crée une tâche ; une future classification IA devra afficher une proposition avant toute mutation.
 - Aucun score unique de « qualité de vie » n'est créé : LifeOS expose des indicateurs explicables et séparés.
+
+## 2026-09-22 — Aujourd’hui uses temporal eligibility only
+
+- `FOCUS` is a ranking signal only; it never makes an undated task eligible for Aujourd’hui.
+- Undated weekly/monthly and flexible/contextual routines remain outside Aujourd’hui until a deterministic calendar rule exists.
+- Multi-day routine windows are represented additively with `schedule_window_weekdays` and optional `schedule_month_weeks`; `{6,7}` is one weekend occurrence, not two.
+- `time_context` is presentation/ordering metadata, not the primary calendar engine.
+- `configuration_status` is not a blanket calendar gate: the engine checks whether the fields required for the occurrence are actually present.

@@ -3,12 +3,8 @@
 This file reflects the completed implementation and verification. No limitation
 is accepted silently.
 
-- Les sous-règles Coran « semaines 1–3 » et « semaine 4/5 » sont conservées
-  dans le contexte de la routine. Le moteur gère la fréquence hebdomadaire ou
-  mensuelle, mais n’impose pas automatiquement la semaine du mois.
-- Une routine `flexible` ou `contextual` peut être cochée, mais ne produit pas
-  de prochaine occurrence et n’est pas comptée comme manquée puisqu’aucun jour
-  précis n’est connu.
+- Les fenêtres Coran « semaines 1–3 » et « semaine 4/5 » sont désormais modélisées explicitement par les jours de fenêtre et les occurrences ordinales du mois.
+- Une routine `flexible` ou `contextual` sans planification explicite reste hors d’Aujourd’hui et n’est pas comptée comme obligation quotidienne.
 - Les rappels internes et échéances sont opérationnels. Les notifications push
   navigateur ne sont pas ajoutées dans cette mission.
 - Les heures absentes du référentiel restent à configurer ; aucun rappel à une
