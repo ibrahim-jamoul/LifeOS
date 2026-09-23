@@ -53,6 +53,7 @@ export type RoutineSummary = {
   id: string;
   name: string;
   lifeArea: LifeArea;
+  routineType: "habit" | "religion";
   expected: number;
   completed: number;
   rate: number | null;
@@ -168,6 +169,7 @@ function summarizeRoutine(routine: AnalyticsRoutine, logs: readonly AnalyticsRou
     id: routine.id,
     name: routine.name,
     lifeArea: routine.lifeArea,
+    routineType: routine.routineType,
     expected: windows.length,
     completed,
     rate: percentage(completed, windows.length),
