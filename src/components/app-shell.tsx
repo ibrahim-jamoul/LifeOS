@@ -55,7 +55,9 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
     if (window.innerWidth >= 1024 || event.touches.length !== 1) return;
     const target = event.target as Element | null;
     if (target?.closest("input,textarea,select,button,[data-no-swipe]")) return;
-    const x = event.touches[0].clientX;
+    const point = event.touches.item(0);
+    if (!point) return;
+    const x = point.clientX;
     const width = window.innerWidth;
     if (x <= 30) touch.current = { x, edge: "left" };
     else if (x >= width - 30) touch.current = { x, edge: "right" };
@@ -66,7 +68,9 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
     const start = touch.current;
     touch.current = null;
     if (!start || event.changedTouches.length !== 1) return;
-    const delta = event.changedTouches[0].clientX - start.x;
+    const point = event.changedTouches.item(0);
+    if (!point) return;
+    const delta = point.clientX - start.x;
     if ((start.edge === "left" && delta >= 72) || (start.edge === "right" && delta <= -72)) router.back();
   }
 
