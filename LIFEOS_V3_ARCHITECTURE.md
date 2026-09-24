@@ -1,88 +1,126 @@
 # LifeOS V3 — Architecture fonctionnelle
 
-## Chaîne principale
+## Principe
+
+LifeOS V3 sépare strictement le **cap** de l’**exécution** :
 
 ```text
 VISION
   ↓
-GOALS
+OBJECTIFS
   ↓
-PROJECTS
+PROJETS (facultatifs)
   ↓
-TASKS / ROUTINES
+MISSIONS / TÂCHES
   ↓
-PLANNING
+PLANNING + RÉCURRENCE
   ↓
-TODAY
+AUJOURD’HUI / À VENIR
   ↓
-LOGS / KPI
+LOGS + KPI
   ↓
 WEEKLY REVIEW
 ```
 
+Un objectif actif ne devient jamais automatiquement une tâche du jour. Pour apparaître dans `Aujourd’hui`, il faut une **action opérationnelle** : tâche planifiée aujourd’hui, occurrence récurrente prévue aujourd’hui, routine prévue aujourd’hui ou rappel arrivé à échéance.
+
 ## 1. Vision
 
-La vision décrit une direction et ne produit jamais directement des éléments quotidiens. Elle sert à cadrer les objectifs.
+La route `/app/goals/vision` est une vue synthétique. Elle n’utilise pas de gros paragraphes comme écran principal : elle résume les horizons existants et récupère dynamiquement le nombre d’objectifs, projets et KPI par domaine PRO / PERSO / RELIGION.
 
-## 2. Goals
+L’administration brute reste accessible via `/app/goals/vision-admin` afin de ne pas supprimer la fonctionnalité existante.
 
-Les objectifs représentent des résultats à obtenir. Ils portent notamment un domaine, un statut, une progression, un horizon et une échéance. Ils ne doivent jamais apparaître dans Aujourd'hui uniquement parce qu'ils sont actifs.
+## 2. Objectifs et missions
 
-## 3. Projects
+La route `/app/goals/objectives` est désormais une vue métier dédiée :
 
-Les projets regroupent le travail permettant de faire progresser un ou plusieurs objectifs. La table `goal_projects` conserve la relation plusieurs-à-plusieurs existante.
+- carte par objectif ;
+- progression, statut et échéance ;
+- liste des missions directement rattachées ;
+- bouton `Ajouter une mission` sur chaque objectif ;
+- création d’une mission avec date, heure, durée, priorité, domaine, projet parent et récurrence.
 
-## 4. Tasks / routines
+Le lien direct est stocké dans `tasks.goal_id`. Le lien historique `tasks.project_id` reste disponible : une mission peut donc appartenir à un objectif avec ou sans projet intermédiaire.
 
-Deux moteurs complémentaires:
+L’ancien CRUD objectifs est conservé sous `/app/goals/objectives-admin`.
 
-- `tasks`: actions/missions concrètes et planifiables;
-- `habits` / `religion_routines`: actions récurrentes régulières.
+## 3. Planning
 
-Une tâche peut maintenant avoir un `goal_id` direct et/ou un `project_id`.
+Une tâche dispose de deux notions distinctes :
 
-## 5. Planning
+- `planned_on` + `planned_time` : quand je compte réellement l’exécuter ;
+- `due_on` / `due_at` : échéance réelle éventuelle.
 
-`planned_on` est la date de travail opérationnelle.
+La vue `/app/planning` regroupe :
 
-`due_on` / `due_at` représentent l'échéance réelle et ne sont pas modifiés lors d'un report opérationnel.
+- En retard ;
+- Aujourd’hui ;
+- Demain ;
+- Cette semaine ;
+- Plus tard ;
+- À planifier.
 
-Une tâche future appartient à À venir. Elle bascule dans Aujourd'hui lorsque `planned_on` correspond à la date courante.
+Il s’agit d’un calendrier orienté action, pas d’un clone de Google Calendar.
 
-## 6. Today
+## 4. Aujourd’hui
 
-Critères d'éligibilité:
+Le dashboard `/app/dashboard` est le centre opérationnel mobile-first.
 
-- `planned_on = aujourd'hui`;
-- vraie échéance aujourd'hui;
-- échéance ou planification passée non terminée;
-- routine dont une occurrence est actionnable aujourd'hui.
+`À faire aujourd’hui` contient uniquement :
 
-Sont exclus:
+- tâches avec `planned_on = aujourd’hui` ;
+- tâches sans date de travail mais avec échéance aujourd’hui ;
+- occurrences de tâches récurrentes prévues aujourd’hui ;
+- routines réellement actionnables aujourd’hui ;
+- rappels arrivés à échéance.
 
-- visions;
-- objectifs;
-- projets;
-- KPI;
-- tâches futures.
+Une ancienne tâche simplement active ou une tâche future n’est pas injectée dans cette liste.
 
-## 7. Logs / KPI
+Actions rapides :
 
-Les logs enregistrent les réalisations. Les KPI mesurent les tendances et les objectifs mesurables. Ils sont consultés dans un dashboard séparé afin de garder Aujourd'hui opérationnel.
+- Fait ;
+- Reporter à demain ;
+- Reporter à +7 jours ;
+- Replanifier à une date précise ;
+- modifier la récurrence pour une série récurrente.
 
-## 8. Weekly Review
+Sous la liste figurent `À venir` puis `Objectifs 2026`, séparés visuellement et fonctionnellement.
 
-La revue exploite les données structurées:
+## 5. Récurrence
 
-- taux d'exécution;
-- répartition PRO / PERSO / RELIGION;
-- routines attendues/réalisées;
-- reports répétés;
-- projets stagnants;
-- objectifs actifs.
+Les tâches utilisent une règle compacte dans `tasks.recurrence_rule` :
 
-Le texte manuel ne sert qu'aux informations que LifeOS ne peut pas déduire et à la préparation de la semaine suivante.
+- `daily` ;
+- `weekly:1,3,5` (jours ISO, lundi = 1) ;
+- `monthly:15`.
 
-## Principe de source de vérité
+`recurrence_until` est facultatif.
 
-`Referentiel perso.docx` est une source de préparation et de réflexion. Les données définitives doivent être stockées dans LifeOS; le référentiel ne doit pas devenir une seconde base durable.
+LifeOS **ne crée pas des centaines de tâches futures**. Les occurrences sont calculées à la demande. Lorsqu’une occurrence récurrente est terminée, seule sa validation est enregistrée dans `task_occurrences`; la tâche mère reste active pour les occurrences suivantes.
+
+Les routines existantes continuent d’utiliser `habits` et `religion_routines`, ce qui évite de dupliquer les concepts.
+
+## 6. KPI
+
+`/app/kpis` reste séparé du dashboard quotidien. Il lit `kpis` et `kpi_entries` et présente les mesures PRO / PERSO / RELIGION avec valeur courante, cible, tendance et progression lorsqu’elles sont disponibles.
+
+## 7. Weekly Review
+
+La revue `/app/review` est calculée depuis les données :
+
+- exécution globale ;
+- actions par domaine ;
+- routines ;
+- KPI ;
+- reports répétés ;
+- projets sans activité ;
+- objectifs avec activité ;
+- objectifs sans activité.
+
+La saisie manuelle est réduite à ce que LifeOS ne peut pas déduire : contexte éventuel, éléments à ralentir et priorités de la semaine suivante.
+
+## 8. Conservation de l’existant
+
+Aucun module existant n’est supprimé : objectifs, projets, tâches, alertes, décisions, finances, religion, arabe, Coran, santé, documents, souvenirs, ressources, assistant, export et progression restent disponibles.
+
+Le nouveau tableau de bord s’appuie sur les tables existantes et ajoute uniquement les éléments de schéma nécessaires à l’exécution V3.

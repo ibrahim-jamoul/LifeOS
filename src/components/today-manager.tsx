@@ -106,17 +106,6 @@ export function TodayManager({
     });
   }
 
-  async function replan(item: DailyPlanItem) {
-    if (!item.taskId) return;
-    const plannedOn = window.prompt("Nouvelle date de travail (AAAA-MM-JJ)", item.plannedOn ?? tomorrow);
-    if (!plannedOn) return;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(plannedOn)) {
-      setError("Format de date invalide. Utilise AAAA-MM-JJ.");
-      return;
-    }
-    await plan(item, plannedOn, "Replanification");
-  }
-
   return (
     <section className="overflow-hidden rounded-3xl border border-emerald-950/10 bg-white shadow-sm">
       <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#edf9f4,#ffffff_58%,#f7faf9)] px-5 py-5 md:px-6">
@@ -173,7 +162,6 @@ export function TodayManager({
                       onComplete={() => void complete(item)}
                       onTomorrow={() => void plan(item, tomorrow, "Report à demain")}
                       onNextWeek={() => void plan(item, nextWeek, "Report à la semaine prochaine")}
-                      onReplan={() => void replan(item)}
                     />
                   ))}
                 </ul>
@@ -216,7 +204,6 @@ function TodayRow({
   onComplete,
   onTomorrow,
   onNextWeek,
-  onReplan,
 }: {
   item: DailyPlanItem;
   pending: boolean;
@@ -224,7 +211,6 @@ function TodayRow({
   onComplete: () => void;
   onTomorrow: () => void;
   onNextWeek: () => void;
-  onReplan: () => void;
 }) {
   return (
     <li className="px-4 py-3">
@@ -263,7 +249,6 @@ function TodayRow({
             <>
               <button type="button" className="button-secondary min-h-10 px-4" disabled={pending} onClick={onTomorrow}><RotateCcw size={15} />Demain</button>
               <button type="button" className="button-secondary min-h-10 px-4" disabled={pending} onClick={onNextWeek}><CalendarClock size={15} />+7 jours</button>
-              <button type="button" className="button-secondary min-h-10 px-4" disabled={pending} onClick={onReplan}><Clock3 size={15} />Replanifier</button>
             </>
           ) : null}
         </div>

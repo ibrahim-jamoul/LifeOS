@@ -58,9 +58,9 @@ export async function GET(request: NextRequest, routeContext: RouteContext) {
     const dayEndExclusive = startOfCalendarDay(tomorrow, timeZone).toISOString();
     const weekEndExclusive = startOfCalendarDay(addCalendarDays(weekEnd, 1), timeZone).toISOString();
     query = query.not("status", "in", "(done,cancelled)");
-    if (view === "today") query = query.or(`due_on.eq.${today},and(due_at.gte.${dayStart},due_at.lt.${dayEndExclusive})`);
-    if (view === "week") query = query.or(`and(due_on.gte.${today},due_on.lte.${weekEnd}),and(due_at.gte.${dayStart},due_at.lt.${weekEndExclusive})`);
-    if (view === "overdue") query = query.or(`due_on.lt.${today},due_at.lt.${now.toISOString()}`);
+    if (view === "today") query = query.or(`planned_on.eq.${today},due_on.eq.${today},and(due_at.gte.${dayStart},due_at.lt.${dayEndExclusive})`);
+    if (view === "week") query = query.or(`and(planned_on.gte.${today},planned_on.lte.${weekEnd}),and(due_on.gte.${today},due_on.lte.${weekEnd}),and(due_at.gte.${dayStart},due_at.lt.${weekEndExclusive})`);
+    if (view === "overdue") query = query.or(`planned_on.lt.${today},due_on.lt.${today},due_at.lt.${now.toISOString()}`);
   }
   if (config.key === "quran_items" && view === "revision") {
     query = query.not("next_revision_at", "is", null).lte("next_revision_at", new Date().toISOString()).neq("status", "paused");

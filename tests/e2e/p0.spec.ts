@@ -28,8 +28,10 @@ test("authenticated P0 control-plane and branch journey", async ({ page }) => {
   try {
     const goal = await create("goals", { title: `E2E Goal ${suffix}`, desired_outcome: "P0 journey", definition_of_done: "All linked records persist", status: "active", priority: "high", horizon: null, start_date: null, target_date: null, progress_percent: 10, reason: null, risk_notes: null, notes: null });
     const project = await create("projects", { title: `E2E Project ${suffix}`, summary: null, goal_ids: [goal.id], status: "focus", priority: "high", target_date: null, next_milestone: "Validate", next_action: "Run E2E", progress_percent: 20, impact: 4, urgency: 4, confidence: 4, effort: 2, budget_planned: 0, budget_actual: 0, blocker_note: null, notes: null });
-    const task = await create("tasks", { title: `E2E Task ${suffix}`, project_id: project.id, status: "todo", priority: "high", due_at: new Date(Date.now() - 60_000).toISOString(), estimate_minutes: 20, actual_minutes: null, notes: null });
-    const complete = await page.request.post(`/api/tasks/${task.id}/complete`);
+    const task = await create("tasks", { title: `E2E Task ${suffix}`, goal_id: goal.id, project_id: project.id, status: "todo", priority: "high", planned_on: isoDate(), planned_time: null, recurrence_rule: null, recurrence_until: null, due_at: null, due_on: null, estimate_minutes: 20, actual_minutes: null, notes: null });
+    const futureTitle = `E2E Future Mission ${suffix}`;
+    await create("tasks", { title: futureTitle, goal_id: goal.id, project_id: project.id, status: "todo", priority: "medium", planned_on: plusDays(3), planned_time: "14:00", recurrence_rule: null, recurrence_until: null, due_at: null, due_on: null, estimate_minutes: 25, actual_minutes: null, notes: null });
+    const complete = await page.request.post(`/api/tasks/${task.id}/complete`, { data: { occurredOn: isoDate() } });
     expect(complete.ok()).toBeTruthy();
     const kpi = await create("kpis", { name: `E2E KPI ${suffix}`, goal_id: goal.id, unit: "%", target_type: "min", target_value: 80, target_min: null, target_max: null, cadence: "weekly", direction: "increase", active: true });
     await create("kpi_entries", { kpi_id: kpi.id, measured_at: new Date().toISOString(), value: 82, note: "E2E" });
@@ -63,7 +65,15 @@ test("authenticated P0 control-plane and branch journey", async ({ page }) => {
     await create("workouts", { occurred_at: new Date().toISOString(), activity: "E2E walk", duration_minutes: 20, intensity: "low", notes: null });
 
     await page.goto("/app/dashboard");
-    await expect(page.getByRole("heading", { name: /Bonjour/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Aujourd’hui" })).toBeVisible();
+    const todaySection = page.getByRole("heading", { name: "À faire aujourd’hui" }).locator("xpath=ancestor::section[1]");
+    await expect(todaySection.getByText(futureTitle)).toHaveCount(0);
+    const upcomingSection = page.getByRole("heading", { name: "À venir" }).locator("xpath=ancestor::section[1]");
+    await expect(upcomingSection.getByText(futureTitle)).toBeVisible();
+    await page.goto(`/app/goals/objectives?goal=${goal.id}`);
+    await expect(page.getByText(futureTitle)).toBeVisible();
+    await page.goto("/app/planning");
+    await expect(page.getByText(futureTitle)).toBeVisible();
     const financeInsight = await page.request.get("/api/insights/finances");
     expect(financeInsight.ok()).toBeTruthy();
     const financeBody = await financeInsight.json() as { data: { totals: { excludedTransfers: number }[] } };
@@ -82,4 +92,5 @@ async function login(page: Page, userEmail: string, userPassword: string) {
 }
 
 function isoDate(): string { return new Date().toISOString().slice(0, 10); }
+function plusDays(days: number): string { const value = new Date(); value.setUTCDate(value.getUTCDate() + days); return value.toISOString().slice(0, 10); }
 function monday(): string { const value = new Date(); const day = value.getUTCDay() || 7; value.setUTCDate(value.getUTCDate() - day + 1); return value.toISOString().slice(0, 10); }

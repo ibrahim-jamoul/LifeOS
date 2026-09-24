@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, BrainCircuit, ChartNoAxesCombined, Compass, Gauge, GaugeCircle, Lightbulb, Menu, NotebookPen, Settings, X } from "lucide-react";
+import { Activity, Bell, BrainCircuit, CalendarDays, ChartNoAxesCombined, Compass, Gauge, Lightbulb, Menu, NotebookPen, Settings, Target, X } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { QuickCapture } from "@/components/quick-capture";
 
@@ -16,8 +16,10 @@ type AppShellProps = {
 
 const navigation = [
   { href: "/app/dashboard", label: "Aujourd’hui", icon: Gauge },
+  { href: "/app/goals/objectives", label: "Objectifs", icon: Target },
+  { href: "/app/planning", label: "Planning", icon: CalendarDays },
+  { href: "/app/kpis", label: "KPI", icon: Activity },
   { href: "/app/progression", label: "Progression", icon: ChartNoAxesCombined },
-  { href: "/app/kpis", label: "KPI", icon: GaugeCircle },
   { href: "/app/insights", label: "Insights", icon: Lightbulb },
   { href: "/app/review", label: "Revue", icon: NotebookPen },
   { href: "/app/explorer", label: "Explorer", icon: Compass },
@@ -53,6 +55,7 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
       <div className="min-w-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur md:px-7">
           <button className="button-secondary size-10 px-0 lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Ouvrir la navigation"><Menu size={20} /></button>
+          <Link href="/app/dashboard" className="ml-2 text-xl font-black tracking-[-0.04em] text-slate-950 lg:hidden">LifeOS</Link>
           <div className="ml-auto flex items-center gap-2">
             <Link href="/app/alerts" className="button-secondary relative size-10 px-0" aria-label={`${unreadAlerts} alertes non lues`}><Bell size={19} />{unreadAlerts > 0 ? <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">{Math.min(unreadAlerts, 99)}</span> : null}</Link>
             <details className="relative">

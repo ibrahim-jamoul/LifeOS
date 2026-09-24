@@ -1,146 +1,124 @@
 # LifeOS V3 — Changelog
 
-Date: 2026-09-24
-Base: `LifeOS-main-ui-list-style-2026-09-22.zip`
-Référence fonctionnelle: `Referentiel perso.docx`
+## Base utilisée
 
-## Principes conservés
-
-- La base Next.js/Supabase existante est conservée.
-- Aucun module existant n'est supprimé.
-- Authentification, routes, RLS, tables et mécanismes de logs existants restent en place.
-- `planned_on` reste la date opérationnelle d'exécution; `due_on` / `due_at` restent les vraies échéances.
-- Les routines existantes (`habits`, `religion_routines`) restent le moteur principal de récurrence régulière.
-
-## Fichiers ajoutés
-
-- `src/components/dashboard-panels.tsx`
-- `src/app/app/kpis/page.tsx`
-- `supabase/migrations/20260924003000_lifeos_v3_planning_links.sql`
-- `LIFEOS_V3_CHANGELOG.md`
-- `LIFEOS_V3_ARCHITECTURE.md`
-
-## Fichiers modifiés
-
-- `src/app/app/dashboard/page.tsx`
-- `src/app/app/review/page.tsx`
-- `src/components/today-manager.tsx`
-- `src/components/app-shell.tsx`
-- `src/lib/resources.ts`
+Cette V3 est reconstruite à partir de `LifeOS-main-ui-list-style-2026-09-22.zip`. Elle ne repart pas de zéro et ne supprime pas les modules existants.
 
 ## Fonctionnalités ajoutées
 
-### Aujourd'hui
+### Dashboard Aujourd’hui
 
-- Conserve uniquement les tâches réellement planifiées, dues ou en retard et les routines actionnables du jour.
-- Ajout d'une action rapide `Replanifier` en plus de `Fait`, `Demain` et `+7 jours`.
-- Les objectifs/projets restent exclus de l'éligibilité quotidienne.
+- refonte mobile-first inspirée de la maquette validée ;
+- progression globale de la journée ;
+- compteurs PRO / PERSO / RELIGION ;
+- liste `À faire aujourd’hui` réellement filtrée par date ;
+- validation rapide ;
+- report demain / +7 jours ;
+- replanification sur une date arbitraire ;
+- bloc `À venir` ;
+- bloc `Objectifs 2026` totalement séparé des tâches ;
+- création d’une tâche/mission depuis le dashboard.
 
-### À venir
+### Objectifs → missions
 
-- Nouveau panneau compact directement sous Aujourd'hui.
-- Liste les prochaines tâches ayant un `planned_on` futur.
-- Une tâche future n'est pas injectée dans Aujourd'hui avant sa date.
-- Groupement par date et affichage du domaine et de la durée estimée.
+- nouvelle vue `/app/goals/objectives` ;
+- chaque objectif affiche ses missions ;
+- bouton `Ajouter une mission` sur chaque objectif ;
+- rattachement direct via `tasks.goal_id` ;
+- projet parent toujours facultatif ;
+- l’administration historique reste disponible sous `/app/goals/objectives-admin`.
 
-### Objectifs 2026
+### Planning
 
-- Nouveau panneau stratégique distinct du bloc quotidien.
-- Affiche titre, domaine, progression, échéance, statut et nombre de missions restantes calculables via les projets liés.
-- Les objectifs ne sont jamais traités comme des actions du jour.
+- nouvelle route `/app/planning` ;
+- groupes En retard / Aujourd’hui / Demain / Cette semaine / Plus tard / À planifier ;
+- création d’une action à une date choisie ;
+- heure et durée facultatives ;
+- séparation date de travail / échéance réelle.
 
-### Missions / tâches
+### Récurrence
 
-- Ajout d'un lien direct optionnel `goal_id` en plus de `project_id`.
-- Ajout des champs `recurrence_rule` et `recurrence_until` pour préparer les missions récurrentes ponctuelles.
-- Les routines fréquentes doivent continuer à utiliser les tables dédiées afin d'éviter de générer des centaines de tâches.
+- règles quotidiennes, hebdomadaires et mensuelles ;
+- pas de génération massive de tâches futures ;
+- nouvelle table `task_occurrences` pour mémoriser les validations d’occurrences ;
+- une occurrence terminée ne clôt pas la série entière.
 
-### KPI Dashboard
+### KPI / revue / vision
 
-- Nouvelle route `/app/kpis`.
-- Vue séparée par PRO / PERSO / RELIGION.
-- Affichage de la valeur actuelle, cible, tendance, progression et statut lorsque les données le permettent.
-- Les KPI ne sont pas injectés sur l'écran Aujourd'hui.
+- navigation directe vers le dashboard KPI ;
+- Weekly Review enrichie par données structurées ;
+- objectifs avec / sans activité calculés ;
+- vue Vision synthétique avec compteurs dynamiques.
 
-### Weekly Review
+## Migration Supabase V3
 
-- Ajout d'une synthèse structurée avant la zone de décision:
-  - exécution globale;
-  - actions par domaine;
-  - routines réalisées / attendues;
-  - reports répétés;
-  - projets stagnants;
-  - objectifs actifs.
-- Les faits sont dérivés des données existantes. Les champs manuels restent limités aux arbitrages et à la préparation de la semaine suivante.
+Fichier : `supabase/migrations/20260924010000_lifeos_v3_execution_model.sql`
 
-## Migration Supabase requise
+Ajouts principaux :
 
-Appliquer:
+### `tasks`
 
-`supabase/migrations/20260924003000_lifeos_v3_planning_links.sql`
+- `goal_id uuid` ;
+- `planned_time time` ;
+- `recurrence_rule text` ;
+- `recurrence_until date` ;
+- FK propriétaire vers `goals` ;
+- index planning et objectif.
 
-Cette migration est additive et ajoute:
+### `task_occurrences`
 
-- `tasks.goal_id`
-- `tasks.recurrence_rule`
-- `tasks.recurrence_until`
-- `profiles.day_start_time`
-- `profiles.day_end_time`
-- `profiles.onboarding_completed_at`
-- `goals.progress_mode`
-- `goals.review_cadence`
+Nouvelle table de journalisation des occurrences récurrentes avec :
 
-Un FK propriétaire `(goal_id, user_id)` est créé vers `goals(id, user_id)` et un index partiel est ajouté sur les tâches actives liées à un objectif.
+- ownership par utilisateur ;
+- RLS ;
+- policies SELECT / INSERT / UPDATE / DELETE ;
+- accès accordé au rôle `authenticated` ;
+- unicité utilisateur + tâche + date.
 
-## Modèle de données
+### `profiles` / `goals`
 
-Aucune table existante n'est remplacée. La V3 conserve la chaîne:
+Les colonnes V3 déjà envisagées sont créées de manière additive et idempotente lorsqu’elles n’existent pas.
 
-`VISION -> GOALS -> PROJECTS -> TASKS/ROUTINES -> PLANNING -> TODAY -> LOGS/KPI -> WEEKLY REVIEW`
+Le projet contient aussi la migration antérieure `20260922235500_add_routine_schedule_windows.sql`, nécessaire au moteur de routines calendrier.
 
-Les tâches peuvent maintenant être reliées directement à un objectif ou indirectement via un projet. Le lien direct reste optionnel pour conserver la compatibilité avec les données existantes.
+## Fichiers principaux ajoutés
 
-## Fonctionnalités conservées
+- `src/components/life-dashboard.tsx`
+- `src/components/goals-mission-board.tsx`
+- `src/components/planning-board.tsx`
+- `src/components/vision-overview.tsx`
+- `src/app/app/planning/page.tsx`
+- `src/app/app/kpis/page.tsx`
+- `src/lib/domain/task-recurrence.ts`
+- `tests/unit/task-recurrence.test.ts`
+- `LIFEOS_V3_ARCHITECTURE.md`
+- `LIFEOS_V3_CHANGELOG.md`
 
-- objectifs;
-- projets;
-- tâches;
-- KPI et mesures;
-- alertes;
-- décisions;
-- finances;
-- religion;
-- arabe;
-- Coran;
-- santé et habitudes;
-- documents;
-- souvenirs;
-- ressources;
-- assistant;
-- export;
-- progression;
-- insights;
-- authentification Supabase;
-- RLS et contrôles existants.
+## Fichiers principaux modifiés
+
+- `src/app/app/dashboard/page.tsx`
+- `src/app/app/[section]/[[...path]]/page.tsx`
+- `src/components/app-shell.tsx`
+- `src/components/resource-workspace.tsx`
+- `src/components/weekly-review-composer.tsx`
+- `src/lib/resources.ts`
+- `src/lib/domain/life-analytics.ts`
+- `src/lib/life-overview-server.ts`
+- `src/app/api/tasks/[id]/complete/route.ts`
+- `src/app/api/data/[resource]/route.ts`
+- `src/app/api/export/route.ts`
+- `src/app/app/review/page.tsx`
+- `tests/e2e/p0.spec.ts`
 
 ## Fonctionnalités supprimées
 
-Aucune.
+Aucune fonctionnalité métier existante n’a été supprimée. Les anciens écrans d’administration sont conservés lorsque la V3 ajoute une nouvelle vue métier.
 
-## Récurrence
+## Tests et contrôles
 
-- Le moteur `habits` / `religion_routines` reste prioritaire pour les routines quotidiennes, hebdomadaires et mensuelles.
-- `tasks.recurrence_rule` prépare une extension pour les missions récurrentes ponctuelles, sans créer artificiellement des occurrences futures en masse.
-- Aucun générateur massif de tâches futures n'est introduit.
+- contrôle syntaxique TypeScript de tous les fichiers TS/TSX : effectué ;
+- tests runtime du moteur de récurrence : effectués ;
+- migration Supabase appliquée et schéma vérifié sur le projet LifeOS ;
+- test E2E mis à jour pour vérifier qu’une mission future est visible dans À venir / Planning / objectif mais pas dans À faire aujourd’hui.
 
-## Limitations restantes
-
-- La migration de `life_vision` vers un modèle multi-lignes compact par domaine/horizon n'est pas imposée dans cette version afin d'éviter une migration destructive de la table singleton existante.
-- Le moteur générique de récurrence de tâches n'instancie pas encore automatiquement des occurrences; les routines existantes restent la solution opérationnelle.
-- Les rendez-vous externes ne sont pas synchronisés avec un calendrier tiers dans ce ZIP.
-- Le nombre de missions restantes d'un objectif est calculé à partir des tâches des projets liés; les missions liées uniquement via `tasks.goal_id` seront pleinement comptabilisées après extension du calcul serveur.
-- Aucun déploiement Supabase/Vercel n'est effectué par ce ZIP: la migration doit être appliquée avant mise en production.
-
-## Validation locale
-
-Le projet a été audité et modifié sans réécriture globale. L'installation des dépendances a été tentée pour exécuter la suite complète, mais `npm ci` n'a pas pu se terminer dans l'environnement de génération (timeout de transport), empêchant l'exécution fiable de `typecheck`, `test` et `build` ici. La validation de production reste donc à exécuter après extraction avec `npm ci && npm run check`, puis les tests E2E avec un environnement Supabase configuré.
+Le build Next.js complet doit toujours être rejoué dans l’environnement Vercel final après publication. L’environnement de génération local ne peut pas restaurer toutes les dépendances npm depuis son cache (un paquet n’est pas disponible hors ligne), ce qui empêche ici un `next build` reproductible complet. Ce point n’est pas présenté comme validé.

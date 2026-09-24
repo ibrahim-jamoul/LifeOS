@@ -442,6 +442,7 @@ function buildForm(config: ResourceConfig, row?: Row): Record<string, unknown> {
     const raw = row?.[field.key];
     if (raw !== undefined && raw !== null) {
       if (field.kind === "datetime" && typeof raw === "string") return [field.key, toLocalDateTimeInput(raw)];
+      if (field.kind === "time" && typeof raw === "string") return [field.key, raw.slice(0, 5)];
       if (field.kind === "tags" && Array.isArray(raw)) return [field.key, raw.join(", ")];
       return [field.key, raw];
     }

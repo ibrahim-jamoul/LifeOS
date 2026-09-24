@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 const userTables = [
   "life_vision", "domains", "goals", "kpis", "kpi_entries", "projects", "goal_projects", "tasks",
-  "reminders", "notifications", "decisions", "weekly_reviews", "study_topics", "study_sessions",
+  "task_occurrences", "reminders", "notifications", "decisions", "weekly_reviews", "study_topics", "study_sessions",
   "religion_routines", "religion_logs", "arabic_profiles", "arabic_sessions", "quran_items", "quran_sessions",
   "financial_accounts", "financial_transactions", "budget_items", "financial_goals", "net_worth_snapshots",
   "habits", "habit_logs", "health_metrics", "health_entries", "workouts", "documents", "memories",

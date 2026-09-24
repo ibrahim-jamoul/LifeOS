@@ -10,6 +10,7 @@ export type AnalyticsTask = {
   plannedOn: string | null;
   dueOn: string | null;
   completedOn: string | null;
+  goalId?: string | null;
 };
 
 export type AnalyticsRoutine = {
