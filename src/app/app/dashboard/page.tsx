@@ -36,15 +36,13 @@ export default async function DashboardPage() {
   const futureEnd = addCalendarDays(today, 21);
   const routineLogStart = addCalendarDays(today, -35);
 
-  const [tasksR, goalsR, projectsR, occurrencesR, habitsR, religionR, habitLogsR, religionLogsR, remindersR] = await Promise.all([
+  const [tasksR, goalsR, projectsR, occurrencesR, habitsR, habitLogsR, remindersR] = await Promise.all([
     supabase.from("tasks").select("id,title,status,priority,life_area,planned_on,planned_time,due_on,due_at,project_id,goal_id,estimate_minutes,recurrence_rule,recurrence_until,completed_at").eq("user_id", userId).neq("status", "cancelled").limit(1000),
     supabase.from("goals").select("id,title,life_area,status,priority,horizon,target_date,progress_percent").eq("user_id", userId).not("status", "in", "(cancelled,archived)").limit(300),
     supabase.from("projects").select("id,title,life_area,status").eq("user_id", userId).not("status", "in", "(cancelled,archived)").limit(400),
     supabase.from("task_occurrences").select("task_id,occurrence_on,completed_at").eq("user_id", userId).eq("occurrence_on", today).limit(1000),
     supabase.from("habits").select("id,name,life_area,frequency,duration_minutes,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(400),
-    supabase.from("religion_routines").select("id,name,target_frequency,duration_minutes,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(400),
     supabase.from("habit_logs").select("habit_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineLogStart).lte("occurred_on", today).limit(5000),
-    supabase.from("religion_logs").select("routine_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineLogStart).lte("occurred_on", today).limit(5000),
     supabase.from("reminders").select("id,title,life_area,remind_on,reminder_time,remind_at,recurrence,active").eq("user_id", userId).eq("active", true).limit(1000),
   ]);
 
@@ -54,11 +52,8 @@ export default async function DashboardPage() {
   const goalMap = new Map(goals.flatMap((row) => typeof row.id === "string" ? [[row.id, String(row.title ?? "Objectif")] as const] : []));
   const projectMap = new Map(projects.flatMap((row) => typeof row.id === "string" ? [[row.id, String(row.title ?? "Projet")] as const] : []));
   const occurrenceDone = new Set(((occurrencesR.data ?? []) as Row[]).flatMap((row) => typeof row.task_id === "string" && typeof row.completed_at === "string" ? [`${row.task_id}:${row.occurrence_on}`] : []));
-  const routines = [
-    ...((habitsR.data ?? []) as Row[]).map((row) => normalizeRoutine(row, "habit")),
-    ...((religionR.data ?? []) as Row[]).map((row) => normalizeRoutine(row, "religion")),
-  ].filter((value): value is NormalizedRoutine => value !== null);
-  const routineLogs = buildRoutineLogMap((habitLogsR.data ?? []) as Row[], (religionLogsR.data ?? []) as Row[]);
+  const routines = ((habitsR.data ?? []) as Row[]).map((row) => normalizeRoutine(row, "habit")).filter((value): value is NormalizedRoutine => value !== null);
+  const routineLogs = buildRoutineLogMap((habitLogsR.data ?? []) as Row[]);
   const reminders = (remindersR.data ?? []) as Row[];
 
   const todayItems: DashboardTodayItem[] = [];
@@ -147,7 +142,7 @@ function normalizeRoutine(row: Row, routineType: "habit" | "religion"): Normaliz
   if (typeof row.id !== "string" || typeof row.name !== "string") return null;
   return { id: row.id, name: row.name, routineType, lifeArea: routineType === "religion" ? "religion" : lifeArea(row.life_area), durationMinutes: numberOrNull(row.duration_minutes), schedule: { frequency: String(routineType === "habit" ? row.frequency ?? "" : row.target_frequency ?? ""), active: row.active !== false && row.status === "active", scheduleWeekday: numberOrNull(row.schedule_weekday), scheduleDayOfMonth: numberOrNull(row.schedule_day_of_month), scheduleWindowWeekdays: numberArray(row.schedule_window_weekdays), scheduleMonthWeeks: numberArray(row.schedule_month_weeks), startOn: stringOrNull(row.start_on), endOn: stringOrNull(row.end_on), pausedAt: stringOrNull(row.paused_at), archivedAt: stringOrNull(row.archived_at) } };
 }
-function buildRoutineLogMap(habit: Row[], religion: Row[]) { const map = new Map<string, number>(); for (const row of habit) if (typeof row.habit_id === "string" && typeof row.occurred_on === "string") map.set(`habit:${row.habit_id}:${row.occurred_on}`, numberOrNull(row.count) ?? 0); for (const row of religion) if (typeof row.routine_id === "string" && typeof row.occurred_on === "string") map.set(`religion:${row.routine_id}:${row.occurred_on}`, numberOrNull(row.count) ?? 0); return map; }
+function buildRoutineLogMap(habit: Row[]) { const map = new Map<string, number>(); for (const row of habit) if (typeof row.habit_id === "string" && typeof row.occurred_on === "string") map.set(`habit:${row.habit_id}:${row.occurred_on}`, numberOrNull(row.count) ?? 0); return map; }
 function hasRoutineCompletion(map: Map<string, number>, routine: NormalizedRoutine, start: string, end: string) { for (const [key, count] of map) { if (count <= 0 || !key.startsWith(`${routine.routineType}:${routine.id}:`)) continue; const date = key.slice(-10); if (date >= start && date <= end) return true; } return false; }
 function parentContext(task: Row, goals: Map<string, string>, projects: Map<string, string>) { const goal = typeof task.goal_id === "string" ? goals.get(task.goal_id) : null; const project = typeof task.project_id === "string" ? projects.get(task.project_id) : null; return goal && project ? `${goal} · ${project}` : goal ?? project ?? null; }
 function resolveDueOn(task: Row, timezone: string) { if (typeof task.due_on === "string") return task.due_on; if (typeof task.due_at === "string") return calendarDateInTimeZone(new Date(task.due_at), timezone); return null; }

@@ -1,110 +1,17 @@
 import Link from "next/link";
-import { ArrowRight, BriefcaseBusiness, Heart, MoonStar, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Heart, MoonStar, Target } from "lucide-react";
 import type { LifeArea } from "@/components/life-dashboard";
 
-export type VisionDomain = {
-  area: Exclude<LifeArea, null>;
-  headline: string | null;
-  targetDate: string | null;
-  status: string | null;
-  goals: number;
-  projects: number;
-  kpis: number;
-};
+export type VisionDomain = { area: Exclude<LifeArea, null>; headline: string | null; targetDate: string | null; status: string | null; goals: number; projects: number; kpis: number };
 
 export function VisionOverview({ quarterFocus, horizons, domains }: { quarterFocus: string | null; horizons: { horizon: string; headline: string | null }[]; domains: VisionDomain[] }) {
-  return (
-    <div className="grid gap-6">
-      <header className="rounded-[2rem] border border-sky-100 bg-white/92 p-5 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="section-kicker text-sky-700">Vision → objectifs → exécution</p>
-            <h1 className="section-title mt-1">Vision</h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600">Le cap reste lisible. La vision résume l’essentiel, puis les objectifs, projets et KPI sont récupérés automatiquement depuis leurs propres espaces.</p>
-          </div>
-          <Link href="/app/goals/vision-admin" className="button-secondary">Modifier la vision</Link>
-        </div>
-
-        {quarterFocus ? (
-          <section className="mt-5 rounded-[1.75rem] border border-emerald-200 bg-emerald-50/70 p-5">
-            <div className="flex items-start gap-3">
-              <div className="grid size-11 place-items-center rounded-2xl bg-emerald-200 text-emerald-900"><Sparkles size={20} /></div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-wider text-emerald-800">Cap du trimestre</p>
-                <p className="mt-1 text-lg font-black text-emerald-950">{shortHeadline(quarterFocus)}</p>
-              </div>
-            </div>
-          </section>
-        ) : null}
-      </header>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        {domains.map((domain) => <DomainVision key={domain.area} item={domain} />)}
-      </section>
-
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="grid size-10 place-items-center rounded-2xl bg-sky-50 text-sky-700"><Target size={18} /></div>
-          <div>
-            <h2 className="text-xl font-black">Horizons</h2>
-            <p className="text-sm text-slate-500">Ce que tu veux voir devenir vrai dans le temps.</p>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          {horizons.map((entry) => (
-            <div key={entry.horizon} className="rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-black uppercase tracking-wider text-slate-500">{entry.horizon}</p>
-              <p className="mt-2 font-bold text-slate-900">{entry.headline ? shortHeadline(entry.headline) : "À définir"}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+  return <div className="grid gap-6"><header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Vision → Objectifs → Exécution</p><h1 className="mt-1 text-4xl font-black tracking-[-0.04em]">Vision</h1><p className="mt-2 max-w-3xl text-sm text-slate-600">Le cap reste concis ; objectifs, projets et KPI sont récupérés dynamiquement depuis leurs propres tables.</p></div><Link href="/app/goals/vision-admin" className="button-secondary">Modifier la vision</Link></header>
+    {quarterFocus ? <section className="rounded-[2rem] border border-emerald-200 bg-emerald-50/70 p-5"><div className="flex items-start gap-3"><div className="grid size-11 place-items-center rounded-2xl bg-emerald-200 text-emerald-900"><Target size={20} /></div><div><p className="text-xs font-black uppercase tracking-wider text-emerald-800">Cap du trimestre</p><p className="mt-1 text-lg font-black text-emerald-950">{shortHeadline(quarterFocus)}</p></div></div></section> : null}
+    <section className="grid gap-4 md:grid-cols-3">{domains.map((domain) => <DomainVision key={domain.area} item={domain} />)}</section>
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-xl font-black">Horizons</h2><div className="mt-4 grid gap-3 md:grid-cols-3">{horizons.map((entry) => <div key={entry.horizon} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4"><p className="text-xs font-black uppercase tracking-wider text-slate-500">{entry.horizon}</p><p className="mt-2 font-bold">{entry.headline ? shortHeadline(entry.headline) : "À définir"}</p></div>)}</div></section>
+  </div>;
 }
-
-function DomainVision({ item }: { item: VisionDomain }) {
-  const Icon = item.area === "pro" ? BriefcaseBusiness : item.area === "perso" ? Heart : MoonStar;
-  const tone = item.area === "pro" ? "bg-blue-50 text-blue-700" : item.area === "perso" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800";
-
-  return (
-    <article className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className={`grid size-11 place-items-center rounded-2xl ${tone}`}><Icon size={18} /></div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-500">{item.area}</p>
-          <h2 className="mt-1 text-lg font-black leading-tight text-slate-950">{item.headline ?? "Cap à préciser"}</h2>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <Metric label="Objectifs" value={item.goals} />
-        <Metric label="Projets" value={item.projects} />
-        <Metric label="KPI" value={item.kpis} />
-      </div>
-
-      <div className="mt-4 flex justify-between text-xs text-slate-500">
-        <span>{item.targetDate ? `Cible ${formatDate(item.targetDate)}` : "Pas de date cible"}</span>
-        <span>{item.status ?? "—"}</span>
-      </div>
-
-      <Link href="/app/goals/objectives" className="mt-4 inline-flex items-center gap-1 text-sm font-black text-emerald-800">
-        Voir le détail <ArrowRight size={14} />
-      </Link>
-    </article>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-2xl bg-slate-50 px-2 py-3"><strong className="block text-lg text-slate-950">{value}</strong><span className="text-[10px] font-bold uppercase text-slate-500">{label}</span></div>;
-}
-
-function shortHeadline(value: string) {
-  const cleaned = value.replace(/\s+/g, " ").trim();
-  const sentence = cleaned.split(/(?<=[.!?])\s/)[0] ?? cleaned;
-  return sentence.length > 150 ? `${sentence.slice(0, 147).trim()}…` : sentence;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`));
-}
+function DomainVision({ item }: { item: VisionDomain }) { const Icon = item.area === "pro" ? BriefcaseBusiness : item.area === "perso" ? Heart : MoonStar; const tone = item.area === "pro" ? "bg-blue-50 text-blue-700" : item.area === "perso" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"; return <article className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start gap-3"><div className={`grid size-10 place-items-center rounded-2xl ${tone}`}><Icon size={18} /></div><div className="min-w-0 flex-1"><p className="text-xs font-black uppercase text-slate-500">{item.area}</p><h2 className="mt-1 text-lg font-black leading-tight">{item.headline ?? "Cap à préciser"}</h2></div></div><div className="mt-4 grid grid-cols-3 gap-2 text-center"><Metric label="Objectifs" value={item.goals} /><Metric label="Projets" value={item.projects} /><Metric label="KPI" value={item.kpis} /></div><div className="mt-4 flex justify-between text-xs text-slate-500"><span>{item.targetDate ? `Cible ${formatDate(item.targetDate)}` : "Pas de date cible"}</span><span>{item.status ?? "—"}</span></div><Link href="/app/goals/objectives" className="mt-4 inline-flex items-center gap-1 text-sm font-black text-emerald-800">Voir le détail <ArrowRight size={14} /></Link></article>; }
+function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl bg-slate-50 px-2 py-3"><strong className="block text-lg">{value}</strong><span className="text-[10px] font-bold uppercase text-slate-500">{label}</span></div>; }
+function shortHeadline(value: string) { const cleaned = value.replace(/\s+/g, " ").trim(); const sentence = cleaned.split(/(?<=[.!?])\s/)[0] ?? cleaned; return sentence.length > 150 ? `${sentence.slice(0, 147).trim()}…` : sentence; }
+function formatDate(value: string) { return new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`)); }

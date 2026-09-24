@@ -23,8 +23,8 @@ type AlertsPayload = { derived: LifeOsAlert[]; persisted: NotificationRow[] };
 
 const hrefBySource: Readonly<Record<string, string>> = {
   task: "/app/goals/tasks", goal: "/app/goals/objectives", project: "/app/goals/projects", kpi: "/app/goals/kpis",
-  decision: "/app/goals/decisions", weekly_review: "/app/goals/reviews", document: "/app/documents", quran_item: "/app/quran/revision",
-  reminder: "/app/goals/reminders", habit: "/app/health/habits", religion_routine: "/app/religion/routines",
+  decision: "/app/goals/decisions", weekly_review: "/app/goals/reviews", document: "/app/documents", quran_item: "/app/learning/revisions",
+  reminder: "/app/goals/reminders", habit: "/app/health/habits", religion_routine: "/app/learning/routines",
 };
 
 export function AlertCenter() {

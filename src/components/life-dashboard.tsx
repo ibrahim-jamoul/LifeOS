@@ -82,7 +82,6 @@ export function LifeDashboard(props: {
   const [customDate, setCustomDate] = useState(today);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [areaFilter, setAreaFilter] = useState<"all" | "pro" | "perso" | "religion">("all");
 
   const totals = useMemo(() => {
     const done = todayItems.filter((item) => item.completed).length;
@@ -127,8 +126,6 @@ export function LifeDashboard(props: {
 
   const tomorrow = addDays(today, 1);
   const nextWeek = addDays(today, 7);
-  const filteredTodayItems = areaFilter === "all" ? todayItems : todayItems.filter((item) => item.lifeArea === areaFilter);
-  const filteredUpcoming = areaFilter === "all" ? upcoming : upcoming.filter((item) => item.lifeArea === areaFilter);
 
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-5 pb-10">
@@ -146,29 +143,17 @@ export function LifeDashboard(props: {
           <div className="flex items-center gap-4"><ProgressRing value={totals.done} total={totals.total} /><div><strong className="text-2xl">{totals.done} / {totals.total}</strong><p className="text-sm text-slate-500">actions terminées</p></div></div>
           <div className="grid grid-cols-3 gap-2 sm:min-w-[26rem]">{totals.areas.map((item) => <AreaCounter key={item.area} {...item} />)}</div>
         </div>
-        <div className="mt-5 flex flex-wrap gap-2 rounded-[1.4rem] bg-slate-50 p-2">
-          {(["all", "pro", "perso", "religion"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setAreaFilter(value)}
-              className={`rounded-full px-4 py-2 text-sm font-black transition ${areaFilter === value ? todayFilterTone(value) : "bg-white text-slate-600 shadow-sm"}`}
-            >
-              {value === "all" ? "Tous" : value.toUpperCase()}
-            </button>
-          ))}
-        </div>
       </section>
 
       {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{error}</div> : null}
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4 sm:px-6"><div className="grid size-10 place-items-center rounded-2xl bg-slate-900 text-white"><Check size={18} /></div><div><h2 className="text-xl font-black sm:text-2xl">À faire aujourd’hui</h2><p className="text-xs text-slate-500">Seulement ce qui est réellement prévu aujourd’hui.</p></div></header>
-        {filteredTodayItems.length === 0 ? (
+        {todayItems.length === 0 ? (
           <div className="px-5 py-10 text-center"><Check className="mx-auto text-emerald-600" /><p className="mt-2 font-bold">Aucune action prévue aujourd’hui.</p><button className="button-secondary mt-4" onClick={() => setComposerOpen(true)}><Plus size={16} />Planifier une action</button></div>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {filteredTodayItems.map((item) => {
+            {todayItems.map((item) => {
               const open = expanded === item.id;
               const busy = pending === item.id;
               return <li key={item.id} className={item.completed ? "bg-emerald-50/25" : ""}>
@@ -193,14 +178,11 @@ export function LifeDashboard(props: {
             })}
           </ul>
         )}
-        <div className="border-t border-slate-100 p-4">
-          <button className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-black text-blue-700 hover:bg-blue-100" onClick={() => setComposerOpen(true)}><Plus size={17} />Ajouter une tâche</button>
-        </div>
       </section>
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6"><div className="flex items-center gap-3"><CalendarDays size={22} /><h2 className="text-xl font-black sm:text-2xl">À venir</h2></div><Link href="/app/planning" className="text-sm font-bold text-emerald-800">Planning</Link></header>
-        {filteredUpcoming.length ? <ul className="divide-y divide-slate-100">{filteredUpcoming.map((item) => <li key={item.id}>{item.href ? <Link href={item.href} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 sm:px-5"><UpcomingRow item={item} /></Link> : <div className="flex items-center gap-3 px-4 py-3 sm:px-5"><UpcomingRow item={item} /></div>}</li>)}</ul> : <p className="px-5 py-6 text-sm text-slate-500">Aucune action future planifiée.</p>}
+        {upcoming.length ? <ul className="divide-y divide-slate-100">{upcoming.map((item) => <li key={item.id}>{item.href ? <Link href={item.href} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 sm:px-5"><UpcomingRow item={item} /></Link> : <div className="flex items-center gap-3 px-4 py-3 sm:px-5"><UpcomingRow item={item} /></div>}</li>)}</ul> : <p className="px-5 py-6 text-sm text-slate-500">Aucune action future planifiée.</p>}
       </section>
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
@@ -310,5 +292,3 @@ function isoWeekday(date: string) { const day = new Date(`${date}T12:00:00Z`).ge
 function clamp(value: number) { return Math.max(0, Math.min(100, value)); }
 function formatShortDate(date: string) { return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`)); }
 async function safeJson(response: Response): Promise<ApiEnvelope> { try { return await response.json() as ApiEnvelope; } catch { return { ok: false, error: { message: "Réponse serveur invalide." } }; } }
-
-function todayFilterTone(area: "all" | "pro" | "perso" | "religion") { if (area === "pro") return "bg-blue-600 text-white"; if (area === "perso") return "bg-rose-500 text-white"; if (area === "religion") return "bg-amber-500 text-white"; return "bg-slate-950 text-white"; }
