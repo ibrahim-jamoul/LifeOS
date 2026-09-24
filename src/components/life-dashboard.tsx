@@ -264,7 +264,7 @@ export function TaskComposer(props: {
     <section className="max-h-[96vh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Mission / tâche</p><h2 className="text-2xl font-black">Planifier une action</h2></div><button className="button-secondary size-10 px-0" onClick={onClose}><X size={18} /></button></header>
       <form className="grid gap-4 p-5 sm:grid-cols-2" onSubmit={submit}>
-        <label className="field sm:col-span-2"><span>Titre *</span><input autoFocus className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex. Faire Open Assessment PSM I" /></label>
+        <label className="field sm:col-span-2"><span>Titre *</span><input autoFocus className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Décrire l’action à réaliser" /></label>
         <label className="field"><span>Date planifiée *</span><input className="input" type="date" min={today} value={plannedOn} onChange={(event) => { setPlannedOn(event.target.value); if (recurrence === "weekly" && event.target.value) setWeekdays([isoWeekday(event.target.value)]); }} /></label>
         <label className="field"><span>Heure</span><input className="input" type="time" value={plannedTime} onChange={(event) => setPlannedTime(event.target.value)} /></label>
         <label className="field"><span>Durée estimée</span><input className="input" type="number" min="0" step="5" value={duration} onChange={(event) => setDuration(event.target.value)} /></label>

@@ -76,7 +76,7 @@ export function QuickCapture({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
         <form className="grid gap-4 p-5" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-          <label className="field">À retenir / faire<input ref={inputRef} className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Ex. Relancer le recruteur vendredi" maxLength={240} /></label>
+          <label className="field">À retenir / faire<input ref={inputRef} className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Écrire ce que tu veux retenir ou planifier" maxLength={240} /></label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="field">Domaine<select className="input" value={lifeArea} onChange={(event) => setLifeArea(event.target.value as LifeArea)}><option value="">À classer plus tard</option><option value="pro">PRO</option><option value="perso">PERSO</option><option value="religion">RELIGION</option></select></label>
             <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 px-3 text-sm font-medium sm:mt-6"><input type="checkbox" checked={planToday} onChange={(event) => setPlanToday(event.target.checked)} />Afficher aujourd’hui</label>
