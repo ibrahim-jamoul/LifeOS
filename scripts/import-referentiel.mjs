@@ -19,6 +19,7 @@ function parseArguments(argv) {
     dataPath: defaultDataPath,
     documentPath: null,
     userId: null,
+    email: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -28,6 +29,8 @@ function parseArguments(argv) {
     else if (argument === "--help" || argument === "-h") options.help = true;
     else if (argument === "--user") options.userId = argv[++index] ?? null;
     else if (argument.startsWith("--user=")) options.userId = argument.slice("--user=".length);
+    else if (argument === "--email") options.email = argv[++index] ?? null;
+    else if (argument.startsWith("--email=")) options.email = argument.slice("--email=".length);
     else if (argument === "--data") options.dataPath = path.resolve(argv[++index] ?? "");
     else if (argument.startsWith("--data=")) options.dataPath = path.resolve(argument.slice("--data=".length));
     else if (argument === "--document") options.documentPath = path.resolve(argv[++index] ?? "");
@@ -47,6 +50,7 @@ Usage:
 Options:
   --apply                 Effectue les écritures. Sans ce drapeau, le mode simulation est utilisé.
   --user <uuid>           Utilisateur cible (ou LIFEOS_IMPORT_USER_ID).
+  --email <adresse>       Résout l'utilisateur cible par son adresse e-mail.
   --data <path>           Jeu de données JSON à importer.
   --document <path>       Fichier Word privé à conserver.
   --skip-document         Ignore explicitement l'upload du Word.
@@ -56,6 +60,7 @@ Variables serveur attendues:
   NEXT_PUBLIC_SUPABASE_URL
   SUPABASE_SECRET_KEY ou SUPABASE_SERVICE_ROLE_KEY
   LIFEOS_IMPORT_USER_ID
+  LIFEOS_IMPORT_EMAIL
   LIFEOS_REFERENCE_DOCX (facultatif)
 `);
 }
@@ -108,6 +113,10 @@ function valuesEqual(left, right) {
     return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
   }
   if (typeof left === "number" && typeof right === "number") return left === right;
+  if (typeof left === "string" && typeof right === "string") {
+    const timePattern = /^\d{2}:\d{2}(?::\d{2})?$/;
+    if (timePattern.test(left) && timePattern.test(right)) return left.slice(0, 5) === right.slice(0, 5);
+  }
   return String(left) === String(right);
 }
 
@@ -115,6 +124,28 @@ function assertUuid(value, label) {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value ?? "")) {
     throw new Error(`${label} doit être un UUID valide.`);
   }
+}
+
+async function resolveUserId(client, explicitId, email) {
+  if (explicitId) {
+    assertUuid(explicitId, "L'utilisateur cible (--user ou LIFEOS_IMPORT_USER_ID)");
+    return explicitId;
+  }
+
+  const normalizedEmail = String(email ?? "").trim().toLocaleLowerCase("fr-FR");
+  if (!normalizedEmail) {
+    throw new Error("Indiquez l'utilisateur cible avec --user, --email, LIFEOS_IMPORT_USER_ID ou LIFEOS_IMPORT_EMAIL.");
+  }
+
+  for (let page = 1; page <= 100; page += 1) {
+    const { data, error } = await client.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw new Error(`Recherche de l'utilisateur impossible: ${error.message}`);
+    const match = data.users.find((user) => user.email?.trim().toLocaleLowerCase("fr-FR") === normalizedEmail);
+    if (match) return match.id;
+    if (data.users.length < 1000) break;
+  }
+
+  throw new Error(`Aucun compte Supabase ne correspond à ${normalizedEmail}.`);
 }
 
 function readDataset(filename) {
@@ -151,6 +182,9 @@ function validateDataset(dataset) {
     if (!Array.isArray(items)) throw new Error(`${spec.collection} doit être une liste.`);
     for (const item of items) {
       if (!item.key || !item.data || typeof item.data !== "object") throw new Error(`Entrée invalide dans ${spec.collection}.`);
+      if (item.overwrite_fields && (!Array.isArray(item.overwrite_fields) || item.overwrite_fields.some((field) => typeof field !== "string"))) {
+        throw new Error(`${item.key} contient overwrite_fields invalide.`);
+      }
       if (allKeys.has(item.key)) throw new Error(`Clé dupliquée dans le jeu de données : ${item.key}`);
       allKeys.add(item.key);
       knownRefs.add(item.key);
@@ -204,14 +238,15 @@ function describeConflict(summary, table, key, fields) {
   summary.conflicts.push({ table, key, fields });
 }
 
-function buildFillOnlyPatch(existing, desired, ignoredFields = new Set()) {
+function buildFillOnlyPatch(existing, desired, ignoredFields = new Set(), overwriteFields = new Set()) {
   const patch = {};
   const conflicts = [];
   for (const [field, wanted] of Object.entries(desired)) {
     if (ignoredFields.has(field) || isBlank(wanted)) continue;
     const current = existing[field];
-    if (isBlank(current)) patch[field] = wanted;
-    else if (!valuesEqual(current, wanted)) conflicts.push(field);
+    if (valuesEqual(current, wanted)) continue;
+    if (isBlank(current) || overwriteFields.has(field)) patch[field] = wanted;
+    else conflicts.push(field);
   }
   return { patch, conflicts };
 }
@@ -307,6 +342,7 @@ async function importEntities({ client, dataset, userId, apply, summary, referen
           existing,
           desired,
           new Set(["id", "user_id", "created_at", "updated_at", "archived_at", "completed_at"]),
+          new Set(item.overwrite_fields ?? []),
         );
         describeConflict(summary, spec.table, item.key, conflicts);
         if (Object.keys(patch).length === 0) {
@@ -524,6 +560,13 @@ function printSummary(summary) {
     for (const warning of summary.warnings) console.log(`- ${warning}`);
   }
   if (summary.mode === "SIMULATION") {
+    if (summary.planned.length > 0) {
+      console.log("\nÉcritures prévues :");
+      for (const item of summary.planned) {
+        const fields = Array.isArray(item.fields) && item.fields.length ? ` (${item.fields.join(", ")})` : "";
+        console.log(`- ${item.action} ${item.table}/${item.key}${fields}`);
+      }
+    }
     console.log("\nAucune donnée n'a été modifiée. Relancez avec --apply après vérification de ce résumé.");
   }
 }
@@ -541,9 +584,6 @@ async function main() {
   const dataset = readDataset(options.dataPath);
   validateDataset(dataset);
 
-  const userId = options.userId ?? process.env.LIFEOS_IMPORT_USER_ID;
-  assertUuid(userId, "L'utilisateur cible (--user ou LIFEOS_IMPORT_USER_ID)");
-
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const serverKey = (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)?.trim();
   if (!supabaseUrl || !serverKey) {
@@ -554,11 +594,16 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
     global: { headers: { "x-client-info": "lifeos-reference-import/1.0" } },
   });
+  const userId = await resolveUserId(
+    client,
+    options.userId ?? (options.email ? null : process.env.LIFEOS_IMPORT_USER_ID),
+    options.email ?? process.env.LIFEOS_IMPORT_EMAIL,
+  );
   const summary = createSummary(options.apply ? "APPLICATION" : "SIMULATION");
   const references = new Map();
 
   console.log(`Jeu de données : ${dataset.metadata.dataset}`);
-  console.log(`Utilisateur cible : ${userId}`);
+  console.log(`Utilisateur cible résolu : ${options.email ?? process.env.LIFEOS_IMPORT_EMAIL ?? "UUID fourni"}`);
   console.log(`Mode : ${summary.mode}`);
 
   await importLifeVision({ client, dataset, userId, apply: options.apply, summary, references });

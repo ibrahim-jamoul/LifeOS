@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, CheckCircle2, CircleMinus, Clock3, Repeat2 } from "lucide-react";
-import type { AreaSummary, PeriodSummary } from "@/lib/domain/life-analytics";
+import type { AreaSummary, PeriodSummary, RoutineSummary } from "@/lib/domain/life-analytics";
 
 export function ExecutionHero({ current, previous }: { current: PeriodSummary; previous: PeriodSummary }) {
   const delta = current.rate !== null && previous.rate !== null ? current.rate - previous.rate : null;
@@ -15,12 +15,42 @@ export function ExecutionHero({ current, previous }: { current: PeriodSummary; p
         <p className="mt-2 text-sm text-slate-600">Exécution des actions et routines réellement planifiées sur la période.</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <MiniMetric label="Attendu" value={current.expected} />
-        <MiniMetric label="Réalisé" value={current.completed} />
-        <MiniMetric label="Tâches finies" value={current.completedActions} />
+        <MiniMetric label="Tâches prévues" value={`${current.taskCompleted}/${current.taskExpected}`} />
+        <MiniMetric label="Routines validées" value={`${current.routineCompleted}/${current.routineExpected}`} />
+        <MiniMetric label="Actions terminées" value={current.completedActions} />
         <MiniMetric label="Période précédente" value={formatRate(previous.rate)} />
       </div>
     </section>
+  );
+}
+
+export function RoutinePerformanceTable({ routines }: { routines: readonly RoutineSummary[] }) {
+  const measurable = routines
+    .filter((routine) => routine.expected > 0)
+    .sort((left, right) => (left.rate ?? 0) - (right.rate ?? 0) || left.name.localeCompare(right.name, "fr"));
+
+  if (!measurable.length) {
+    return <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Aucune routine mesurable sur cette période.</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[620px] text-left text-sm">
+        <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+          <tr><th className="px-3 py-3 font-semibold">Routine</th><th className="px-3 py-3 font-semibold">Domaine</th><th className="px-3 py-3 text-right font-semibold">Réalisé</th><th className="px-3 py-3 text-right font-semibold">Régularité</th></tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {measurable.map((routine) => (
+            <tr key={`${routine.routineType}-${routine.id}`}>
+              <td className="px-3 py-3 font-medium text-slate-900">{routine.name}</td>
+              <td className="px-3 py-3"><span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold uppercase text-slate-600">{routine.lifeArea ?? "non classé"}</span></td>
+              <td className="px-3 py-3 text-right tabular-nums text-slate-600">{routine.completed}/{routine.expected}</td>
+              <td className="px-3 py-3 text-right"><span className={`inline-flex min-w-14 justify-center rounded-full px-2.5 py-1 text-xs font-bold ${routineTone(routine.rate)}`}>{formatRate(routine.rate)}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -111,6 +141,13 @@ function EmptyFact({ icon, text }: { icon: React.ReactNode; text: string }) {
 
 function formatRate(value: number | null): string {
   return value === null ? "—" : `${value}%`;
+}
+
+function routineTone(rate: number | null): string {
+  if (rate === null) return "bg-slate-100 text-slate-600";
+  if (rate >= 80) return "bg-emerald-50 text-emerald-800";
+  if (rate >= 50) return "bg-blue-50 text-blue-800";
+  return "bg-amber-50 text-amber-900";
 }
 
 function daysBetween(start: string, end: string): number {

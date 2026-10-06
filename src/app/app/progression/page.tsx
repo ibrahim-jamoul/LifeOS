@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProgressCharts } from "@/components/progress-charts";
-import { AreaCards, ExecutionHero } from "@/components/overview-ui";
+import { AreaCards, ExecutionHero, RoutinePerformanceTable } from "@/components/overview-ui";
 import { loadLifeOverview } from "@/lib/life-overview-server";
 
 export const metadata: Metadata = { title: "Progression" };
@@ -75,6 +75,14 @@ export default async function ProgressionPage({ searchParams }: PageProps) {
             )) : <p className="text-sm text-slate-500">Aucune routine mesurable sous 50 % sur la période.</p>}
           </div>
         </article>
+      </section>
+
+      <section className="card">
+        <div className="mb-5">
+          <h2 className="text-lg font-bold">Détail des routines</h2>
+          <p className="mt-1 text-sm text-slate-600">Comparaison entre les occurrences prévues et celles réellement validées. Les routines les moins régulières apparaissent en premier.</p>
+        </div>
+        <RoutinePerformanceTable routines={overview.current.routines} />
       </section>
     </div>
   );
