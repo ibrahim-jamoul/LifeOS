@@ -50,8 +50,6 @@ export function TodayManager({
   nextWeek,
   top,
   remaining,
-  completedRoutines,
-  totalRoutines,
   localHour,
 }: Props) {
   const router = useRouter();

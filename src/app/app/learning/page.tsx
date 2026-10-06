@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, BookMarked, BookOpenText, CheckCircle2, Clock3, Library, RefreshCcw, Sparkles, SunMedium } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookMarked, BookOpenText, CheckCircle2, Library, RefreshCcw, Sparkles, SunMedium } from "lucide-react";
 import { RoutinesToday, type RoutineTodayItem } from "@/components/routines-today";
 import { addCalendarDays, calendarDateInTimeZone, isRoutineActionableOn, routineCompletionWindow, type RoutineSchedule } from "@/lib/domain/routines";
 import { createClient } from "@/lib/supabase/server";

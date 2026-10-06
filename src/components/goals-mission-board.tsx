@@ -55,7 +55,6 @@ export function GoalsMissionBoard(props: { today: string; goals: GoalBoardGoal[]
     <div className="grid gap-4">{visibleGoals.map((goal) => {
       const rows = missions.filter((mission) => mission.goalId === goal.id).sort(compareMissions);
       const remaining = rows.filter((mission) => !["done", "cancelled"].includes(mission.status)).length;
-      const done = rows.filter((mission) => mission.status === "done").length;
       const open = expanded === goal.id;
       const next = rows.find((mission) => !["done", "cancelled"].includes(mission.status));
       return <section key={goal.id} className="overflow-hidden rounded-[1.75rem] border border-orange-100/80 bg-white/95 shadow-sm">
