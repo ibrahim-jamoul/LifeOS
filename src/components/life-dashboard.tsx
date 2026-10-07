@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { groupTodayItems, type TodayAreaKey, type TodayItemGroup } from "@/lib/domain/today-groups";
+import { UpcomingCalendar } from "@/components/upcoming-calendar";
 
 export type LifeArea = "pro" | "perso" | "religion" | null;
 
@@ -190,10 +191,7 @@ export function LifeDashboard(props: {
         )}
       </section>
 
-      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6"><div className="flex items-center gap-3"><CalendarDays size={22} /><h2 className="text-xl font-black sm:text-2xl">À venir</h2></div><Link href="/app/planning" className="text-sm font-bold text-emerald-800">Planning</Link></header>
-        {upcoming.length ? <ul className="divide-y divide-slate-100">{upcoming.map((item) => <li key={item.id}>{item.href ? <Link href={item.href} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 sm:px-5"><UpcomingRow item={item} /></Link> : <div className="flex items-center gap-3 px-4 py-3 sm:px-5"><UpcomingRow item={item} /></div>}</li>)}</ul> : <p className="px-5 py-6 text-sm text-slate-500">Aucune action future planifiée.</p>}
-      </section>
+      <UpcomingCalendar today={today} items={upcoming} />
 
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
         <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6"><div className="flex items-center gap-3"><Target size={22} /><div><h2 className="text-xl font-black sm:text-2xl">Objectifs 2026</h2><p className="text-xs text-slate-500">Séparés des tâches quotidiennes.</p></div></div><Link href="/app/goals/objectives" className="text-sm font-bold text-emerald-800">Ouvrir</Link></header>
@@ -276,10 +274,6 @@ function todayAreaPresentation(area: TodayAreaKey): { label: string; tone: strin
   if (area === "perso") return { label: "PERSO", tone: "bg-rose-50 text-rose-700" };
   if (area === "religion") return { label: "RELIGION", tone: "bg-amber-50 text-amber-800" };
   return { label: "À CLASSER", tone: "bg-slate-100 text-slate-700" };
-}
-
-function UpcomingRow({ item }: { item: DashboardUpcomingItem }) {
-  return <><DateTile date={item.date} /><div className="min-w-0 flex-1"><p className="truncate font-bold">{item.title}</p><p className="mt-0.5 truncate text-xs text-slate-500">{item.context ?? (item.recurring ? "Occurrence récurrente" : "Action planifiée")}{item.time ? ` · ${item.time.slice(0, 5)}` : ""}{item.durationMinutes ? ` · ${item.durationMinutes} min` : ""}</p></div><AreaBadge area={item.lifeArea} /><ChevronRight size={18} className="text-slate-400" /></>;
 }
 
 export function TaskComposer(props: {
@@ -367,7 +361,6 @@ export function TaskComposer(props: {
 function ProgressRing({ value, total }: { value: number; total: number }) { const pct = total ? Math.round(value / total * 100) : 0; return <div className="grid size-20 place-items-center rounded-full" style={{ background: `conic-gradient(#35a66f ${pct}%, #edf1ef ${pct}% 100%)` }}><div className="grid size-14 place-items-center rounded-full bg-white text-sm font-black text-emerald-800">{pct}%</div></div>; }
 function AreaCounter({ area, done, total }: { area: Exclude<LifeArea, null>; done: number; total: number }) { const Icon = area === "pro" ? BriefcaseBusiness : area === "perso" ? Heart : MoonStar; return <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 px-2 py-3 text-xs font-bold shadow-sm"><Icon size={15} /><span className="hidden sm:inline">{area.toUpperCase()}</span><span className="text-slate-500">{done}/{total}</span></div>; }
 function AreaBadge({ area }: { area: LifeArea }) { if (!area) return null; const tone = area === "pro" ? "bg-blue-50 text-blue-700" : area === "perso" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"; return <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-black ${tone}`}>{area.toUpperCase()}</span>; }
-function DateTile({ date }: { date: string }) { const value = new Date(`${date}T12:00:00Z`); const day = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", timeZone: "UTC" }).format(value); const month = new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: "UTC" }).format(value).replace(".", "").toUpperCase(); return <div className="grid size-14 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-slate-50 leading-none"><span className="text-[10px] font-black text-slate-500">{month}</span><strong className="-mt-2 text-xl">{day}</strong></div>; }
 function addDays(date: string, amount: number) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + amount); return value.toISOString().slice(0, 10); }
 function isoWeekday(date: string) { const day = new Date(`${date}T12:00:00Z`).getUTCDay(); return day || 7; }
 function clamp(value: number) { return Math.max(0, Math.min(100, value)); }

@@ -13,9 +13,9 @@ import {
   addCalendarDays,
   calendarDateInTimeZone,
   isRoutineActionableOn,
-  nextRoutineOccurrence,
   routineCompletionWindow,
   routineReasonForDate,
+  scheduledRoutineDates,
   type RoutineSchedule,
 } from "@/lib/domain/routines";
 import { taskOccurrencesBetween, taskOccursOn } from "@/lib/domain/task-recurrence";
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
   const { data: profile } = await supabase.from("profiles").select("timezone").eq("id", userId).maybeSingle();
   const timezone = typeof profile?.timezone === "string" ? profile.timezone : "Europe/Paris";
   const today = calendarDateInTimeZone(now, timezone);
-  const futureEnd = addCalendarDays(today, 21);
+  const futureEnd = addCalendarDays(today, 120);
   const nextDayStartsAt = startOfCalendarDay(addCalendarDays(today, 1), timezone).toISOString();
   const routineLogStart = addCalendarDays(today, -35);
 
@@ -113,19 +113,20 @@ export default async function DashboardPage() {
     const recurrenceRule = stringOrNull(task.recurrence_rule);
     const recurrenceUntil = stringOrNull(task.recurrence_until);
     const dates = recurrenceRule
-      ? taskOccurrencesBetween({ plannedOn, recurrenceRule, recurrenceUntil, start: upcomingStart, end: futureEnd, limit: 12 })
+      ? taskOccurrencesBetween({ plannedOn, recurrenceRule, recurrenceUntil, start: upcomingStart, end: futureEnd, limit: 180 })
       : plannedOn && plannedOn >= upcomingStart && plannedOn <= futureEnd ? [plannedOn] : [];
     for (const date of dates) upcoming.push({ id: `task:${task.id}:${date}`, date, title: task.title, lifeArea: lifeArea(task.life_area), time: stringOrNull(task.planned_time), durationMinutes: numberOrNull(task.estimate_minutes), context: parentContext(task, goalMap, projectMap), recurring: Boolean(recurrenceRule) });
   }
   for (const routine of routines) {
-    const next = nextRoutineOccurrence(routine.schedule, upcomingStart, true);
-    if (next && next <= futureEnd) upcoming.push({ id: `routine:${routine.routineType}:${routine.id}:${next}`, date: next, title: routine.name, lifeArea: routine.lifeArea, time: routine.reminderTime, durationMinutes: routine.durationMinutes, context: "Routine planifiée", recurring: true });
+    for (const date of scheduledRoutineDates(routine.schedule, upcomingStart, futureEnd)) {
+      upcoming.push({ id: `routine:${routine.routineType}:${routine.id}:${date}`, date, title: routine.name, lifeArea: routine.lifeArea, time: routine.reminderTime, durationMinutes: routine.durationMinutes, context: routineReasonForDate(routine.schedule, date), recurring: true });
+    }
   }
   for (const reminder of reminders) {
     if (typeof reminder.id !== "string" || typeof reminder.title !== "string") continue;
     const baseDate = reminderBaseDate(reminder, timezone); if (!baseDate) continue;
     const recurrence = typeof reminder.recurrence === "string" ? reminder.recurrence : "none";
-    for (const date of reminderDatesBetween(baseDate, recurrence, upcomingStart, futureEnd).slice(0, 3)) upcoming.push({ id: `reminder:${reminder.id}:${date}`, date, title: reminder.title, lifeArea: lifeArea(reminder.life_area), time: reminderTime(reminder, timezone), durationMinutes: null, context: "Rappel", recurring: recurrence !== "none", href: "/app/goals/reminders" });
+    for (const date of reminderDatesBetween(baseDate, recurrence, upcomingStart, futureEnd).slice(0, 180)) upcoming.push({ id: `reminder:${reminder.id}:${date}`, date, title: reminder.title, lifeArea: lifeArea(reminder.life_area), time: reminderTime(reminder, timezone), durationMinutes: null, context: "Rappel", recurring: recurrence !== "none", href: "/app/goals/reminders" });
   }
   upcoming.sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? "99:99").localeCompare(b.time ?? "99:99") || a.title.localeCompare(b.title, "fr"));
 
@@ -142,7 +143,7 @@ export default async function DashboardPage() {
   const projectOptions: ProjectOption[] = projects.flatMap((project) => typeof project.id === "string" && typeof project.title === "string" && !["done", "cancelled", "archived"].includes(String(project.status ?? "")) ? [{ id: project.id, title: project.title, lifeArea: lifeArea(project.life_area) }] : []);
 
   const dateLabel = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: timezone }).format(now);
-  return <LifeDashboard today={today} nextDayStartsAt={nextDayStartsAt} dateLabel={dateLabel} todayItems={todayItems} upcoming={upcoming.slice(0, 12)} goals={dashboardGoals} goalOptions={goalOptions} projectOptions={projectOptions} />;
+  return <LifeDashboard today={today} nextDayStartsAt={nextDayStartsAt} dateLabel={dateLabel} todayItems={todayItems} upcoming={upcoming} goals={dashboardGoals} goalOptions={goalOptions} projectOptions={projectOptions} />;
 }
 
 function normalizeRoutine(row: Row, routineType: "habit" | "religion"): NormalizedRoutine | null {

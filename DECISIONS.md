@@ -91,3 +91,9 @@ SHA-256 content matches the supplied Word file.
 - A completed mission remains visible at the end of its group for the rest of the user's calendar day and can be unchecked there.
 - At the next midnight in the profile time zone, the dashboard refreshes: daily recurring occurrences start a new day, while a non-recurring task remains permanently completed unless it was explicitly unchecked before midnight.
 - Rows without a life area are preserved in a conditional “À classer” group instead of being hidden or assigned arbitrarily.
+
+## 2026-10-07 — Upcoming work uses a calendar without changing its source of truth
+
+- The dashboard “À venir” section remains derived from existing tasks, routines, and reminders; the calendar is a presentation layer, not a new planning system.
+- The initial calendar window covers the next 120 days so monthly navigation can show recurring work without another database query or table.
+- Calendar indicators reuse the existing PRO, PERSO, and RELIGION life areas, while selecting a date reveals its complete agenda.
