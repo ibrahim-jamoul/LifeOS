@@ -1,33 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Repeat2 } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Repeat2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { DashboardUpcomingItem, LifeArea } from "@/components/life-dashboard";
-import { calendarMonthGrid, groupCalendarItems, shiftCalendarMonth, toggleCalendarDate } from "@/lib/domain/upcoming-calendar";
+import { calendarMonthGrid, groupCalendarItems, groupCalendarItemsByArea, shiftCalendarMonth, toggleCalendarDate, type CalendarAreaGroup, type CalendarAreaKey } from "@/lib/domain/upcoming-calendar";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
+const CLOSED_AREAS: Record<CalendarAreaKey, boolean> = { pro: false, perso: false, religion: false, other: false };
 
 export function UpcomingCalendar({ today, items }: { today: string; items: DashboardUpcomingItem[] }) {
   const groupedItems = useMemo(() => groupCalendarItems(items), [items]);
   const firstDate = items[0]?.date ?? today;
   const lastDate = items.at(-1)?.date ?? today;
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [openAreas, setOpenAreas] = useState<Record<CalendarAreaKey, boolean>>(() => ({ ...CLOSED_AREAS }));
   const [visibleMonth, setVisibleMonth] = useState(firstDate.slice(0, 7));
   const gridDays = useMemo(() => calendarMonthGrid(visibleMonth), [visibleMonth]);
   const selectedItems = selectedDate ? groupedItems.get(selectedDate) ?? [] : [];
+  const selectedGroups = groupCalendarItemsByArea(selectedItems);
   const minMonth = today.slice(0, 7);
   const maxMonth = lastDate.slice(0, 7);
 
   function selectDate(date: string) {
-    setSelectedDate((current) => toggleCalendarDate(current, date));
+    const nextDate = toggleCalendarDate(selectedDate, date);
+    const nextGroups = nextDate ? groupCalendarItemsByArea(groupedItems.get(nextDate) ?? []) : [];
+    setSelectedDate(nextDate);
+    setOpenAreas({ ...CLOSED_AREAS, ...(nextGroups[0] ? { [nextGroups[0].key]: true } : {}) });
     setVisibleMonth(date.slice(0, 7));
   }
 
   function showMonth(month: string) {
     setVisibleMonth(month);
     setSelectedDate(null);
+    setOpenAreas({ ...CLOSED_AREAS });
   }
 
   return (
@@ -67,26 +74,38 @@ export function UpcomingCalendar({ today, items }: { today: string; items: Dashb
 
         {selectedDate ? <aside id="upcoming-day-agenda" className="min-w-0 border-t border-slate-100 bg-slate-50/55">
           <div className="border-b border-slate-100 px-5 py-4"><p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Agenda</p><h3 className="mt-1 text-lg font-black capitalize">{formatLongDate(selectedDate)}</h3><p className="text-xs text-slate-500">{selectedItems.length} mission{selectedItems.length > 1 ? "s" : ""}</p></div>
-          {selectedItems.length ? <ul className="divide-y divide-slate-100">{selectedItems.map((item) => <li key={item.id}><AgendaItem item={item} /></li>)}</ul> : <div className="px-5 py-8 text-center"><CalendarDays className="mx-auto text-slate-300" size={28} /><p className="mt-2 text-sm font-semibold text-slate-500">Aucune mission ce jour-là.</p></div>}
+          {selectedItems.length ? <div className="grid gap-2 p-3 sm:p-4">{selectedGroups.map((group) => <AgendaAreaSection key={group.key} group={group} open={openAreas[group.key]} onToggle={() => setOpenAreas((current) => ({ ...current, [group.key]: !current[group.key] }))} />)}</div> : <div className="px-5 py-8 text-center"><CalendarDays className="mx-auto text-slate-300" size={28} /><p className="mt-2 text-sm font-semibold text-slate-500">Aucune mission ce jour-là.</p></div>}
         </aside> : null}
       </div>}
     </section>
   );
 }
 
+function AgendaAreaSection({ group, open, onToggle }: { group: CalendarAreaGroup<DashboardUpcomingItem>; open: boolean; onToggle: () => void }) {
+  const presentation = agendaAreaPresentation(group.key);
+  const panelId = `upcoming-area-${group.key}`;
+  return <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+    <button type="button" className="grid min-h-14 w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 text-left" aria-expanded={open} aria-controls={panelId} onClick={onToggle}>
+      <span className={`rounded-xl px-2.5 py-1.5 text-xs font-black tracking-[0.08em] ${presentation.tone}`}>{presentation.label}</span>
+      <span className="text-sm text-slate-500">{group.items.length} mission{group.items.length > 1 ? "s" : ""}</span>
+      <ChevronDown className={`text-slate-400 transition ${open ? "rotate-180" : ""}`} size={18} />
+    </button>
+    {open ? <ul id={panelId} className="divide-y divide-slate-100 border-t border-slate-100">{group.items.map((item) => <li key={item.id}><AgendaItem item={item} /></li>)}</ul> : null}
+  </section>;
+}
+
 function AgendaItem({ item }: { item: DashboardUpcomingItem }) {
   const content = <div className="flex min-h-20 items-start gap-3 px-5 py-4">
     <span className={`mt-1 h-12 w-1 shrink-0 rounded-full ${areaTone(item.lifeArea)}`} />
-    <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="whitespace-normal break-words font-bold leading-5 text-slate-950">{item.title}</p><AreaPill area={item.lifeArea} /></div><p className="mt-1 whitespace-normal break-words text-xs leading-5 text-slate-500">{item.context ?? (item.recurring ? "Occurrence récurrente" : "Action planifiée")}</p><div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-600">{item.time ? <span className="inline-flex items-center gap-1"><Clock3 size={13} />{item.time.slice(0, 5)}</span> : null}{item.durationMinutes ? <span>{item.durationMinutes} min</span> : null}{item.recurring ? <span className="inline-flex items-center gap-1"><Repeat2 size={13} />Récurrente</span> : null}</div></div>
+    <div className="min-w-0 flex-1"><p className="whitespace-normal break-words font-bold leading-5 text-slate-950">{item.title}</p><p className="mt-1 whitespace-normal break-words text-xs leading-5 text-slate-500">{item.context ?? (item.recurring ? "Occurrence récurrente" : "Action planifiée")}</p><div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-600">{item.time ? <span className="inline-flex items-center gap-1"><Clock3 size={13} />{item.time.slice(0, 5)}</span> : null}{item.durationMinutes ? <span>{item.durationMinutes} min</span> : null}{item.recurring ? <span className="inline-flex items-center gap-1"><Repeat2 size={13} />Récurrente</span> : null}</div></div>
     {item.href ? <ChevronRight className="mt-2 shrink-0 text-slate-400" size={18} /> : null}
   </div>;
   return item.href ? <Link href={item.href} className="block hover:bg-white">{content}</Link> : content;
 }
 
 function Legend({ area, label }: { area: Exclude<LifeArea, null>; label: string }) { return <span className="inline-flex items-center gap-1.5"><span className={`size-2 rounded-full ${areaTone(area)}`} />{label}</span>; }
-function AreaPill({ area }: { area: LifeArea }) { return area ? <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${areaPillTone(area)}`}>{area.toUpperCase()}</span> : null; }
 function areaTone(area: LifeArea) { return area === "pro" ? "bg-blue-500" : area === "perso" ? "bg-rose-500" : area === "religion" ? "bg-amber-500" : "bg-slate-400"; }
-function areaPillTone(area: Exclude<LifeArea, null>) { return area === "pro" ? "bg-blue-50 text-blue-700" : area === "perso" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"; }
+function agendaAreaPresentation(area: CalendarAreaKey): { label: string; tone: string } { if (area === "pro") return { label: "PRO", tone: "bg-blue-50 text-blue-700" }; if (area === "perso") return { label: "PERSO", tone: "bg-rose-50 text-rose-700" }; if (area === "religion") return { label: "RELIGION", tone: "bg-amber-50 text-amber-800" }; return { label: "À CLASSER", tone: "bg-slate-100 text-slate-700" }; }
 function calendarDots(items: DashboardUpcomingItem[]) { return [...new Set(items.map((item) => item.lifeArea ?? "other"))].slice(0, 4).map((area) => <span key={area} className={`size-1.5 rounded-full ${areaTone(area === "other" ? null : area as LifeArea)}`} />); }
 function formatMonth(month: string) { return new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T12:00:00Z`)); }
 function formatLongDate(date: string) { return new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`)); }

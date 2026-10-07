@@ -4,6 +4,19 @@ export type CalendarItem = {
   date: string;
 };
 
+export type CalendarAreaKey = "pro" | "perso" | "religion" | "other";
+
+export type CalendarAreaItem = {
+  lifeArea: "pro" | "perso" | "religion" | null;
+};
+
+export type CalendarAreaGroup<T extends CalendarAreaItem> = {
+  key: CalendarAreaKey;
+  items: T[];
+};
+
+const CALENDAR_AREAS = ["pro", "perso", "religion"] as const;
+
 export function calendarMonthGrid(month: string): string[] {
   const first = parseMonth(month);
   const firstWeekday = first.getUTCDay() || 7;
@@ -39,6 +52,15 @@ export function groupCalendarItems<T extends CalendarItem>(items: readonly T[]):
 
 export function toggleCalendarDate(current: string | null, requested: string): string | null {
   return current === requested ? null : requested;
+}
+
+export function groupCalendarItemsByArea<T extends CalendarAreaItem>(items: readonly T[]): CalendarAreaGroup<T>[] {
+  const groups: CalendarAreaGroup<T>[] = CALENDAR_AREAS.flatMap((key) => {
+    const areaItems = items.filter((item) => item.lifeArea === key);
+    return areaItems.length > 0 ? [{ key, items: areaItems }] : [];
+  });
+  const otherItems = items.filter((item) => item.lifeArea === null);
+  return otherItems.length > 0 ? [...groups, { key: "other", items: otherItems }] : groups;
 }
 
 function parseMonth(month: string): Date {

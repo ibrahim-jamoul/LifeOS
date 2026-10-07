@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calendarMonthGrid, groupCalendarItems, shiftCalendarMonth, toggleCalendarDate } from "../../src/lib/domain/upcoming-calendar";
+import { calendarMonthGrid, groupCalendarItems, groupCalendarItemsByArea, shiftCalendarMonth, toggleCalendarDate } from "../../src/lib/domain/upcoming-calendar";
 
 describe("upcoming calendar helpers", () => {
   it("builds a Monday-first grid containing the full requested month", () => {
@@ -27,5 +27,15 @@ describe("upcoming calendar helpers", () => {
     expect(toggleCalendarDate(null, "2026-10-18")).toBe("2026-10-18");
     expect(toggleCalendarDate("2026-10-18", "2026-10-19")).toBe("2026-10-19");
     expect(toggleCalendarDate("2026-10-18", "2026-10-18")).toBeNull();
+  });
+
+  it("groups a selected day's missions by life area and preserves unclassified items", () => {
+    const groups = groupCalendarItemsByArea([
+      { id: "religion", lifeArea: "religion" as const },
+      { id: "pro", lifeArea: "pro" as const },
+      { id: "other", lifeArea: null },
+    ]);
+    expect(groups.map((group) => group.key)).toEqual(["pro", "religion", "other"]);
+    expect(groups[0]?.items.map((item) => item.id)).toEqual(["pro"]);
   });
 });
