@@ -37,6 +37,10 @@ export function groupCalendarItems<T extends CalendarItem>(items: readonly T[]):
   return groups;
 }
 
+export function toggleCalendarDate(current: string | null, requested: string): string | null {
+  return current === requested ? null : requested;
+}
+
 function parseMonth(month: string): Date {
   const match = MONTH_PATTERN.exec(month);
   if (!match) throw new RangeError("Expected an ISO calendar month");

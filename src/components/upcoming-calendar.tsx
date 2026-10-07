@@ -5,7 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Repeat2 } from "lucide
 import { useMemo, useState } from "react";
 
 import type { DashboardUpcomingItem, LifeArea } from "@/components/life-dashboard";
-import { calendarMonthGrid, groupCalendarItems, shiftCalendarMonth } from "@/lib/domain/upcoming-calendar";
+import { calendarMonthGrid, groupCalendarItems, shiftCalendarMonth, toggleCalendarDate } from "@/lib/domain/upcoming-calendar";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
 
@@ -13,22 +13,21 @@ export function UpcomingCalendar({ today, items }: { today: string; items: Dashb
   const groupedItems = useMemo(() => groupCalendarItems(items), [items]);
   const firstDate = items[0]?.date ?? today;
   const lastDate = items.at(-1)?.date ?? today;
-  const [selectedDate, setSelectedDate] = useState(firstDate);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [visibleMonth, setVisibleMonth] = useState(firstDate.slice(0, 7));
   const gridDays = useMemo(() => calendarMonthGrid(visibleMonth), [visibleMonth]);
-  const selectedItems = groupedItems.get(selectedDate) ?? [];
+  const selectedItems = selectedDate ? groupedItems.get(selectedDate) ?? [] : [];
   const minMonth = today.slice(0, 7);
   const maxMonth = lastDate.slice(0, 7);
 
   function selectDate(date: string) {
-    setSelectedDate(date);
+    setSelectedDate((current) => toggleCalendarDate(current, date));
     setVisibleMonth(date.slice(0, 7));
   }
 
   function showMonth(month: string) {
     setVisibleMonth(month);
-    const firstEvent = items.find((item) => item.date.startsWith(month));
-    setSelectedDate(firstEvent?.date ?? `${month}-01`);
+    setSelectedDate(null);
   }
 
   return (
@@ -38,8 +37,8 @@ export function UpcomingCalendar({ today, items }: { today: string; items: Dashb
         <Link href="/app/planning" className="text-sm font-bold text-emerald-800">Planning</Link>
       </header>
 
-      {items.length === 0 ? <p className="px-5 py-6 text-sm text-slate-500">Aucune action future planifiée.</p> : <div className="grid lg:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
-        <div className="border-b border-slate-100 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+      {items.length === 0 ? <p className="px-5 py-6 text-sm text-slate-500">Aucune action future planifiée.</p> : <div>
+        <div className="p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="text-xl font-black capitalize">{formatMonth(visibleMonth)}</h3>
             <div className="flex items-center gap-1">
@@ -57,7 +56,7 @@ export function UpcomingCalendar({ today, items }: { today: string; items: Dashb
               const selected = date === selectedDate;
               const isToday = date === today;
               const available = date >= today && date.slice(0, 7) >= minMonth && date.slice(0, 7) <= maxMonth;
-              return <button key={date} type="button" disabled={!available} onClick={() => selectDate(date)} className={`relative grid min-h-14 place-items-center rounded-2xl px-1 py-1.5 transition sm:min-h-16 ${selected ? "bg-slate-950 text-white shadow-sm" : isToday ? "bg-red-50 text-red-700" : inMonth ? "text-slate-800 hover:bg-slate-100" : "text-slate-300"}`} aria-label={`${formatLongDate(date)}${dayItems.length ? `, ${dayItems.length} mission${dayItems.length > 1 ? "s" : ""}` : ""}`} aria-pressed={selected}>
+              return <button key={date} type="button" disabled={!available} onClick={() => selectDate(date)} className={`relative grid min-h-14 place-items-center rounded-2xl px-1 py-1.5 transition sm:min-h-16 ${selected ? "bg-slate-950 text-white shadow-sm" : isToday ? "bg-red-50 text-red-700" : inMonth ? "text-slate-800 hover:bg-slate-100" : "text-slate-300"}`} aria-label={`${formatLongDate(date)}${dayItems.length ? `, ${dayItems.length} mission${dayItems.length > 1 ? "s" : ""}` : ""}`} aria-pressed={selected} aria-expanded={selected} aria-controls="upcoming-day-agenda">
                 <span className={`text-sm font-bold ${isToday && !selected ? "grid size-7 place-items-center rounded-full bg-red-500 text-white" : ""}`}>{Number(date.slice(8, 10))}</span>
                 <span className="flex h-2 items-center justify-center gap-0.5" aria-hidden="true">{calendarDots(dayItems)}</span>
               </button>;
@@ -66,10 +65,10 @@ export function UpcomingCalendar({ today, items }: { today: string; items: Dashb
           <div className="mt-4 flex flex-wrap gap-3 text-[11px] font-bold text-slate-500"><Legend area="pro" label="PRO" /><Legend area="perso" label="PERSO" /><Legend area="religion" label="RELIGION" /></div>
         </div>
 
-        <aside className="min-w-0 bg-slate-50/55">
+        {selectedDate ? <aside id="upcoming-day-agenda" className="min-w-0 border-t border-slate-100 bg-slate-50/55">
           <div className="border-b border-slate-100 px-5 py-4"><p className="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Agenda</p><h3 className="mt-1 text-lg font-black capitalize">{formatLongDate(selectedDate)}</h3><p className="text-xs text-slate-500">{selectedItems.length} mission{selectedItems.length > 1 ? "s" : ""}</p></div>
           {selectedItems.length ? <ul className="divide-y divide-slate-100">{selectedItems.map((item) => <li key={item.id}><AgendaItem item={item} /></li>)}</ul> : <div className="px-5 py-8 text-center"><CalendarDays className="mx-auto text-slate-300" size={28} /><p className="mt-2 text-sm font-semibold text-slate-500">Aucune mission ce jour-là.</p></div>}
-        </aside>
+        </aside> : null}
       </div>}
     </section>
   );
