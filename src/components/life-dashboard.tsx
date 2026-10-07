@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   BriefcaseBusiness,
@@ -20,6 +20,7 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { groupTodayItems, type TodayAreaKey, type TodayItemGroup } from "@/lib/domain/today-groups";
 
 export type LifeArea = "pro" | "perso" | "religion" | null;
 
@@ -68,6 +69,7 @@ type ApiEnvelope = { ok: boolean; error?: { message?: string } };
 
 export function LifeDashboard(props: {
   today: string;
+  nextDayStartsAt: string;
   dateLabel: string;
   todayItems: DashboardTodayItem[];
   upcoming: DashboardUpcomingItem[];
@@ -75,13 +77,14 @@ export function LifeDashboard(props: {
   goalOptions: GoalOption[];
   projectOptions: ProjectOption[];
 }) {
-  const { today, dateLabel, todayItems, upcoming, goals, goalOptions, projectOptions } = props;
+  const { today, nextDayStartsAt, dateLabel, todayItems, upcoming, goals, goalOptions, projectOptions } = props;
   const router = useRouter();
   const [composerOpen, setComposerOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [customDate, setCustomDate] = useState(today);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [openAreas, setOpenAreas] = useState<Record<TodayAreaKey, boolean>>({ pro: true, perso: false, religion: false, other: false });
 
   const totals = useMemo(() => {
     const done = todayItems.filter((item) => item.completed).length;
@@ -91,6 +94,21 @@ export function LifeDashboard(props: {
     });
     return { done, total: todayItems.length, areas };
   }, [todayItems]);
+  const todayGroups = useMemo(() => groupTodayItems(todayItems), [todayItems]);
+
+  useEffect(() => {
+    const boundary = Date.parse(nextDayStartsAt);
+    const refreshForNewDay = () => {
+      if (Date.now() >= boundary) router.refresh();
+    };
+    const delay = Math.max(0, Math.min(boundary - Date.now() + 250, 2_147_483_647));
+    const timer = window.setTimeout(refreshForNewDay, delay);
+    document.addEventListener("visibilitychange", refreshForNewDay);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", refreshForNewDay);
+    };
+  }, [nextDayStartsAt, router]);
 
   async function post(id: string, url: string, body: unknown) {
     setPending(id);
@@ -108,14 +126,13 @@ export function LifeDashboard(props: {
     }
   }
 
-  async function complete(item: DashboardTodayItem) {
-    if (item.completed) return;
+  async function setCompletion(item: DashboardTodayItem, completed: boolean) {
     if (item.kind === "task" && item.taskId) {
-      await post(item.id, `/api/tasks/${item.taskId}/complete`, { occurredOn: today });
+      await post(item.id, `/api/tasks/${item.taskId}/complete`, { occurredOn: today, completed });
       return;
     }
     if (item.kind === "routine" && item.routineId && item.routineType) {
-      await post(item.id, "/api/routines/toggle", { routineType: item.routineType, routineId: item.routineId, occurredOn: today, completed: true });
+      await post(item.id, "/api/routines/toggle", { routineType: item.routineType, routineId: item.routineId, occurredOn: today, completed });
     }
   }
 
@@ -152,31 +169,24 @@ export function LifeDashboard(props: {
         {todayItems.length === 0 ? (
           <div className="px-5 py-10 text-center"><Check className="mx-auto text-emerald-600" /><p className="mt-2 font-bold">Aucune action prévue aujourd’hui.</p><button className="button-secondary mt-4" onClick={() => setComposerOpen(true)}><Plus size={16} />Planifier une action</button></div>
         ) : (
-          <ul className="divide-y divide-slate-100">
-            {todayItems.map((item) => {
-              const open = expanded === item.id;
-              const busy = pending === item.id;
-              return <li key={item.id} className={item.completed ? "bg-emerald-50/25" : ""}>
-                <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                  {item.kind === "reminder" ? <div className="grid size-9 shrink-0 place-items-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700"><Bell size={17} /></div> :
-                    <button className={`grid size-9 shrink-0 place-items-center rounded-xl border ${item.completed ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-slate-400 hover:border-emerald-500"}`} disabled={busy || item.completed} onClick={() => void complete(item)} aria-label={`Terminer ${item.title}`}>
-                      {busy ? <LoaderCircle className="animate-spin" size={18} /> : item.completed ? <Check size={18} /> : <Circle size={17} />}
-                    </button>}
-                  <div className="min-w-0 flex-1"><p className={`truncate font-bold ${item.completed ? "text-slate-500 line-through" : "text-slate-950"}`}>{item.title}</p><div className="mt-0.5 flex flex-wrap gap-x-2 text-xs text-slate-500">{item.context ? <span>{item.context}</span> : null}{item.plannedTime ? <span className="inline-flex items-center gap-1"><Clock3 size={12} />{item.plannedTime.slice(0, 5)}</span> : null}{item.durationMinutes ? <span>{item.durationMinutes} min</span> : null}{item.recurring ? <span>Récurrente</span> : null}</div></div>
-                  <AreaBadge area={item.lifeArea} />
-                  {item.kind === "reminder" && item.href ? <Link href={item.href} className="grid size-8 place-items-center text-slate-400"><ChevronRight size={18} /></Link> : !item.completed ? <button className="grid size-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100" onClick={() => { setExpanded(open ? null : item.id); setCustomDate(today); }}><ChevronDown className={open ? "rotate-180" : ""} size={18} /></button> : null}
-                </div>
-                {open && !item.completed && item.kind !== "reminder" ? <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5"><div className="flex flex-wrap gap-2">
-                  <button className="button-primary min-h-9 px-3 py-1" disabled={busy} onClick={() => void complete(item)}><Check size={15} />Fait</button>
-                  {item.kind === "task" && !item.recurring ? <>
-                    <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void replan(item, tomorrow)}><RotateCcw size={14} />Demain</button>
-                    <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void replan(item, nextWeek)}><CalendarDays size={14} />+7 jours</button>
-                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5"><input className="bg-transparent px-1 text-sm outline-none" type="date" min={today} value={customDate} onChange={(event) => setCustomDate(event.target.value)} /><button className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-bold text-white" onClick={() => void replan(item, customDate)}>Replanifier</button></div>
-                  </> : item.kind === "task" ? <Link className="button-secondary min-h-9 px-3 py-1" href="/app/goals/tasks"><CalendarDays size={14} />Modifier la récurrence</Link> : null}
-                </div></div> : null}
-              </li>;
-            })}
-          </ul>
+          <div className="grid gap-3 bg-slate-50/60 p-3 sm:p-4">
+            {todayGroups.map((group) => <TodayAreaSection
+              key={group.key}
+              group={group}
+              open={openAreas[group.key]}
+              expandedItem={expanded}
+              pendingItem={pending}
+              today={today}
+              tomorrow={tomorrow}
+              nextWeek={nextWeek}
+              customDate={customDate}
+              onToggleArea={() => setOpenAreas((current) => ({ ...current, [group.key]: !current[group.key] }))}
+              onToggleItem={(item) => { setExpanded(expanded === item.id ? null : item.id); setCustomDate(today); }}
+              onCustomDateChange={setCustomDate}
+              onSetCompletion={setCompletion}
+              onReplan={replan}
+            />)}
+          </div>
         )}
       </section>
 
@@ -195,6 +205,77 @@ export function LifeDashboard(props: {
       {composerOpen ? <TaskComposer today={today} goals={goalOptions} projects={projectOptions} onClose={() => setComposerOpen(false)} onSaved={() => { setComposerOpen(false); router.refresh(); }} /> : null}
     </div>
   );
+}
+
+function TodayAreaSection(props: {
+  group: TodayItemGroup<DashboardTodayItem>;
+  open: boolean;
+  expandedItem: string | null;
+  pendingItem: string | null;
+  today: string;
+  tomorrow: string;
+  nextWeek: string;
+  customDate: string;
+  onToggleArea: () => void;
+  onToggleItem: (item: DashboardTodayItem) => void;
+  onCustomDateChange: (date: string) => void;
+  onSetCompletion: (item: DashboardTodayItem, completed: boolean) => Promise<void>;
+  onReplan: (item: DashboardTodayItem, plannedOn: string) => Promise<void>;
+}) {
+  const { group, open, expandedItem, pendingItem, today, tomorrow, nextWeek, customDate, onToggleArea, onToggleItem, onCustomDateChange, onSetCompletion, onReplan } = props;
+  const area = todayAreaPresentation(group.key);
+  const panelId = `today-area-${group.key}`;
+
+  return (
+    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <button type="button" className="grid min-h-14 w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 text-left sm:px-5" aria-expanded={open} aria-controls={panelId} onClick={onToggleArea}>
+        <span className={`rounded-xl px-2.5 py-1.5 text-xs font-black tracking-[0.08em] ${area.tone}`}>{area.label}</span>
+        <span className="text-sm text-slate-500">{group.remaining} à faire · {group.completed} faite{group.completed > 1 ? "s" : ""}</span>
+        <ChevronDown className={`text-slate-400 transition ${open ? "rotate-180" : ""}`} size={18} />
+      </button>
+
+      {open ? <div id={panelId} className="border-t border-slate-100">
+        {group.items.length === 0 ? <p className="px-4 py-5 text-sm text-slate-500 sm:px-5">Aucune mission dans cette catégorie aujourd’hui.</p> : <ul className="divide-y divide-slate-100">
+          {group.items.map((item, index) => {
+            const itemOpen = expandedItem === item.id;
+            const busy = pendingItem === item.id;
+            const firstCompleted = item.completed && index === group.remaining;
+            return <li key={item.id} className={item.completed ? "bg-emerald-50/25" : ""}>
+              {firstCompleted ? <div className="border-b border-slate-100 px-4 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400 sm:px-5">Terminées</div> : null}
+              <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] sm:px-5">
+                {item.kind === "reminder" ? <div className="grid size-11 place-items-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700"><Bell size={17} /></div> :
+                  <button className={`grid size-11 place-items-center rounded-xl border ${item.completed ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-slate-400 hover:border-emerald-500"}`} disabled={busy} onClick={() => void onSetCompletion(item, !item.completed)} aria-label={item.completed ? `Annuler la validation de ${item.title}` : `Terminer ${item.title}`}>
+                    {busy ? <LoaderCircle className="animate-spin" size={18} /> : item.completed ? <Check size={18} /> : <Circle size={17} />}
+                  </button>}
+                <div className="min-w-0 pt-0.5">
+                  <p className={`whitespace-normal break-words font-bold leading-5 ${item.completed ? "text-slate-500 line-through" : "text-slate-950"}`}>{item.title}</p>
+                  <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-xs leading-5 text-slate-500">{item.context ? <span className="whitespace-normal break-words">{item.context}</span> : null}{item.plannedTime ? <span className="inline-flex items-center gap-1"><Clock3 size={12} />{item.plannedTime.slice(0, 5)}</span> : null}{item.durationMinutes ? <span>{item.durationMinutes} min</span> : null}{item.recurring ? <span>Récurrente</span> : null}</div>
+                </div>
+                <div className="col-start-2 flex flex-wrap items-center gap-1.5 sm:col-start-3 sm:row-start-1 sm:justify-end">
+                  {item.kind === "reminder" && item.href ? <Link href={item.href} className="button-secondary min-h-11 px-3 py-1 sm:min-h-9"><ChevronRight size={15} />Ouvrir</Link> : item.kind !== "reminder" ? <button className={item.completed ? "button-secondary min-h-11 px-3 py-1 text-xs sm:min-h-9" : "button-primary min-h-11 px-3 py-1 text-xs sm:min-h-9"} disabled={busy} onClick={() => void onSetCompletion(item, !item.completed)}>{item.completed ? "Annuler fait" : "Fait"}</button> : null}
+                  {item.kind === "task" && !item.completed ? <button className="grid size-11 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 sm:size-9" onClick={() => onToggleItem(item)} aria-label={`Options de ${item.title}`} aria-expanded={itemOpen}><ChevronDown className={itemOpen ? "rotate-180" : ""} size={18} /></button> : null}
+                </div>
+              </div>
+              {itemOpen && !item.completed && item.kind === "task" ? <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5"><div className="flex flex-wrap gap-2">
+                {!item.recurring ? <>
+                  <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void onReplan(item, tomorrow)}><RotateCcw size={14} />Demain</button>
+                  <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void onReplan(item, nextWeek)}><CalendarDays size={14} />+7 jours</button>
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5"><input className="bg-transparent px-1 text-sm outline-none" type="date" min={today} value={customDate} onChange={(event) => onCustomDateChange(event.target.value)} /><button className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-bold text-white" onClick={() => void onReplan(item, customDate)}>Replanifier</button></div>
+                </> : <Link className="button-secondary min-h-9 px-3 py-1" href="/app/goals/tasks"><CalendarDays size={14} />Modifier la récurrence</Link>}
+              </div></div> : null}
+            </li>;
+          })}
+        </ul>}
+      </div> : null}
+    </section>
+  );
+}
+
+function todayAreaPresentation(area: TodayAreaKey): { label: string; tone: string } {
+  if (area === "pro") return { label: "PRO", tone: "bg-blue-50 text-blue-700" };
+  if (area === "perso") return { label: "PERSO", tone: "bg-rose-50 text-rose-700" };
+  if (area === "religion") return { label: "RELIGION", tone: "bg-amber-50 text-amber-800" };
+  return { label: "À CLASSER", tone: "bg-slate-100 text-slate-700" };
 }
 
 function UpcomingRow({ item }: { item: DashboardUpcomingItem }) {

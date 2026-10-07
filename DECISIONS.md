@@ -84,3 +84,10 @@ SHA-256 content matches the supplied Word file.
 - Multi-day routine windows are represented additively with `schedule_window_weekdays` and optional `schedule_month_weeks`; `{6,7}` is one weekend occurrence, not two.
 - `time_context` is presentation/ordering metadata, not the primary calendar engine.
 - `configuration_status` is not a blanket calendar gate: the engine checks whether the fields required for the occurrence are actually present.
+
+## 2026-10-07 — Daily validation remains reversible until the day changes
+
+- Aujourd’hui groups missions by `life_area` (PRO, PERSO, RELIGION) without creating another task system.
+- A completed mission remains visible at the end of its group for the rest of the user's calendar day and can be unchecked there.
+- At the next midnight in the profile time zone, the dashboard refreshes: daily recurring occurrences start a new day, while a non-recurring task remains permanently completed unless it was explicitly unchecked before midnight.
+- Rows without a life area are preserved in a conditional “À classer” group instead of being hidden or assigned arbitrarily.

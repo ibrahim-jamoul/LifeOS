@@ -8,6 +8,7 @@ import {
   type LifeArea,
   type ProjectOption,
 } from "@/components/life-dashboard";
+import { startOfCalendarDay } from "@/lib/domain/dates";
 import {
   addCalendarDays,
   calendarDateInTimeZone,
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
   const timezone = typeof profile?.timezone === "string" ? profile.timezone : "Europe/Paris";
   const today = calendarDateInTimeZone(now, timezone);
   const futureEnd = addCalendarDays(today, 21);
+  const nextDayStartsAt = startOfCalendarDay(addCalendarDays(today, 1), timezone).toISOString();
   const routineLogStart = addCalendarDays(today, -35);
 
   const [tasksR, goalsR, projectsR, occurrencesR, habitsR, religionRoutinesR, habitLogsR, religionLogsR, remindersR] = await Promise.all([
@@ -140,7 +142,7 @@ export default async function DashboardPage() {
   const projectOptions: ProjectOption[] = projects.flatMap((project) => typeof project.id === "string" && typeof project.title === "string" && !["done", "cancelled", "archived"].includes(String(project.status ?? "")) ? [{ id: project.id, title: project.title, lifeArea: lifeArea(project.life_area) }] : []);
 
   const dateLabel = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: timezone }).format(now);
-  return <LifeDashboard today={today} dateLabel={dateLabel} todayItems={todayItems} upcoming={upcoming.slice(0, 12)} goals={dashboardGoals} goalOptions={goalOptions} projectOptions={projectOptions} />;
+  return <LifeDashboard today={today} nextDayStartsAt={nextDayStartsAt} dateLabel={dateLabel} todayItems={todayItems} upcoming={upcoming.slice(0, 12)} goals={dashboardGoals} goalOptions={goalOptions} projectOptions={projectOptions} />;
 }
 
 function normalizeRoutine(row: Row, routineType: "habit" | "religion"): NormalizedRoutine | null {
