@@ -7,6 +7,7 @@ import { Activity, Bell, BookOpen, BrainCircuit, CalendarDays, ChartNoAxesCombin
 import { signOutAction } from "@/app/(auth)/actions";
 import { QuickCapture } from "@/components/quick-capture";
 import { LearningShell } from "@/components/learning-shell";
+import { SyncButton } from "@/components/sync-button";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -117,6 +118,7 @@ export function AppShell({ children, email, displayName, unreadAlerts }: AppShel
           {current && CurrentIcon ? <div className={`hidden items-center gap-2 rounded-full px-3 py-1.5 text-sm font-black lg:flex ${current.tone}`}><CurrentIcon size={16} />{current.label}</div> : <div />}
           <div className="ml-auto flex items-center gap-2">
             <Link href="/app/alerts" className="button-secondary relative size-10 px-0" aria-label={`${unreadAlerts} alertes non lues`}><Bell size={19} />{unreadAlerts > 0 ? <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">{Math.min(unreadAlerts, 99)}</span> : null}</Link>
+            <SyncButton />
             <details className="relative">
               <summary className="flex cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-left"><span className="grid size-8 place-items-center rounded-lg bg-emerald-100 text-emerald-900"><BrainCircuit size={17} /></span><span className="hidden max-w-36 truncate text-xs md:block"><strong className="block truncate text-sm">{displayName || "Mon LifeOS"}</strong><span className="text-slate-500">{email}</span></span></summary>
               <div className="absolute right-0 top-12 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl"><Link className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-100" href="/app/settings">Mon profil</Link><Link className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-100" href="/app/settings/notifications">Notifications</Link><Link className="block rounded-lg px-3 py-2 text-sm hover:bg-slate-100" href="/app/settings/export">Exporter mes données</Link><form action={signOutAction}><button className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-700 hover:bg-red-50">Se déconnecter</button></form></div>
