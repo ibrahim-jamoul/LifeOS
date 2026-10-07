@@ -68,7 +68,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     action: "rescheduled",
     summary: summary.slice(0, 160),
   });
-  if (logError) console.error("LifeOS task planning activity log failed", { code: logError.code });
+  if (logError) console.error("LifeOS task rescheduling activity log failed", { code: logError.code });
 
   return apiData(data);
 }

@@ -6,7 +6,7 @@ LifeOS reste la source de vérité. Le référentiel sert de source de préparat
 
 ## Modèle d’exécution
 
-Vision → Objectif → Projet optionnel → Mission / tâche → Planning → Aujourd’hui → Mesure → Revue.
+Vision → Objectif → Projet optionnel → Mission / tâche → Aujourd’hui / À venir → Mesure → Revue.
 
 Un projet est facultatif. Une mission peut être liée directement à un objectif.
 

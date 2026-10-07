@@ -4,12 +4,11 @@
 
 V4 simplifie les surfaces de pilotage sans retirer les écrans avancés existants. Le parcours principal devient :
 
-1. Aujourd’hui
-2. Planning
-3. Objectifs
-4. KPI
-5. Revue
-6. Vision
+1. Aujourd’hui, avec la planification et le calendrier À venir
+2. Objectifs
+3. KPI
+4. Revue
+5. Vision
 
 Les vues Progression, Insights et Explorer restent accessibles sous « Outils avancés ».
 
@@ -30,11 +29,10 @@ Les vues Progression, Insights et Explorer restent accessibles sous « Outils av
 - Ajout direct de missions depuis chaque objectif.
 - Les fonctions CRUD avancées restent disponibles sous « Options avancées ».
 
-## Planning
+## Planification dans Aujourd’hui
 
-- Vue mono-colonne simplifiée.
-- Repère sur les sept prochains jours.
-- Ajout d’une tâche avec date, heure, durée, domaine, objectif parent, projet parent et récurrence.
+- La page dédiée a été retirée pour éviter le doublon avec Aujourd’hui.
+- Le calendrier À venir et l’ajout de tâches conservent la date, l’heure, la durée, le domaine, l’objectif parent, le projet parent et la récurrence.
 
 ## KPI
 

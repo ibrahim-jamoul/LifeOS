@@ -97,3 +97,9 @@ SHA-256 content matches the supplied Word file.
 - The dashboard “À venir” section remains derived from existing tasks, routines, and reminders; the calendar is a presentation layer, not a new planning system.
 - The initial calendar window covers the next 120 days so monthly navigation can show recurring work without another database query or table.
 - Calendar indicators reuse the existing PRO, PERSO, and RELIGION life areas, while selecting a date reveals its complete agenda.
+
+## 2026-10-08 — Planning is integrated into Aujourd’hui
+
+- The dedicated Planning route, navigation entry, and presentation component are removed because they duplicate Aujourd’hui and its upcoming calendar.
+- Task scheduling fields, recurrence helpers, rescheduling actions, goal links, and Supabase tables remain shared sources of truth and are not deleted or migrated.
+- Future missions stay visible in Aujourd’hui → À venir and in their related objective.

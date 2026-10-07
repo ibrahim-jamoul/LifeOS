@@ -4,7 +4,7 @@
 
 Ajouter à la V4 existante un second univers d'interface, **Apprentissage**, sans mélanger l'interface quotidienne de LifeOS avec l'interface de formation.
 
-- LifeOS principal = tâches, planning, objectifs, KPI, revue, vision.
+- LifeOS principal = Aujourd’hui et ses tâches datées, objectifs, KPI, revue, vision.
 - Apprentissage = leçons, révisions, Coran, routines d'apprentissage, ressources, progression.
 - Les deux univers restent connectés au même Supabase et peuvent partager les données utiles.
 

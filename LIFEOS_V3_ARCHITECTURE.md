@@ -13,9 +13,7 @@ PROJETS (facultatifs)
   ↓
 MISSIONS / TÂCHES
   ↓
-PLANNING + RÉCURRENCE
-  ↓
-AUJOURD’HUI / À VENIR
+PLANIFICATION + RÉCURRENCE DANS AUJOURD’HUI / À VENIR
   ↓
 LOGS + KPI
   ↓
@@ -44,23 +42,14 @@ Le lien direct est stocké dans `tasks.goal_id`. Le lien historique `tasks.proje
 
 L’ancien CRUD objectifs est conservé sous `/app/goals/objectives-admin`.
 
-## 3. Planning
+## 3. Planification intégrée à Aujourd’hui
 
 Une tâche dispose de deux notions distinctes :
 
 - `planned_on` + `planned_time` : quand je compte réellement l’exécuter ;
 - `due_on` / `due_at` : échéance réelle éventuelle.
 
-La vue `/app/planning` regroupe :
-
-- En retard ;
-- Aujourd’hui ;
-- Demain ;
-- Cette semaine ;
-- Plus tard ;
-- À planifier.
-
-Il s’agit d’un calendrier orienté action, pas d’un clone de Google Calendar.
+Il n’existe plus de page Planning dédiée. La date d’exécution, l’heure facultative et la récurrence restent portées par les tâches, puis sont exploitées par `Aujourd’hui`, son calendrier `À venir` et les missions rattachées aux objectifs.
 
 ## 4. Aujourd’hui
 

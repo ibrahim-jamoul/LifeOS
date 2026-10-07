@@ -53,7 +53,7 @@ export default async function InsightsPage() {
           title="Exécution globale"
           body={`Période actuelle : ${overview.current.rate === null ? "non mesurable" : `${overview.current.rate}%`}. Période précédente : ${overview.previous.rate === null ? "non mesurable" : `${overview.previous.rate}%`}.${delta === null ? "" : ` Écart : ${delta > 0 ? "+" : ""}${delta} points.`}`}
         />
-        <InsightCard tone={overview.repeatedlyRescheduled.length >= 3 ? "warn" : "neutral"} title="Stabilité du planning" body={`${overview.repeatedlyRescheduled.length} tâche(s) ouverte(s) sont reportées à répétition.`} />
+        <InsightCard tone={overview.repeatedlyRescheduled.length >= 3 ? "warn" : "neutral"} title="Stabilité d’exécution" body={`${overview.repeatedlyRescheduled.length} tâche(s) ouverte(s) sont reportées à répétition.`} />
         <InsightCard tone={overview.inactiveProjects.length >= 2 ? "warn" : "neutral"} title="Dispersion projets" body={`${overview.inactiveProjects.length} projet(s) actif(s) sont sans activité récente.`} />
         {declaredArea && activityArea
           ? <InsightCard

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, Bell, BookOpen, BrainCircuit, CalendarDays, ChartNoAxesCombined, ChevronDown, Compass, Eye, Gauge, Lightbulb, Menu, NotebookPen, Settings, Target, X } from "lucide-react";
+import { Activity, Bell, BookOpen, BrainCircuit, ChartNoAxesCombined, ChevronDown, Compass, Eye, Gauge, Lightbulb, Menu, NotebookPen, Settings, Target, X } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
 import { QuickCapture } from "@/components/quick-capture";
 import { LearningShell } from "@/components/learning-shell";
@@ -19,7 +19,6 @@ type AppShellProps = {
 const navigation = [
   { href: "/app/dashboard", label: "Aujourd’hui", icon: Gauge, tone: "bg-emerald-100 text-emerald-800" },
   { href: "/app/learning", label: "Apprentissage", icon: BookOpen, tone: "bg-amber-100 text-amber-900" },
-  { href: "/app/planning", label: "Planning", icon: CalendarDays, tone: "bg-teal-100 text-teal-800" },
   { href: "/app/goals/objectives", label: "Objectifs", icon: Target, tone: "bg-orange-100 text-orange-800" },
   { href: "/app/kpis", label: "KPI", icon: Activity, tone: "bg-blue-100 text-blue-800" },
   { href: "/app/review", label: "Revue", icon: NotebookPen, tone: "bg-indigo-100 text-indigo-800" },
@@ -33,7 +32,6 @@ const advancedNavigation = [
 ] as const;
 
 function pageTheme(pathname: string) {
-  if (pathname.startsWith("/app/planning")) return "from-emerald-50/90 via-white to-teal-50/70";
   if (pathname.startsWith("/app/goals/objectives")) return "from-orange-50/80 via-white to-rose-50/55";
   if (pathname.startsWith("/app/kpis")) return "from-blue-50/85 via-white to-sky-50/60";
   if (pathname.startsWith("/app/review")) return "from-indigo-50/80 via-white to-slate-50/70";

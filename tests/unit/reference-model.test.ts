@@ -50,7 +50,7 @@ describe("reference model validation", () => {
     expect(result.success).toBe(false);
   });
 
-  it("keeps an operational planning date separate from the real deadline", () => {
+  it("keeps an operational execution date separate from the real deadline", () => {
     const result = schema("tasks").safeParse({
       title: "Action planifiée",
       life_area: "pro",

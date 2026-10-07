@@ -30,7 +30,7 @@ export function UpcomingPanel({ today, items }: { today: string; items: readonly
           <h2 className="mt-1 text-xl font-bold">Prochaines actions datées</h2>
           <p className="mt-1 text-sm text-slate-600">Visible ici avant la date, puis automatiquement dans Aujourd’hui le jour prévu.</p>
         </div>
-        <Link href="/app/goals/tasks" className="shrink-0 text-sm font-bold text-emerald-800">Planning <ChevronRight className="inline" size={14}/></Link>
+        <Link href="/app/goals/tasks" className="shrink-0 text-sm font-bold text-emerald-800">Toutes les tâches <ChevronRight className="inline" size={14}/></Link>
       </div>
       {items.length === 0 ? <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Aucune action future planifiée.</p> : (
         <div className="mt-5 divide-y divide-slate-100">

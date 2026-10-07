@@ -65,7 +65,7 @@ describe("routine calendar eligibility", () => {
     expect(nextRoutineOccurrence(routine, "2026-09-23")).toBeNull();
   });
 
-  it("keeps flexible and contextual routines out without explicit planning", () => {
+  it("keeps flexible and contextual routines out without an explicit schedule", () => {
     expect(isRoutineActionableOn({ frequency: "flexible" }, "2026-09-23")).toBe(false);
     expect(isRoutineActionableOn({ frequency: "contextual" }, "2026-09-23")).toBe(false);
   });

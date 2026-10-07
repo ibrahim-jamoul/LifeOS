@@ -72,8 +72,6 @@ test("authenticated P0 control-plane and branch journey", async ({ page }) => {
     await expect(upcomingSection.getByText(futureTitle)).toBeVisible();
     await page.goto(`/app/goals/objectives?goal=${goal.id}`);
     await expect(page.getByText(futureTitle)).toBeVisible();
-    await page.goto("/app/planning");
-    await expect(page.getByText(futureTitle)).toBeVisible();
     const financeInsight = await page.request.get("/api/insights/finances");
     expect(financeInsight.ok()).toBeTruthy();
     const financeBody = await financeInsight.json() as { data: { totals: { excludedTransfers: number }[] } };

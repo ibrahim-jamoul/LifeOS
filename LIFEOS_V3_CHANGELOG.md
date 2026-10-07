@@ -28,11 +28,11 @@ Cette V3 est reconstruite à partir de `LifeOS-main-ui-list-style-2026-09-22.zip
 - projet parent toujours facultatif ;
 - l’administration historique reste disponible sous `/app/goals/objectives-admin`.
 
-### Planning
+### Planification intégrée à Aujourd’hui
 
-- nouvelle route `/app/planning` ;
-- groupes En retard / Aujourd’hui / Demain / Cette semaine / Plus tard / À planifier ;
-- création d’une action à une date choisie ;
+- aucune route Planning dédiée ;
+- calendrier `À venir` conservé dans Aujourd’hui ;
+- création d’une action datée conservée dans les surfaces partagées ;
 - heure et durée facultatives ;
 - séparation date de travail / échéance réelle.
 
@@ -85,9 +85,7 @@ Le projet contient aussi la migration antérieure `20260922235500_add_routine_sc
 
 - `src/components/life-dashboard.tsx`
 - `src/components/goals-mission-board.tsx`
-- `src/components/planning-board.tsx`
 - `src/components/vision-overview.tsx`
-- `src/app/app/planning/page.tsx`
 - `src/app/app/kpis/page.tsx`
 - `src/lib/domain/task-recurrence.ts`
 - `tests/unit/task-recurrence.test.ts`
@@ -112,13 +110,13 @@ Le projet contient aussi la migration antérieure `20260922235500_add_routine_sc
 
 ## Fonctionnalités supprimées
 
-Aucune fonctionnalité métier existante n’a été supprimée. Les anciens écrans d’administration sont conservés lorsque la V3 ajoute une nouvelle vue métier.
+La page Planning dédiée et ses accès ont été supprimés après intégration de son contenu utile dans Aujourd’hui. Les données de tâches, objectifs, dates d’exécution et récurrences restent intactes. Les anciens écrans d’administration sont conservés lorsqu’ils protègent une fonctionnalité métier distincte.
 
 ## Tests et contrôles
 
 - contrôle syntaxique TypeScript de tous les fichiers TS/TSX : effectué ;
 - tests runtime du moteur de récurrence : effectués ;
 - migration Supabase appliquée et schéma vérifié sur le projet LifeOS ;
-- test E2E mis à jour pour vérifier qu’une mission future est visible dans À venir / Planning / objectif mais pas dans À faire aujourd’hui.
+- test E2E mis à jour pour vérifier qu’une mission future est visible dans À venir et dans son objectif, mais pas dans À faire aujourd’hui.
 
 Le build Next.js complet doit toujours être rejoué dans l’environnement Vercel final après publication. L’environnement de génération local ne peut pas restaurer toutes les dépendances npm depuis son cache (un paquet n’est pas disponible hors ligne), ce qui empêche ici un `next build` reproductible complet. Ce point n’est pas présenté comme validé.
