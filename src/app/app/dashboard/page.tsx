@@ -18,7 +18,8 @@ import {
   scheduledRoutineDates,
   type RoutineSchedule,
 } from "@/lib/domain/routines";
-import { taskOccurrencesBetween, taskOccursOn } from "@/lib/domain/task-recurrence";
+import { taskOccurrencesBetween } from "@/lib/domain/task-recurrence";
+import { applyOccurrenceOverrides, occurrenceScheduledForDate, type TaskOccurrenceOverride } from "@/lib/domain/task-occurrences";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Aujourd’hui" };
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
     supabase.from("tasks").select("id,title,status,priority,life_area,planned_on,planned_time,due_on,due_at,project_id,goal_id,estimate_minutes,recurrence_rule,recurrence_until,completed_at").eq("user_id", userId).neq("status", "cancelled").limit(1000),
     supabase.from("goals").select("id,title,life_area,status,priority,horizon,target_date,progress_percent").eq("user_id", userId).not("status", "in", "(cancelled,archived)").limit(300),
     supabase.from("projects").select("id,title,life_area,status").eq("user_id", userId).not("status", "in", "(cancelled,archived)").limit(400),
-    supabase.from("task_occurrences").select("task_id,occurrence_on,completed_at").eq("user_id", userId).eq("occurrence_on", today).limit(1000),
+    supabase.from("task_occurrences").select("task_id,occurrence_on,rescheduled_on,completed_at").eq("user_id", userId).or(`occurrence_on.gte.${today},rescheduled_on.gte.${today}`).limit(5000),
     supabase.from("habits").select("id,name,life_area,frequency,duration_minutes,reminder_enabled,reminder_time,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(400),
     supabase.from("religion_routines").select("id,name,target_frequency,duration_minutes,reminder_enabled,reminder_time,schedule_weekday,schedule_day_of_month,schedule_window_weekdays,schedule_month_weeks,start_on,end_on,active,status,paused_at,archived_at").eq("user_id", userId).eq("active", true).eq("status", "active").limit(400),
     supabase.from("habit_logs").select("habit_id,occurred_on,count").eq("user_id", userId).gte("occurred_on", routineLogStart).lte("occurred_on", today).limit(5000),
@@ -55,7 +56,7 @@ export default async function DashboardPage() {
   const projects = (projectsR.data ?? []) as Row[];
   const goalMap = new Map(goals.flatMap((row) => typeof row.id === "string" ? [[row.id, String(row.title ?? "Objectif")] as const] : []));
   const projectMap = new Map(projects.flatMap((row) => typeof row.id === "string" ? [[row.id, String(row.title ?? "Projet")] as const] : []));
-  const occurrenceDone = new Set(((occurrencesR.data ?? []) as Row[]).flatMap((row) => typeof row.task_id === "string" && typeof row.completed_at === "string" ? [`${row.task_id}:${row.occurrence_on}`] : []));
+  const occurrenceOverrides: TaskOccurrenceOverride[] = ((occurrencesR.data ?? []) as Row[]).flatMap((row) => typeof row.task_id === "string" && typeof row.occurrence_on === "string" ? [{ taskId: row.task_id, occurrenceOn: row.occurrence_on, rescheduledOn: stringOrNull(row.rescheduled_on), completedAt: stringOrNull(row.completed_at) }] : []);
   const routines = [
     ...((habitsR.data ?? []) as Row[]).map((row) => normalizeRoutine(row, "habit")),
     ...((religionRoutinesR.data ?? []) as Row[]).map((row) => normalizeRoutine(row, "religion")),
@@ -71,19 +72,19 @@ export default async function DashboardPage() {
     const recurrenceUntil = stringOrNull(task.recurrence_until);
     const recurring = Boolean(recurrenceRule);
     const status = String(task.status ?? "todo");
-    const dueOn = resolveDueOn(task, timezone);
-    const doneOccurrence = recurring && occurrenceDone.has(`${task.id}:${today}`);
+    const occurrence = recurring ? occurrenceScheduledForDate({ taskId: task.id, plannedOn, recurrenceRule, recurrenceUntil, date: today, overrides: occurrenceOverrides }) : null;
+    const doneOccurrence = Boolean(occurrence?.completed);
     const completedToday = !recurring && status === "done" && typeof task.completed_at === "string" && calendarDateInTimeZone(new Date(task.completed_at), timezone) === today;
     const active = !["done", "cancelled"].includes(status);
     const scheduledToday = recurring
-      ? active && taskOccursOn({ plannedOn, recurrenceRule, recurrenceUntil, date: today })
-      : active && (plannedOn === today || (plannedOn === null && dueOn === today));
+      ? active && Boolean(occurrence)
+      : active && plannedOn === today;
     if (!scheduledToday && !doneOccurrence && !completedToday) continue;
     todayItems.push({
       id: `task:${task.id}:${today}`, kind: "task", title: task.title, lifeArea: lifeArea(task.life_area),
       durationMinutes: numberOrNull(task.estimate_minutes), plannedTime: stringOrNull(task.planned_time),
       context: parentContext(task, goalMap, projectMap), completed: doneOccurrence || completedToday,
-      recurring, taskId: task.id, routineId: null, routineType: null,
+      recurring, occurrenceOn: occurrence?.occurrenceOn ?? null, taskId: task.id, routineId: null, routineType: null,
     });
   }
 
@@ -112,9 +113,12 @@ export default async function DashboardPage() {
     const plannedOn = stringOrNull(task.planned_on);
     const recurrenceRule = stringOrNull(task.recurrence_rule);
     const recurrenceUntil = stringOrNull(task.recurrence_until);
-    const dates = recurrenceRule
+    const naturalDates = recurrenceRule
       ? taskOccurrencesBetween({ plannedOn, recurrenceRule, recurrenceUntil, start: upcomingStart, end: futureEnd, limit: 180 })
       : plannedOn && plannedOn >= upcomingStart && plannedOn <= futureEnd ? [plannedOn] : [];
+    const dates = recurrenceRule
+      ? applyOccurrenceOverrides({ taskId: task.id, naturalDates, overrides: occurrenceOverrides, start: upcomingStart, end: futureEnd }).filter((item) => !item.completed).map((item) => item.date)
+      : naturalDates;
     for (const date of dates) upcoming.push({ id: `task:${task.id}:${date}`, date, title: task.title, lifeArea: lifeArea(task.life_area), time: stringOrNull(task.planned_time), durationMinutes: numberOrNull(task.estimate_minutes), context: parentContext(task, goalMap, projectMap), recurring: Boolean(recurrenceRule) });
   }
   for (const routine of routines) {
@@ -153,7 +157,6 @@ function normalizeRoutine(row: Row, routineType: "habit" | "religion"): Normaliz
 function buildRoutineLogMap(habit: Row[], religion: Row[]) { const map = new Map<string, number>(); for (const row of habit) if (typeof row.habit_id === "string" && typeof row.occurred_on === "string") map.set(`habit:${row.habit_id}:${row.occurred_on}`, numberOrNull(row.count) ?? 0); for (const row of religion) if (typeof row.routine_id === "string" && typeof row.occurred_on === "string") map.set(`religion:${row.routine_id}:${row.occurred_on}`, numberOrNull(row.count) ?? 0); return map; }
 function hasRoutineCompletion(map: Map<string, number>, routine: NormalizedRoutine, start: string, end: string) { for (const [key, count] of map) { if (count <= 0 || !key.startsWith(`${routine.routineType}:${routine.id}:`)) continue; const date = key.slice(-10); if (date >= start && date <= end) return true; } return false; }
 function parentContext(task: Row, goals: Map<string, string>, projects: Map<string, string>) { const goal = typeof task.goal_id === "string" ? goals.get(task.goal_id) : null; const project = typeof task.project_id === "string" ? projects.get(task.project_id) : null; return goal && project ? `${goal} · ${project}` : goal ?? project ?? null; }
-function resolveDueOn(task: Row, timezone: string) { if (typeof task.due_on === "string") return task.due_on; if (typeof task.due_at === "string") return calendarDateInTimeZone(new Date(task.due_at), timezone); return null; }
 function compareToday(a: DashboardTodayItem, b: DashboardTodayItem) { if (a.completed !== b.completed) return a.completed ? 1 : -1; const timeA = a.plannedTime ?? "99:99"; const timeB = b.plannedTime ?? "99:99"; return timeA.localeCompare(timeB) || a.title.localeCompare(b.title, "fr"); }
 function priorityRank(value: unknown) { return value === "critical" ? 5 : value === "high" ? 4 : value === "medium" ? 3 : value === "low" ? 2 : 1; }
 function lifeArea(value: unknown): LifeArea { return value === "pro" || value === "perso" || value === "religion" ? value : null; }

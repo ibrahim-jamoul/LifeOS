@@ -103,3 +103,9 @@ SHA-256 content matches the supplied Word file.
 - The dedicated Planning route, navigation entry, and presentation component are removed because they duplicate Aujourd’hui and its upcoming calendar.
 - Task scheduling fields, recurrence helpers, rescheduling actions, goal links, and Supabase tables remain shared sources of truth and are not deleted or migrated.
 - Future missions stay visible in Aujourd’hui → À venir and in their related objective.
+
+## 2026-10-08 — Objectifs QuickFlow keeps planning and deadlines separate
+
+- A task enters Aujourd’hui only through its execution date (`planned_on`) or a rescheduled recurring occurrence; `due_on` remains an alert/deadline and never schedules work by itself.
+- A recurring occurrence can be moved independently through `task_occurrences.rescheduled_on`; the original `occurrence_on` remains its stable identity for completion and reopening.
+- Quick objective creation never invents a definition of DONE: a missing definition is stored with `configuration_status = to_complete`.

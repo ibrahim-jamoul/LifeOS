@@ -59,11 +59,10 @@ Un objectif, une certification ou un projet `FOCUS` ne crée jamais directement 
 Une tâche est éligible lorsque :
 
 - `planned_on = today` ;
-- `due_on` / `due_at` correspond à aujourd’hui ;
-- sa vraie échéance est dépassée et aucune replanification future ne la retire volontairement de la file du jour ;
+- une occurrence récurrente tombe aujourd’hui ou a été reportée aujourd’hui via `task_occurrences.rescheduled_on` ;
 - `planned_on < today` et la tâche n’est toujours pas terminée : elle est alors affichée comme **En retard · à replanifier**.
 
-Une tâche avec `planned_on > today` est exclue de la file d’exécution, même si son échéance réelle est déjà dépassée ; l’alerte d’échéance reste indépendante. Une tâche sans planification ni échéance est exclue, même si son projet est `FOCUS`.
+Une tâche avec `planned_on > today` est exclue de la file d’exécution, même si son échéance réelle est déjà dépassée ; l’alerte d’échéance reste indépendante. Une échéance `due_on` / `due_at` ne crée jamais à elle seule une planification dans Aujourd’hui. Une tâche sans planification est exclue, même si son projet est `FOCUS`.
 
 ### Routines
 
@@ -91,7 +90,7 @@ Le programme Coran du référentiel est donc représenté explicitement : nouvel
 
 ### Libellés dans l’UX
 
-La justification affichée doit venir de la règle qui a créé l’éligibilité : `Planifié aujourd’hui`, `Échéance aujourd’hui`, `En retard`, `Routine quotidienne`, `Prévu ce vendredi`, `Prévu ce week-end`, etc. `Projet FOCUS` n’est jamais un motif d’éligibilité. `time_context` reste utilisable pour l’ordre (matin / journée / soir) et la présentation.
+La justification affichée doit venir de la règle qui a créé l’éligibilité : `Planifié aujourd’hui`, `Reporté aujourd’hui`, `En retard · à replanifier`, `Routine quotidienne`, `Prévu ce vendredi`, `Prévu ce week-end`, etc. `Projet FOCUS` et `Échéance aujourd’hui` ne sont jamais des motifs de planification. `time_context` reste utilisable pour l’ordre (matin / journée / soir) et la présentation.
 
 ## Impératifs et objectifs hebdomadaires
 

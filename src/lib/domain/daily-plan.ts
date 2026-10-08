@@ -99,7 +99,7 @@ function taskToPlanItem(task: DailyPlanTaskInput, today: string): DailyPlanItem 
   // planned_on is the operational source of truth. A deliberate future
   // reschedule removes the task from today's execution list without mutating
   // its real deadline; deadline alerts remain handled independently.
-  if (plannedOn && plannedOn > today) return null;
+  if (!plannedOn || plannedOn > today) return null;
 
   let base = 0;
   let reason = "";

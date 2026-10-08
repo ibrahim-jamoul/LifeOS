@@ -35,6 +35,7 @@ export type DashboardTodayItem = {
   context: string | null;
   completed: boolean;
   recurring: boolean;
+  occurrenceOn?: string | null;
   taskId: string | null;
   routineId: string | null;
   routineType: "habit" | "religion" | null;
@@ -129,7 +130,7 @@ export function LifeDashboard(props: {
 
   async function setCompletion(item: DashboardTodayItem, completed: boolean) {
     if (item.kind === "task" && item.taskId) {
-      await post(item.id, `/api/tasks/${item.taskId}/complete`, { occurredOn: today, completed });
+      await post(item.id, `/api/tasks/${item.taskId}/complete`, { occurredOn: today, occurrenceOn: item.occurrenceOn ?? undefined, completed });
       return;
     }
     if (item.kind === "routine" && item.routineId && item.routineType) {
@@ -138,8 +139,8 @@ export function LifeDashboard(props: {
   }
 
   async function replan(item: DashboardTodayItem, plannedOn: string) {
-    if (!item.taskId || item.recurring) return;
-    await post(item.id, `/api/tasks/${item.taskId}/plan`, { plannedOn });
+    if (!item.taskId) return;
+    await post(item.id, `/api/tasks/${item.taskId}/plan`, { plannedOn, occurrenceOn: item.recurring ? item.occurrenceOn ?? today : undefined });
   }
 
   const tomorrow = addDays(today, 1);
@@ -255,11 +256,12 @@ function TodayAreaSection(props: {
                 </div>
               </div>
               {itemOpen && !item.completed && item.kind === "task" ? <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5"><div className="flex flex-wrap gap-2">
-                {!item.recurring ? <>
+                <>
                   <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void onReplan(item, tomorrow)}><RotateCcw size={14} />Demain</button>
                   <button className="button-secondary min-h-9 px-3 py-1" onClick={() => void onReplan(item, nextWeek)}><CalendarDays size={14} />+7 jours</button>
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5"><input className="bg-transparent px-1 text-sm outline-none" type="date" min={today} value={customDate} onChange={(event) => onCustomDateChange(event.target.value)} /><button className="rounded-lg bg-slate-900 px-2 py-1 text-xs font-bold text-white" onClick={() => void onReplan(item, customDate)}>Replanifier</button></div>
-                </> : <Link className="button-secondary min-h-9 px-3 py-1" href="/app/goals/tasks"><CalendarDays size={14} />Modifier la récurrence</Link>}
+                  {item.recurring ? <span className="self-center text-xs text-slate-500">Cette occurrence seulement</span> : null}
+                </>
               </div></div> : null}
             </li>;
           })}
@@ -288,9 +290,9 @@ export function TaskComposer(props: {
   const { today, goals, projects, onClose, onSaved, initialGoalId, initialLifeArea } = props;
   const initialGoal = goals.find((goal) => goal.id === initialGoalId);
   const [title, setTitle] = useState("");
-  const [plannedOn, setPlannedOn] = useState(today);
+  const [plannedOn, setPlannedOn] = useState("");
   const [plannedTime, setPlannedTime] = useState("");
-  const [duration, setDuration] = useState("30");
+  const [duration, setDuration] = useState("");
   const [priority, setPriority] = useState("medium");
   const [lifeArea, setLifeArea] = useState<"" | Exclude<LifeArea, null>>((initialGoal?.lifeArea ?? initialLifeArea ?? "") as "" | Exclude<LifeArea, null>);
   const [goalId, setGoalId] = useState(initialGoalId ?? "");
@@ -316,12 +318,13 @@ export function TaskComposer(props: {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!title.trim() || !plannedOn) return;
+    if (!title.trim()) return;
+    if (recurrence !== "none" && !plannedOn) { setError("Choisis une date de début pour la récurrence."); return; }
     if (recurrence === "weekly" && weekdays.length === 0) { setError("Choisis au moins un jour."); return; }
     const recurrenceRule = recurrence === "none" ? null : recurrence === "daily" ? "daily" : recurrence === "weekly" ? `weekly:${weekdays.join(",")}` : `monthly:${Number(plannedOn.slice(8, 10))}`;
     const payload = {
       title: title.trim(), life_area: lifeArea || null, goal_id: goalId || null, project_id: projectId || null,
-      status: "todo", priority, configuration_status: "ready", planned_on: plannedOn, planned_time: plannedTime || null,
+      status: "todo", priority, configuration_status: "ready", planned_on: plannedOn || null, planned_time: plannedOn ? plannedTime || null : null,
       recurrence_rule: recurrenceRule, recurrence_until: recurrence === "none" ? null : recurrenceUntil || null,
       due_on: dueOn || null, due_at: null, estimate_minutes: duration ? Number(duration) : null, actual_minutes: null, notes: null,
     };
@@ -337,22 +340,21 @@ export function TaskComposer(props: {
 
   return <div className="fixed inset-0 z-[70] grid place-items-end bg-slate-950/45 sm:place-items-center sm:p-4" role="dialog" aria-modal="true">
     <section className="max-h-[96vh] w-full overflow-y-auto rounded-t-[2rem] bg-white shadow-2xl sm:max-w-2xl sm:rounded-[2rem]">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Mission / tâche</p><h2 className="text-2xl font-black">Planifier une action</h2></div><button className="button-secondary size-10 px-0" onClick={onClose}><X size={18} /></button></header>
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur"><div><p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-700">Mission / tâche</p><h2 className="text-2xl font-black">Ajouter une mission</h2></div><button type="button" className="button-secondary size-10 px-0" onClick={onClose} aria-label="Fermer"><X size={18} /></button></header>
       <form className="grid gap-4 p-5 sm:grid-cols-2" onSubmit={submit}>
         <label className="field sm:col-span-2"><span>Titre *</span><input autoFocus className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Décrire l’action à réaliser" /></label>
-        <label className="field"><span>Date planifiée *</span><input className="input" type="date" min={today} value={plannedOn} onChange={(event) => { setPlannedOn(event.target.value); if (recurrence === "weekly" && event.target.value) setWeekdays([isoWeekday(event.target.value)]); }} /></label>
-        <label className="field"><span>Heure</span><input className="input" type="time" value={plannedTime} onChange={(event) => setPlannedTime(event.target.value)} /></label>
-        <label className="field"><span>Durée estimée</span><input className="input" type="number" min="0" step="5" value={duration} onChange={(event) => setDuration(event.target.value)} /></label>
-        <label className="field"><span>Priorité</span><select className="input" value={priority} onChange={(event) => setPriority(event.target.value)}><option value="unset">À définir</option><option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option><option value="critical">Critique</option></select></label>
-        <label className="field"><span>Domaine</span><select className="input" value={lifeArea} onChange={(event) => setLifeArea(event.target.value as "" | Exclude<LifeArea, null>)}><option value="">— Aucun —</option><option value="pro">PRO</option><option value="perso">PERSO</option><option value="religion">RELIGION</option></select></label>
-        <label className="field"><span>Objectif parent</span><select className="input" value={goalId} onChange={(event) => chooseGoal(event.target.value)}><option value="">— Mission indépendante —</option>{goals.map((goal) => <option key={goal.id} value={goal.id}>{goal.title}</option>)}</select></label>
-        <label className="field"><span>Projet parent</span><select className="input" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="">— Aucun —</option>{filteredProjects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label>
-        <label className="field"><span>Récurrence</span><select className="input" value={recurrence} onChange={(event) => { const value = event.target.value as typeof recurrence; setRecurrence(value); if (value === "weekly" && plannedOn) setWeekdays([isoWeekday(plannedOn)]); }}><option value="none">Non</option><option value="daily">Tous les jours</option><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option></select></label>
+        <fieldset className="sm:col-span-2"><legend className="mb-2 text-sm font-semibold">Quand ?</legend><div className="flex flex-wrap gap-2">{([["Non planifiée", ""], ["Aujourd’hui", today], ["Demain", addDays(today, 1)], ["+7 jours", addDays(today, 7)]] as const).map(([label, value]) => <button key={label} type="button" className={`rounded-full border px-3 py-2 text-sm font-bold ${plannedOn === value ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600"}`} onClick={() => { setPlannedOn(value); if (!value) { setPlannedTime(""); setRecurrence("none"); } }}>{label}</button>)}</div><input className="input mt-2" aria-label="Date personnalisée" type="date" min={today} value={plannedOn} onChange={(event) => { setPlannedOn(event.target.value); if (recurrence === "weekly" && event.target.value) setWeekdays([isoWeekday(event.target.value)]); }} /></fieldset>
+        <label className="field"><span>Heure exacte (facultative)</span><input className="input" type="time" disabled={!plannedOn} value={plannedTime} onChange={(event) => setPlannedTime(event.target.value)} /></label>
+        <fieldset><legend className="mb-2 text-sm font-semibold">Durée</legend><div className="flex flex-wrap gap-2">{["", "15", "30", "60", "90"].map((value) => <button key={value || "none"} type="button" className={`rounded-full border px-3 py-2 text-sm font-bold ${duration === value ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600"}`} onClick={() => setDuration(value)}>{value ? `${value} min` : "Sans durée"}</button>)}</div></fieldset>
+        <fieldset><legend className="mb-2 text-sm font-semibold">Priorité</legend><div className="flex flex-wrap gap-2">{([["Basse", "low"], ["Moyenne", "medium"], ["Haute", "high"], ["Critique", "critical"]] as const).map(([label, value]) => <button key={value} type="button" className={`rounded-full border px-3 py-2 text-sm font-bold ${priority === value ? "border-orange-500 bg-orange-50 text-orange-800" : "border-slate-200 text-slate-600"}`} onClick={() => setPriority(value)}>{label}</button>)}</div></fieldset>
+        <fieldset><legend className="mb-2 text-sm font-semibold">Domaine</legend><div className="flex flex-wrap gap-2">{[["Aucun", ""], ["PRO", "pro"], ["PERSO", "perso"], ["RELIGION", "religion"]].map(([label, value]) => <button key={label} type="button" className={`rounded-full border px-3 py-2 text-sm font-bold ${lifeArea === value ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 text-slate-600"}`} onClick={() => setLifeArea(value as "" | Exclude<LifeArea, null>)}>{label}</button>)}</div></fieldset>
+        {!initialGoalId ? <label className="field"><span>Objectif parent</span><select className="input" value={goalId} onChange={(event) => chooseGoal(event.target.value)}><option value="">Mission indépendante</option>{goals.map((goal) => <option key={goal.id} value={goal.id}>{goal.title}</option>)}</select></label> : null}
+        <details className="rounded-2xl border border-slate-200 p-3 sm:col-span-2"><summary className="cursor-pointer text-sm font-bold text-slate-600">Options avancées</summary><div className="mt-3 grid gap-4 sm:grid-cols-2"><label className="field"><span>Projet parent</span><select className="input" value={projectId} onChange={(event) => setProjectId(event.target.value)}><option value="">Aucun</option>{filteredProjects.map((project) => <option key={project.id} value={project.id}>{project.title}</option>)}</select></label><label className="field"><span>Récurrence</span><select className="input" value={recurrence} onChange={(event) => { const value = event.target.value as typeof recurrence; setRecurrence(value); if (value === "weekly" && plannedOn) setWeekdays([isoWeekday(plannedOn)]); }}><option value="none">Non</option><option value="daily">Tous les jours</option><option value="weekly">Chaque semaine</option><option value="monthly">Chaque mois</option></select></label></div></details>
         {recurrence !== "none" ? <label className="field"><span>Fin de récurrence</span><input className="input" type="date" min={plannedOn} value={recurrenceUntil} onChange={(event) => setRecurrenceUntil(event.target.value)} /></label> : null}
         {recurrence === "weekly" ? <fieldset className="sm:col-span-2"><legend className="mb-2 text-sm font-semibold">Jours</legend><div className="flex flex-wrap gap-2">{["L", "M", "M", "J", "V", "S", "D"].map((label, index) => { const day = index + 1; const active = weekdays.includes(day); return <button key={day} type="button" className={`grid size-10 place-items-center rounded-xl border text-sm font-bold ${active ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-500"}`} onClick={() => toggleWeekday(day)}>{label}</button>; })}</div></fieldset> : null}
         <label className="field sm:col-span-2"><span>Échéance réelle (facultative)</span><input className="input" type="date" value={dueOn} onChange={(event) => setDueOn(event.target.value)} /><span className="text-xs font-normal text-slate-500">Planifiée = quand tu travailles dessus. Échéance = quand elle doit être finie.</span></label>
         {error ? <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 sm:col-span-2">{error}</div> : null}
-        <footer className="sticky bottom-0 -mx-5 -mb-5 flex justify-end gap-2 border-t border-slate-100 bg-white px-5 py-4 sm:col-span-2"><button type="button" className="button-secondary" onClick={onClose}>Annuler</button><button className="button-primary" disabled={saving || !title.trim() || !plannedOn}>{saving ? <LoaderCircle className="animate-spin" size={16} /> : <Plus size={16} />}{saving ? "Création…" : "Créer la mission"}</button></footer>
+        <footer className="sticky bottom-0 -mx-5 -mb-5 flex justify-end gap-2 border-t border-slate-100 bg-white px-5 py-4 sm:col-span-2"><button type="button" className="button-secondary" onClick={onClose}>Annuler</button><button className="button-primary" disabled={saving || !title.trim()}>{saving ? <LoaderCircle className="animate-spin" size={16} /> : <Plus size={16} />}{saving ? "Création…" : plannedOn ? "Créer et planifier" : "Créer sans planifier"}</button></footer>
       </form>
     </section>
   </div>;

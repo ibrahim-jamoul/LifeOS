@@ -5,13 +5,14 @@ import { calendarDateInTimeZone } from "@/lib/domain/routines";
 import { taskOccursOn } from "@/lib/domain/task-recurrence";
 
 type RouteContext = { params: Promise<{ id: string }> };
-const schema = z.object({ occurredOn: z.iso.date().optional(), completed: z.boolean().optional() }).strict();
+const schema = z.object({ occurredOn: z.iso.date().optional(), occurrenceOn: z.iso.date().optional(), completed: z.boolean().optional() }).strict();
 
 export async function POST(request: Request, { params }: RouteContext) {
   const auth = await requireUser();
   if (isApiResponse(auth)) return auth;
   const { id } = await params;
   let occurredOn: string | undefined;
+  let occurrenceOn: string | undefined;
   let completed = true;
   try {
     const text = await request.text();
@@ -19,6 +20,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       const parsed = schema.safeParse(JSON.parse(text));
       if (!parsed.success) return apiError("VALIDATION_ERROR", "La date de validation est invalide.", 400);
       occurredOn = parsed.data.occurredOn;
+      occurrenceOn = parsed.data.occurrenceOn;
       completed = parsed.data.completed ?? true;
     }
   } catch { return apiError("INVALID_INPUT", "La validation est invalide.", 400); }
@@ -40,18 +42,29 @@ export async function POST(request: Request, { params }: RouteContext) {
   if (recurring) {
     const plannedOn = typeof task.planned_on === "string" ? task.planned_on : null;
     const recurrenceUntil = typeof task.recurrence_until === "string" ? task.recurrence_until : null;
-    if (!taskOccursOn({ plannedOn, recurrenceRule: task.recurrence_rule, recurrenceUntil, date: completionDate })) return apiError("NOT_SCHEDULED", "Cette mission récurrente n’est pas prévue à cette date.", 409);
+    const occurrenceDate = occurrenceOn ?? completionDate;
+    if (!taskOccursOn({ plannedOn, recurrenceRule: task.recurrence_rule, recurrenceUntil, date: occurrenceDate })) return apiError("NOT_SCHEDULED", "Cette mission récurrente n’est pas prévue à cette date.", 409);
+    const { data: occurrence, error: occurrenceError } = await auth.supabase.from("task_occurrences").select("rescheduled_on").eq("user_id", auth.userId).eq("task_id", id).eq("occurrence_on", occurrenceDate).maybeSingle();
+    if (occurrenceError) return databaseError(occurrenceError);
+    if (occurrence?.rescheduled_on && occurrence.rescheduled_on !== completionDate) return apiError("NOT_SCHEDULED", "Cette occurrence est planifiée à une autre date.", 409);
+    if (!occurrence?.rescheduled_on && occurrenceDate !== completionDate) return apiError("NOT_SCHEDULED", "Cette occurrence n’est pas planifiée à cette date.", 409);
     if (!completed) {
-      const { error } = await auth.supabase.from("task_occurrences").delete().eq("user_id", auth.userId).eq("task_id", id).eq("occurrence_on", completionDate);
+      const query = occurrence?.rescheduled_on
+        ? auth.supabase.from("task_occurrences").update({ completed_at: null }).eq("user_id", auth.userId).eq("task_id", id).eq("occurrence_on", occurrenceDate)
+        : auth.supabase.from("task_occurrences").delete().eq("user_id", auth.userId).eq("task_id", id).eq("occurrence_on", occurrenceDate);
+      const { error } = await query;
       if (error) return databaseError(error);
       await logActivity(auth.supabase, auth.userId, id, String(task.title), "unchecked_occurrence");
-      return apiData({ ...task, occurrence_on: completionDate, completed_at: null, recurring: true });
+      return apiData({ ...task, occurrence_on: occurrenceDate, completed_at: null, recurring: true });
     }
-    const { data, error } = await auth.supabase.from("task_occurrences").upsert({ user_id: auth.userId, task_id: id, occurrence_on: completionDate, completed_at: completedAt } as never, { onConflict: "user_id,task_id,occurrence_on" }).select("id,occurrence_on,completed_at").single();
+    const completionQuery = occurrence
+      ? auth.supabase.from("task_occurrences").update({ completed_at: completedAt }).eq("user_id", auth.userId).eq("task_id", id).eq("occurrence_on", occurrenceDate)
+      : auth.supabase.from("task_occurrences").insert({ user_id: auth.userId, task_id: id, occurrence_on: occurrenceDate, completed_at: completedAt } as never);
+    const { data, error } = await completionQuery.select("id,occurrence_on,rescheduled_on,completed_at").single();
     if (error || !data) return databaseError(error);
     await refreshProject(auth.supabase, auth.userId, task.project_id, completedAt);
     await logActivity(auth.supabase, auth.userId, id, String(task.title), "completed_occurrence");
-    return apiData({ ...task, occurrence_on: completionDate, completed_at: completedAt, recurring: true });
+    return apiData({ ...task, occurrence_on: occurrenceDate, completed_at: completedAt, recurring: true });
   }
 
   if (!completed) {

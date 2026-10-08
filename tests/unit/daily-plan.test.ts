@@ -90,12 +90,12 @@ describe("LifeOS daily manager", () => {
     expect(plan.all.map((item) => item.title)).toEqual(["Lire Scrum Guide"]);
   });
 
-  it("keeps real deadlines ahead of routines while focus only breaks ties between eligible tasks", () => {
+  it("keeps real deadlines ahead of routines only when the task is also planned", () => {
     const plan = buildDailyPlan({
       today: "2026-09-21",
       localHour: 9,
       tasks: [
-        { ...baseTask, id: "due", title: "Échéance", dueOn: "2026-09-21" },
+        { ...baseTask, id: "due", title: "Échéance", dueOn: "2026-09-21", plannedOn: "2026-09-21" },
         { ...baseTask, id: "normal", title: "Action normale", plannedOn: "2026-09-21" },
         { ...baseTask, id: "focus", title: "Action focus", plannedOn: "2026-09-21", focusProject: true },
       ],
@@ -103,6 +103,16 @@ describe("LifeOS daily manager", () => {
     });
 
     expect(plan.all.map((item) => item.title)).toEqual(["Échéance", "Action focus", "Action normale", "Routine matin"]);
+  });
+
+  it("keeps an unplanned deadline out of Aujourd’hui", () => {
+    const plan = buildDailyPlan({
+      today: "2026-09-21",
+      localHour: 9,
+      tasks: [{ ...baseTask, id: "due-only", title: "Échéance seule", dueOn: "2026-09-21" }],
+      routines: [],
+    });
+    expect(plan.all).toEqual([]);
   });
 
   it("marks a previously planned unfinished task as overdue and to replan", () => {

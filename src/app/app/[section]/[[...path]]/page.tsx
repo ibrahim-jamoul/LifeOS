@@ -7,6 +7,7 @@ import { ResourceWorkspace } from "@/components/resource-workspace";
 import { VisionOverview, type VisionDomain } from "@/components/vision-overview";
 import { calendarDateInTimeZone } from "@/lib/domain/routines";
 import { taskOccursOn } from "@/lib/domain/task-recurrence";
+import { occurrenceScheduledForDate, type TaskOccurrenceOverride } from "@/lib/domain/task-occurrences";
 import { createClient } from "@/lib/supabase/server";
 
 type SectionDefinition = { heading: string; intro: string; resources: readonly string[]; paths: Readonly<Record<string, string>> };
@@ -45,26 +46,36 @@ async function GoalsMissionServer({ initialGoalId }: { initialGoalId: string | n
   const { data: profile } = await supabase.from("profiles").select("timezone").eq("id", userId).maybeSingle();
   const timezone = typeof profile?.timezone === "string" ? profile.timezone : "Europe/Paris";
   const today = calendarDateInTimeZone(new Date(), timezone);
-  const [goalsR, tasksR, projectsR] = await Promise.all([
+  const [goalsR, tasksR, projectsR, occurrencesR, kpisR, goalProjectsR] = await Promise.all([
     supabase.from("goals").select("id,title,life_area,status,priority,progress_percent,target_date,desired_outcome").eq("user_id", userId).not("status", "in", "(cancelled,archived)").order("target_date", { ascending: true, nullsFirst: false }).limit(300),
-    supabase.from("tasks").select("id,goal_id,title,status,priority,life_area,planned_on,planned_time,estimate_minutes,project_id,recurrence_rule,recurrence_until").eq("user_id", userId).not("goal_id", "is", null).limit(1500),
+    supabase.from("tasks").select("id,goal_id,title,status,priority,life_area,planned_on,planned_time,estimate_minutes,project_id,recurrence_rule,recurrence_until,due_on").eq("user_id", userId).not("goal_id", "is", null).limit(1500),
     supabase.from("projects").select("id,title,life_area,status").eq("user_id", userId).not("status", "in", "(cancelled,archived)").limit(500),
+    supabase.from("task_occurrences").select("task_id,occurrence_on,rescheduled_on,completed_at").eq("user_id", userId).or(`occurrence_on.eq.${today},rescheduled_on.eq.${today}`).limit(1500),
+    supabase.from("kpis").select("id,goal_id,name,unit,active").eq("user_id", userId).eq("active", true).limit(500),
+    supabase.from("goal_projects").select("goal_id,project_id").eq("user_id", userId).limit(1000),
   ]);
   const projectRows = (projectsR.data ?? []) as Record<string, unknown>[];
   const projectNames = new Map(projectRows.flatMap((row) => typeof row.id === "string" && typeof row.title === "string" ? [[row.id, row.title] as const] : []));
-  const goals: GoalBoardGoal[] = ((goalsR.data ?? []) as Record<string, unknown>[]).flatMap((row) => typeof row.id === "string" && typeof row.title === "string" ? [{ id: row.id, title: row.title, lifeArea: area(row.life_area), status: String(row.status ?? "draft"), priority: String(row.priority ?? "unset"), progress: typeof row.progress_percent === "number" ? Math.round(row.progress_percent) : 0, targetDate: typeof row.target_date === "string" ? row.target_date : null, desiredOutcome: typeof row.desired_outcome === "string" ? row.desired_outcome : null }] : []);
+  const kpiCounts = countBy((kpisR.data ?? []) as Record<string, unknown>[], "goal_id");
+  const projectCounts = countBy((goalProjectsR.data ?? []) as Record<string, unknown>[], "goal_id");
+  const goals: GoalBoardGoal[] = ((goalsR.data ?? []) as Record<string, unknown>[]).flatMap((row) => typeof row.id === "string" && typeof row.title === "string" ? [{ id: row.id, title: row.title, lifeArea: area(row.life_area), status: String(row.status ?? "draft"), priority: String(row.priority ?? "unset"), progress: typeof row.progress_percent === "number" ? Math.round(row.progress_percent) : 0, targetDate: typeof row.target_date === "string" ? row.target_date : null, desiredOutcome: typeof row.desired_outcome === "string" ? row.desired_outcome : null, kpiCount: kpiCounts.get(row.id) ?? 0, projectCount: projectCounts.get(row.id) ?? 0 }] : []);
+  const occurrenceOverrides: TaskOccurrenceOverride[] = ((occurrencesR.data ?? []) as Record<string, unknown>[]).flatMap((row) => typeof row.task_id === "string" && typeof row.occurrence_on === "string" ? [{ taskId: row.task_id, occurrenceOn: row.occurrence_on, rescheduledOn: typeof row.rescheduled_on === "string" ? row.rescheduled_on : null, completedAt: typeof row.completed_at === "string" ? row.completed_at : null }] : []);
   const missions: GoalBoardMission[] = ((tasksR.data ?? []) as Record<string, unknown>[]).flatMap((row) => {
     if (typeof row.id !== "string" || typeof row.goal_id !== "string" || typeof row.title !== "string") return [];
     const plannedOn = typeof row.planned_on === "string" ? row.planned_on : null;
     const recurrenceRule = typeof row.recurrence_rule === "string" ? row.recurrence_rule : null;
     const recurrenceUntil = typeof row.recurrence_until === "string" ? row.recurrence_until : null;
+    const occurrence = recurrenceRule ? occurrenceScheduledForDate({ taskId: row.id, plannedOn, recurrenceRule, recurrenceUntil, date: today, overrides: occurrenceOverrides }) : null;
     return [{
       id: row.id, goalId: row.goal_id, title: row.title, status: String(row.status ?? "todo"), priority: String(row.priority ?? "unset"), lifeArea: area(row.life_area),
       plannedOn, plannedTime: typeof row.planned_time === "string" ? row.planned_time : null,
       estimateMinutes: typeof row.estimate_minutes === "number" ? row.estimate_minutes : null,
+      dueOn: typeof row.due_on === "string" ? row.due_on : null,
       projectTitle: typeof row.project_id === "string" ? projectNames.get(row.project_id) ?? null : null,
       recurrenceRule, recurrenceUntil,
-      occursToday: taskOccursOn({ plannedOn, recurrenceRule, recurrenceUntil, date: today }),
+      occursToday: recurrenceRule ? Boolean(occurrence) : taskOccursOn({ plannedOn, recurrenceRule, recurrenceUntil, date: today }),
+      occurrenceOn: occurrence?.occurrenceOn ?? null,
+      completedToday: Boolean(occurrence?.completed),
     }];
   });
   const projects: ProjectOption[] = projectRows.flatMap((row) => typeof row.id === "string" && typeof row.title === "string" && !["done", "cancelled", "archived"].includes(String(row.status ?? "")) ? [{ id: row.id, title: row.title, lifeArea: area(row.life_area) }] : []);
@@ -96,3 +107,4 @@ async function VisionServer() {
 function area(value: unknown): "pro" | "perso" | "religion" | null { return value === "pro" || value === "perso" || value === "religion" ? value : null; }
 function priority(value: unknown) { return value === "critical" ? 5 : value === "high" ? 4 : value === "medium" ? 3 : value === "low" ? 2 : 1; }
 function target(value: unknown) { return typeof value === "string" ? value : "9999-12-31"; }
+function countBy(rows: Record<string, unknown>[], key: string) { const counts = new Map<string, number>(); for (const row of rows) if (typeof row[key] === "string") counts.set(row[key], (counts.get(row[key]) ?? 0) + 1); return counts; }
