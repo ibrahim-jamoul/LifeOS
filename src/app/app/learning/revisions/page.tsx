@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BookOpen, RefreshCcw } from "lucide-react";
 import { QuranAttentionManager } from "@/components/quran-attention-manager";
+import { LearningV5 } from "@/components/learning-v5";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Révisions · Apprentissage" };
@@ -55,6 +56,7 @@ export default async function LearningRevisionsPage() {
 
   return (
     <div className="grid gap-6">
+      <LearningV5 mode="due" />
       <section className="rounded-[2rem] border border-[#e8dfd1] bg-[#fffdf8] p-5 shadow-sm sm:p-7">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-800">Apprentissage · Religion</p>
         <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:learning:smoke": "node --experimental-strip-types scripts/smoke-learning-lot2.mjs",
     "test:e2e": "playwright test",
     "import:referentiel": "node scripts/import-referentiel.mjs",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"

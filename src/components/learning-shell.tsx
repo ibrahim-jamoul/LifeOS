@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   Bell,
-  BookMarked,
   BookOpen,
   BookOpenText,
   ChartNoAxesCombined,
@@ -16,7 +15,6 @@ import {
   RefreshCcw,
   Settings,
   Sparkles,
-  SunMedium,
   UserRound,
   X,
 } from "lucide-react";
@@ -32,15 +30,13 @@ type LearningShellProps = {
 
 const navigation = [
   { href: "/app/learning", label: "Accueil", icon: Home },
-  { href: "/app/learning/lessons", label: "Leçons", icon: BookOpenText },
-  { href: "/app/learning/revisions", label: "Révisions", icon: RefreshCcw },
-  { href: "/app/learning/quran", label: "Coran", icon: BookMarked },
-  { href: "/app/learning/routines", label: "Routines", icon: SunMedium },
+  { href: "/app/learning/paths", label: "Parcours", icon: BookOpenText },
+  { href: "/app/learning/revisions", label: "Réviser", icon: RefreshCcw },
   { href: "/app/learning/resources", label: "Ressources", icon: Library },
-  { href: "/app/learning/progress", label: "Progression", icon: ChartNoAxesCombined },
+  { href: "/app/learning/bilan", label: "Bilan", icon: ChartNoAxesCombined },
 ] as const;
 
-const mobileNavigation = navigation.filter((item) => ["/app/learning", "/app/learning/lessons", "/app/learning/revisions", "/app/learning/quran", "/app/learning/progress"].includes(item.href));
+const mobileNavigation = navigation;
 
 export function LearningShell({ children, email, displayName, unreadAlerts }: LearningShellProps) {
   const pathname = usePathname();
@@ -95,7 +91,7 @@ export function LearningShell({ children, email, displayName, unreadAlerts }: Le
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 pb-6">
-          <p className="px-3 pb-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-50/45">Religion · domaine actif</p>
+          <p className="px-3 pb-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-50/45">Votre espace personnel</p>
           <ul className="grid gap-1">
             {navigation.map(({ href, label, icon: Icon }) => {
               const active = isActive(href);
@@ -109,9 +105,17 @@ export function LearningShell({ children, email, displayName, unreadAlerts }: Le
             })}
           </ul>
 
+          <div className="mt-5 grid gap-1 border-t border-white/10 pt-4">
+            <span className="px-3 py-1 text-xs font-black uppercase tracking-[.14em] text-white/60">Parcours spécialisés</span>
+            <Link className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10" href="/app/learning/religion">Programme Religion</Link>
+            <Link className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10" href="/app/learning/quran">Coran</Link>
+            <Link className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10" href="/app/learning/routines">Routines Religion</Link>
+            <Link className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10" href="/app/learning/lessons">Anciennes leçons</Link>
+            <Link className="rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10" href="/app/learning/progress">Progression Religion</Link>
+          </div>
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center gap-2 text-sm font-bold"><Sparkles size={16} /> Un univers extensible</div>
-            <p className="mt-2 text-xs leading-5 text-emerald-50/65">Religion d’abord. Arabe, certifications et autres apprentissages pourront rejoindre cet espace ensuite sans modifier LifeOS principal.</p>
+            <p className="mt-2 text-xs leading-5 text-emerald-50/65">Parcours, modules, notions et révisions au même endroit. Le Coran et les routines conservent leurs écrans spécialisés.</p>
           </div>
         </nav>
 
@@ -126,7 +130,7 @@ export function LearningShell({ children, email, displayName, unreadAlerts }: Le
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#e7dfd2] bg-[#fffdf8]/92 px-4 backdrop-blur md:px-7">
           <button className="button-secondary size-10 px-0 lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Ouvrir la navigation"><Menu size={20} /></button>
           <Link href="/app/learning" className="ml-2 flex items-center gap-2 text-lg font-black tracking-[-0.03em] text-slate-950 lg:hidden"><BookOpen size={19} className="text-emerald-800" /> Apprentissage</Link>
-          <div className="hidden items-center gap-2 rounded-full bg-[#efe7d9] px-3 py-1.5 text-sm font-black text-[#6a4a27] lg:flex"><BookOpen size={16} /> Religion</div>
+          <div className="hidden items-center gap-2 rounded-full bg-[#efe7d9] px-3 py-1.5 text-sm font-black text-[#6a4a27] lg:flex"><BookOpen size={16} /> Tous les domaines</div>
           <div className="ml-auto flex items-center gap-2">
             <Link href="/app/alerts" className="button-secondary relative size-10 px-0" aria-label={`${unreadAlerts} alertes non lues`}><Bell size={19} />{unreadAlerts > 0 ? <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">{Math.min(unreadAlerts, 99)}</span> : null}</Link>
             <SyncButton />
