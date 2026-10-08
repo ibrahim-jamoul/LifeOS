@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarDays, Check, ChevronDown, Circle, Flag, LoaderCircle, MoreHorizontal, Plus, Target, X } from "lucide-react";
 import { TaskComposer, type GoalOption, type LifeArea, type ProjectOption } from "@/components/life-dashboard";
 import { describeTaskRecurrence } from "@/lib/domain/task-recurrence";
@@ -19,7 +19,7 @@ export type GoalBoardMission = {
   occurrenceOn: string | null; completedToday: boolean;
 };
 
-type AreaFilter = "all" | Exclude<LifeArea, null>;
+type GoalAreaKey = "pro" | "perso" | "religion" | "other";
 type DetailTab = "overview" | "missions" | "kpis" | "projects";
 
 type ApiEnvelope = { ok?: boolean; error?: { message?: string } };
@@ -27,18 +27,27 @@ type ApiEnvelope = { ok?: boolean; error?: { message?: string } };
 export function GoalsMissionBoard(props: { today: string; goals: GoalBoardGoal[]; missions: GoalBoardMission[]; projects: ProjectOption[]; initialGoalId?: string | null }) {
   const { today, goals, missions, projects, initialGoalId } = props;
   const router = useRouter();
-  const [area, setArea] = useState<AreaFilter>("all");
   const [expanded, setExpanded] = useState<string | null>(initialGoalId ?? null);
   const [detailTab, setDetailTab] = useState<DetailTab>("overview");
   const [composerGoal, setComposerGoal] = useState<GoalBoardGoal | null>(null);
   const [goalComposerOpen, setGoalComposerOpen] = useState(false);
+  const [openAreas, setOpenAreas] = useState<Record<GoalAreaKey, boolean>>(() => {
+    const initialGoal = goals.find((goal) => goal.id === initialGoalId);
+    const initialArea = goalAreaKey(initialGoal?.lifeArea ?? "pro");
+    return { pro: initialArea === "pro", perso: initialArea === "perso", religion: initialArea === "religion", other: initialArea === "other" };
+  });
 
-  const visibleGoals = useMemo(() => goals.filter((goal) => area === "all" || goal.lifeArea === area), [goals, area]);
   const todayGoalIds = useMemo(() => new Set(missions.filter((mission) => mission.occursToday && !mission.completedToday && !["done", "cancelled"].includes(mission.status)).map((mission) => mission.goalId)), [missions]);
-  const todayGoals = visibleGoals.filter((goal) => todayGoalIds.has(goal.id));
-  const otherGoals = visibleGoals.filter((goal) => !todayGoalIds.has(goal.id));
-  const orderedGoals = [...todayGoals, ...otherGoals];
-  const goalOptions: GoalOption[] = goals.map((goal) => ({ id: goal.id, title: goal.title, lifeArea: goal.lifeArea }));
+  const missionsByGoal = useMemo(() => {
+    const grouped = new Map<string, GoalBoardMission[]>();
+    for (const mission of missions) grouped.set(mission.goalId, [...(grouped.get(mission.goalId) ?? []), mission]);
+    return grouped;
+  }, [missions]);
+  const goalGroups = useMemo(() => (["pro", "perso", "religion", "other"] as const).map((key) => ({
+    key,
+    goals: goals.filter((goal) => goalAreaKey(goal.lifeArea) === key).sort((left, right) => Number(todayGoalIds.has(right.id)) - Number(todayGoalIds.has(left.id)) || left.title.localeCompare(right.title, "fr")),
+  })).filter((group) => group.goals.length > 0), [goals, todayGoalIds]);
+  const goalOptions: GoalOption[] = useMemo(() => goals.map((goal) => ({ id: goal.id, title: goal.title, lifeArea: goal.lifeArea })), [goals]);
 
   return <div className="grid gap-5">
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -48,20 +57,26 @@ export function GoalsMissionBoard(props: { today: string; goals: GoalBoardGoal[]
 
     <div className="grid grid-cols-3 gap-2"><Metric value={goals.filter((goal) => goal.status === "active").length} label="Actifs" /><Metric value={todayGoalIds.size} label="Du jour" /><Metric value={goals.filter((goal) => goal.status === "at_risk").length} label="À risque" /></div>
 
-    <div className="rounded-2xl border border-orange-100 bg-white/80 p-2 shadow-sm backdrop-blur">
-      <div className="flex flex-wrap gap-2">{(["all", "pro", "perso", "religion"] as const).map((value) => <button key={value} className={`rounded-full px-4 py-2 text-sm font-bold transition ${area === value ? areaTone(value) : "border border-slate-200 bg-white text-slate-600"}`} onClick={() => setArea(value)}>{value === "all" ? "Tous" : value.toUpperCase()}</button>)}</div>
-    </div>
-
-    <div className="grid gap-4">{orderedGoals.map((goal, index) => {
-      const rows = missions.filter((mission) => mission.goalId === goal.id).sort(compareMissions);
-      const remaining = rows.filter((mission) => !["done", "cancelled"].includes(mission.status)).length;
-      const open = expanded === goal.id;
-      const next = rows.find((mission) => !["done", "cancelled"].includes(mission.status));
-      const sectionTitle = index === 0 ? (todayGoals.length ? "Aujourd’hui" : "Autres objectifs") : index === todayGoals.length ? "Autres objectifs" : null;
-      return <Fragment key={goal.id}>{sectionTitle ? <h2 className="mt-2 text-sm font-black uppercase tracking-[0.16em] text-slate-500">{sectionTitle}</h2> : null}<section className="overflow-hidden rounded-[1.75rem] border border-orange-100/80 bg-white/95 shadow-sm">
+    <div className="grid gap-3">{goalGroups.map((group) => {
+      const presentation = goalAreaPresentation(group.key);
+      const areaOpen = openAreas[group.key];
+      const todayCount = group.goals.filter((goal) => todayGoalIds.has(goal.id)).length;
+      const panelId = `goal-area-${group.key}`;
+      return <section key={group.key} className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
+        <button type="button" className="grid min-h-16 w-full grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 text-left sm:px-5" aria-expanded={areaOpen} aria-controls={panelId} onClick={() => setOpenAreas((current) => ({ ...current, [group.key]: !current[group.key] }))}>
+          <span className={`rounded-xl px-3 py-2 text-xs font-black tracking-[0.08em] ${presentation.tone}`}>{presentation.label}</span>
+          <span><strong className="block text-sm text-slate-950">{group.goals.length} objectif{group.goals.length > 1 ? "s" : ""}</strong><span className="text-xs text-slate-500">{todayCount ? `${todayCount} du jour` : "Aucun prévu aujourd’hui"}</span></span>
+          <ChevronDown className={`text-slate-400 transition ${areaOpen ? "rotate-180" : ""}`} size={20} />
+        </button>
+        {areaOpen ? <div id={panelId} className="grid gap-3 border-t border-slate-100 bg-slate-50/60 p-3 sm:p-4">{group.goals.map((goal) => {
+          const rows = [...(missionsByGoal.get(goal.id) ?? [])].sort(compareMissions);
+          const remaining = rows.filter((mission) => !["done", "cancelled"].includes(mission.status)).length;
+          const open = expanded === goal.id;
+          const next = rows.find((mission) => !["done", "cancelled"].includes(mission.status));
+          return <section key={goal.id} className="overflow-hidden rounded-[1.5rem] border border-orange-100/80 bg-white/95 shadow-sm">
         <button className="flex w-full items-start gap-4 px-5 py-5 text-left sm:px-6" onClick={() => { setExpanded(open ? null : goal.id); setDetailTab("overview"); }}>
           <div className={`grid size-11 shrink-0 place-items-center rounded-2xl ${goalTone(goal.lifeArea)}`}><Target size={21} /></div>
-          <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-black sm:text-2xl">{goal.title}</h2><AreaBadge area={goal.lifeArea} /></div>{goal.desiredOutcome ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{goal.desiredOutcome}</p> : null}<div className="mt-3 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, goal.progress))}%` }} /></div><strong className="text-sm">{goal.progress}%</strong></div><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500"><span>{remaining} mission{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}</span>{next ? <span>Prochaine : {next.title}</span> : null}{goal.targetDate ? <span>Cible {formatDate(goal.targetDate)}</span> : null}</div></div>
+          <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-black sm:text-2xl">{goal.title}</h2>{todayGoalIds.has(goal.id) ? <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">AUJOURD’HUI</span> : null}</div>{goal.desiredOutcome ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{goal.desiredOutcome}</p> : null}<div className="mt-3 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-500" style={{ width: `${Math.max(0, Math.min(100, goal.progress))}%` }} /></div><strong className="text-sm">{goal.progress}%</strong></div><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500"><span>{remaining} mission{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}</span>{next ? <span>Prochaine : {next.title}</span> : null}{goal.targetDate ? <span>Cible {formatDate(goal.targetDate)}</span> : null}</div></div>
           <ChevronDown className={`mt-2 shrink-0 text-slate-400 transition ${open ? "rotate-180" : ""}`} />
         </button>
         {open ? <div className="border-t border-orange-100 bg-orange-50/25 px-4 py-4 sm:px-6 sm:py-5">
@@ -72,10 +87,12 @@ export function GoalsMissionBoard(props: { today: string; goals: GoalBoardGoal[]
           {detailTab === "projects" ? <EmptyLinked count={goal.projectCount} label="projet" href="/app/goals/projects" /> : null}
           <details className="mt-4 rounded-xl border border-slate-200 bg-white px-3 py-2"><summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-bold text-slate-500"><MoreHorizontal size={16} />Options avancées</summary><div className="mt-2 flex flex-wrap gap-2"><Link href={`/app/goals/objectives-admin?q=${encodeURIComponent(goal.title)}`} className="button-secondary">Modifier l’objectif</Link><Link href="/app/goals/tasks" className="button-secondary">Voir toutes les tâches</Link></div></details>
         </div> : null}
-      </section></Fragment>;
+          </section>;
+        })}</div> : null}
+      </section>;
     })}</div>
 
-    {visibleGoals.length === 0 ? <div className="rounded-2xl border border-dashed border-orange-200 bg-white/80 p-8 text-center"><Target className="mx-auto text-orange-300" /><p className="mt-3 font-black">Aucun objectif dans ce filtre.</p><p className="mt-1 text-sm text-slate-500">Change de domaine ou crée un objectif.</p></div> : null}
+    {goals.length === 0 ? <div className="rounded-2xl border border-dashed border-orange-200 bg-white/80 p-8 text-center"><Target className="mx-auto text-orange-300" /><p className="mt-3 font-black">Aucun objectif.</p><p className="mt-1 text-sm text-slate-500">Crée ton premier objectif pour commencer.</p></div> : null}
     {composerGoal ? <TaskComposer today={today} goals={goalOptions} projects={projects} initialGoalId={composerGoal.id} initialLifeArea={composerGoal.lifeArea} onClose={() => setComposerGoal(null)} onSaved={() => { setComposerGoal(null); router.refresh(); }} /> : null}
     {goalComposerOpen ? <GoalComposer onClose={() => setGoalComposerOpen(false)} onSaved={() => { setGoalComposerOpen(false); router.refresh(); }} /> : null}
   </div>;
@@ -147,10 +164,10 @@ function MissionRow({ mission, today, onChanged }: { mission: GoalBoardMission; 
 }
 function Metric({ value, label }: { value: number; label: string }) { return <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center shadow-sm"><strong className="block text-2xl font-black">{value}</strong><span className="text-xs font-bold text-slate-500">{label}</span></div>; }
 function EmptyLinked({ count, label, href }: { count: number; label: string; href: string }) { return <div className="rounded-2xl border border-slate-200 bg-white p-5 text-center"><p className="font-black">{count ? `${count} ${label}${count > 1 ? "s" : ""} lié${count > 1 ? "s" : ""}` : `Aucun ${label} lié`}</p><Link className="button-secondary mt-3" href={href}>Gérer les {label}s</Link></div>; }
-function AreaBadge({ area }: { area: LifeArea }) { if (!area) return null; const tone = area === "pro" ? "bg-blue-50 text-blue-700" : area === "perso" ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-amber-800"; return <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${tone}`}>{area.toUpperCase()}</span>; }
 function PriorityBadge({ priority }: { priority: string }) { if (!priority || priority === "unset") return null; const tone = priority === "critical" ? "bg-red-50 text-red-700" : priority === "high" ? "bg-amber-50 text-amber-800" : "bg-slate-100 text-slate-600"; return <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${tone}`}>{priority.toUpperCase()}</span>; }
 function goalTone(area: LifeArea) { return area === "pro" ? "bg-blue-50 text-blue-700" : area === "perso" ? "bg-rose-50 text-rose-700" : area === "religion" ? "bg-amber-50 text-amber-800" : "bg-orange-50 text-orange-700"; }
-function areaTone(area: AreaFilter) { if (area === "pro") return "bg-blue-600 text-white"; if (area === "perso") return "bg-rose-500 text-white"; if (area === "religion") return "bg-amber-500 text-white"; return "bg-slate-950 text-white"; }
+function goalAreaKey(area: LifeArea): GoalAreaKey { return area ?? "other"; }
+function goalAreaPresentation(area: GoalAreaKey): { label: string; tone: string } { if (area === "pro") return { label: "PRO", tone: "bg-blue-50 text-blue-700" }; if (area === "perso") return { label: "PERSO", tone: "bg-rose-50 text-rose-700" }; if (area === "religion") return { label: "RELIGION", tone: "bg-amber-50 text-amber-800" }; return { label: "À CLASSER", tone: "bg-slate-100 text-slate-700" }; }
 function formatDate(date: string) { return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`)); }
 function compareMissions(a: GoalBoardMission, b: GoalBoardMission) { if (a.status === "done" && b.status !== "done") return 1; if (a.status !== "done" && b.status === "done") return -1; if (a.occursToday !== b.occursToday) return a.occursToday ? -1 : 1; return (a.plannedOn ?? "9999").localeCompare(b.plannedOn ?? "9999") || a.title.localeCompare(b.title, "fr"); }
 function addDays(date: string, amount: number) { const value = new Date(`${date}T12:00:00Z`); value.setUTCDate(value.getUTCDate() + amount); return value.toISOString().slice(0, 10); }
