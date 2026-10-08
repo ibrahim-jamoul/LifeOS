@@ -14,7 +14,8 @@
     "test:learning:smoke": "node --experimental-strip-types scripts/smoke-learning-lot2.mjs",
     "test:e2e": "playwright test",
     "import:referentiel": "node scripts/import-referentiel.mjs",
-    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "test:learning:preflight": "node --experimental-strip-types scripts/verify-learning-v5-local.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

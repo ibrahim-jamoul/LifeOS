@@ -126,8 +126,14 @@ declare
   next_due date;
 begin
   if auth.uid() is null then raise exception 'Authentication required' using errcode='42501'; end if;
-  if p_assessment not in ('forgot','fragile','correct','mastered') or p_today is null then
+  if p_assessment is null or p_assessment not in ('forgot','fragile','correct','mastered') or p_today is null then
     raise exception 'Invalid review input' using errcode='22023';
+  end if;
+  -- The app supplies the user's local calendar date. Legitimate world time zones
+  -- differ from UTC by at most one day; reject forged historical/future dates.
+  if p_today < (now() at time zone 'UTC')::date - 1
+     or p_today > (now() at time zone 'UTC')::date + 1 then
+    raise exception 'Review date out of range' using errcode='22023';
   end if;
   select * into current_row from public.learning_knowledge
   where id=p_knowledge_id and user_id=auth.uid() for update;

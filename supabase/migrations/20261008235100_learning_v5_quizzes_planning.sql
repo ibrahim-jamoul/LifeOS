@@ -93,7 +93,7 @@ end $$;
 -- The answer key is never selectable with a normal authenticated Data API client.
 -- Server-side grading via SECURITY DEFINER can still access this owner-guarded table.
 revoke select on public.learning_questions from authenticated;
-grant select (id,user_id,quiz_id,prompt,choices,explanation,source_url,position,created_at)
+grant select (id,user_id,quiz_id,prompt,choices,source_url,position,created_at)
   on public.learning_questions to authenticated;
 
 -- Clients cannot forge exam scores or plan links. These writes go through guarded RPCs.
@@ -123,12 +123,16 @@ begin
   if not found then raise exception 'Quiz not found' using errcode='42501'; end if;
   if not q.published then raise exception 'Quiz not published' using errcode='22023'; end if;
   for question in
-    select id, correct_index, explanation, source_url from public.learning_questions
+    select id, correct_index, explanation, source_url,
+           jsonb_array_length(choices) as choice_count from public.learning_questions
     where quiz_id=p_quiz_id and user_id=(select auth.uid()) order by position,id limit 100
   loop
     question_count := question_count+1;
     given := p_answers ->> (question.id::text);
-    if given is not null and given !~ '^[0-5]$' then raise exception 'Invalid choice' using errcode='22023'; end if;
+    if given is not null and (given !~ '^[0-5]$'
+        or given::int >= question.choice_count) then
+      raise exception 'Invalid choice' using errcode='22023';
+    end if;
     if given is not null and given::int = question.correct_index then correct_count:=correct_count+1; end if;
     results:=results||jsonb_build_array(jsonb_build_object('questionId',question.id,'correctIndex',question.correct_index,
       'givenIndex',case when given is null then null else given::int end,
@@ -210,11 +214,14 @@ create function public.guard_published_quiz_questions()
 returns trigger language plpgsql security invoker set search_path = '' as $$
 declare
   referenced_quiz uuid;
+  question_count int;
   is_published boolean;
 begin
   referenced_quiz := case when tg_op='DELETE' then old.quiz_id else new.quiz_id end;
+  -- Lock quiz row to serialize question changes with publishing.
+  -- Without this, a concurrent question INSERT can race against publication.
   select published into is_published from public.learning_quizzes
-  where id=referenced_quiz and user_id=(select auth.uid());
+  where id=referenced_quiz and user_id=(select auth.uid()) for update;
   if is_published then raise exception 'Published quiz questions are immutable' using errcode='23514'; end if;
   if tg_op='UPDATE' and old.quiz_id <> new.quiz_id then
     raise exception 'Moving a question between quizzes is not allowed' using errcode='23514';
@@ -233,6 +240,14 @@ begin
   if old.published and (not new.published or old.path_id <> new.path_id
     or old.mode <> new.mode or old.activity_id is distinct from new.activity_id) then
     raise exception 'Published quiz configuration is immutable' using errcode='23514';
+  end if;
+  -- A direct PostgREST update must obey the same minimum-question rule as the API.
+  if not old.published and new.published then
+    select count(*) into question_count from public.learning_questions
+      where quiz_id=old.id and user_id=old.user_id;
+    if question_count < 1 or question_count > 100 then
+      raise exception 'A published quiz requires 1 to 100 questions' using errcode='23514';
+    end if;
   end if;
   return new;
 end;

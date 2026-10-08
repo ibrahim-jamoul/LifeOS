@@ -53,13 +53,17 @@ export async function GET(request: Request) {
   }
 
   if (view === "home") {
-    const [paths, due, sessions] = await Promise.all([
+    const [paths, sessions] = await Promise.all([
       db.from("learning_paths").select("id,title,domain,path_type,status,weekly_minutes,updated_at,goal_id,project_id").eq("user_id", userId).neq("status", "archived").order("updated_at", { ascending: false }).limit(100),
-      db.from("learning_knowledge").select("id", { count: "exact", head: true }).eq("user_id", userId).lte("next_review_on", today),
       db.from("learning_sessions").select("duration_minutes,occurred_at").eq("user_id", userId).gte("occurred_at", new Date(Date.now() - 48 * 3600_000).toISOString()).limit(300),
     ]);
-    if (paths.error || due.error || sessions.error) return learningDatabaseError(paths.error || due.error || sessions.error);
-    return apiData({ paths: paths.data ?? [], dueCount: due.count ?? 0, sessionMinutesToday: (sessions.data ?? []).filter((s) => calendarDateInTimeZone(new Date(s.occurred_at), profile?.timezone || "Europe/Paris") === today).reduce((sum, s) => sum + s.duration_minutes, 0) });
+    if (paths.error || sessions.error) return learningDatabaseError(paths.error || sessions.error);
+    // Paused/abandoned paths are excluded from the daily review queue; completed
+    // paths remain revisable to retain acquired knowledge over time.
+    const reviewableIds = (paths.data ?? []).filter((path) => ["active", "completed"].includes(path.status)).map((path) => path.id);
+    const due = reviewableIds.length ? await db.from("learning_knowledge").select("id", { count: "exact", head: true }).eq("user_id", userId).in("path_id", reviewableIds).lte("next_review_on", today) : null;
+    if (due?.error) return learningDatabaseError(due.error);
+    return apiData({ paths: paths.data ?? [], dueCount: due?.count ?? 0, sessionMinutesToday: (sessions.data ?? []).filter((s) => calendarDateInTimeZone(new Date(s.occurred_at), profile?.timezone || "Europe/Paris") === today).reduce((sum, s) => sum + s.duration_minutes, 0) });
   }
 
   if (view === "path") {
@@ -81,7 +85,11 @@ export async function GET(request: Request) {
   }
 
   if (view === "due") {
-    const { data, error } = await db.from("learning_knowledge").select("id,path_id,title,summary,source_url,review_step,last_assessment,next_review_on").eq("user_id", userId).lte("next_review_on", today).order("next_review_on").limit(100);
+    const { data: reviewablePaths, error: pathError } = await db.from("learning_paths").select("id").eq("user_id", userId).in("status", ["active", "completed"]).limit(500);
+    if (pathError) return learningDatabaseError(pathError);
+    const reviewableIds = (reviewablePaths ?? []).map((path) => path.id);
+    if (reviewableIds.length === 0) return apiData({ due: [], today });
+    const { data, error } = await db.from("learning_knowledge").select("id,path_id,title,summary,source_url,review_step,last_assessment,next_review_on").eq("user_id", userId).in("path_id", reviewableIds).lte("next_review_on", today).order("next_review_on").limit(100);
     if (error) return learningDatabaseError(error);
     return apiData({ due: data ?? [], today });
   }
@@ -90,7 +98,7 @@ export async function GET(request: Request) {
   const [sessions, activities, knowledge, paths, reviews] = await Promise.all([
     db.from("learning_sessions").select("id,path_id,duration_minutes,result,occurred_at").eq("user_id", userId).gte("occurred_at", since).limit(1000),
     db.from("learning_activities").select("id,status,activity_type").eq("user_id", userId).limit(1000),
-    db.from("learning_knowledge").select("id,last_assessment,next_review_on").eq("user_id", userId).limit(1000),
+    db.from("learning_knowledge").select("id,path_id,last_assessment,next_review_on").eq("user_id", userId).limit(1000),
     db.from("learning_paths").select("id,status,domain").eq("user_id", userId).limit(1000),
     db.from("learning_reviews").select("id,assessment,reviewed_at").eq("user_id", userId).gte("reviewed_at", since).limit(1000),
   ]);
@@ -102,7 +110,7 @@ export async function GET(request: Request) {
     activitiesCompleted: activities.data?.filter((a) => a.status === "completed").length ?? 0,
     activitiesTotal: activities.data?.length ?? 0,
     knowledgeCount: knowledge.data?.length ?? 0,
-    dueCount: knowledge.data?.filter((k) => k.next_review_on <= today).length ?? 0,
+    dueCount: knowledge.data?.filter((k) => k.next_review_on <= today && (paths.data ?? []).some((p) => p.id === k.path_id && ["active", "completed"].includes(p.status))).length ?? 0,
     reviewed30d: reviews.data?.length ?? 0,
     activePaths: paths.data?.filter((p) => p.status === "active").length ?? 0,
   });
